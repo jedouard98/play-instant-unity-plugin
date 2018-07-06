@@ -24,13 +24,13 @@ namespace GooglePlayInstant.Editor
             "Loading Screen", "Build"};
 
         public const int BundleCreateSelect = 0;
-		public const int BundleDeploySelect = 1;
+        public const int BundleDeploySelect = 1;
         public const int VerifyBundleSelect = 2;
-		public const int LoadingScreenSelect = 3;
+        public const int LoadingScreenSelect = 3;
         public const int BuildSelect = 4;
 
         private const int FieldMinWidth = 100;
-		private const int ButtonWidth = 200;
+        private const int ButtonWidth = 200;
 
         public static void ShowWindow(int tabSelect)
         {
@@ -107,7 +107,7 @@ namespace GooglePlayInstant.Editor
                     GUILayout.Button ("Create Loading Scene", GUILayout.Width(ButtonWidth));
                     break;
                 case BuildSelect:
-                	EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
                     EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
                     EditorGUILayout.Space();
                     EditorGUILayout.BeginHorizontal();
