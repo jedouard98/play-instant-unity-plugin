@@ -71,13 +71,13 @@ namespace GooglePlayInstant.Editor
         [MenuItem("PlayInstant/Quick Deploy/AssetBundle Creation...", false, 300)]
         private static void AssetBundleCreationSettings()
         {
-            PlayInstantQuickDeployWindow.ShowWindow(PlayInstantQuickDeployWindow.BundleCreateSelect);
+            PlayInstantQuickDeployWindow.ShowWindow(PlayInstantQuickDeployWindow.CreateBundleSelect);
         }
 
         [MenuItem("PlayInstant/Quick Deploy/AssetBundle Deployment...", false, 301)]
         private static void AssetBundleDeploymentSettings()
         {
-            PlayInstantQuickDeployWindow.ShowWindow(PlayInstantQuickDeployWindow.BundleDeploySelect);
+            PlayInstantQuickDeployWindow.ShowWindow(PlayInstantQuickDeployWindow.DeployBundleSelect);
         }
 
         [MenuItem("PlayInstant/Quick Deploy/AssetBundle Verification...", false, 302)]
@@ -93,7 +93,7 @@ namespace GooglePlayInstant.Editor
         }
 
         [MenuItem("PlayInstant/Quick Deploy/Build APK...", false, 304)]
-        private static void BuildAPKSettings()
+        private static void BuildApkSettings()
         {
             PlayInstantQuickDeployWindow.ShowWindow(PlayInstantQuickDeployWindow.BuildSelect);
         }
