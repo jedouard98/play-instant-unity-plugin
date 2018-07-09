@@ -20,61 +20,47 @@ namespace GooglePlayInstant.Editor
     public class PlayInstantQuickDeployWindow : EditorWindow
     {
         private static int _toolbarSelectedButtonIndex = 0;
-        private static readonly ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
+        private static readonly string[] ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
             "Loading Screen", "Build"};
-
-<<<<<<< HEAD
-        public const int CreateBundleSelect = 0;
-        public const int DeployBundleSelect = 1;
-=======
-        public const int BundleCreateSelect = 0;
-        public const int BundleDeploySelect = 1;
->>>>>>> 611042ab9120bdde53d86a6cc6d1580228ac46ac
-        public const int VerifyBundleSelect = 2;
-        public const int LoadingScreenSelect = 3;
-        public const int BuildSelect = 4;
+        
+        public enum ToolBarSelectedButton
+        {
+            CreateBundle,
+            DeployBundle,
+            VerifyBundle,
+            LoadingScreen,
+            Build,
+        }
 
         private const int FieldMinWidth = 100;
         private const int ButtonWidth = 200;
 
-        public static void ShowWindow(int tabSelect)
+        public static void ShowWindow(ToolBarSelectedButton select)
         {
             GetWindow<PlayInstantQuickDeployWindow>("Quick Deploy");
-            _toolbarSelectedButtonIndex = tabSelect;
+            _toolbarSelectedButtonIndex = (int) select;
         }
 
         // TODO: replace stub strings with real values
         void OnGUI()
         {
-            _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, toolbarStrings);
-            switch(_toolbarSelectedButtonIndex) 
+            _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
+            switch((ToolBarSelectedButton) _toolbarSelectedButtonIndex) 
             {
-                case CreateBundleSelect:
+                case ToolBarSelectedButton.CreateBundle:
                     OnGuiCreateBundleSelect();
                     break;
-                case DeployBundleSelect:
+                case ToolBarSelectedButton.DeployBundle:
                     OnGuiDeployBundleSelect();
                     break;
-                case VerifyBundleSelect:
+                case ToolBarSelectedButton.VerifyBundle:
                     OnGuiVerifyBundleSelect();
                     break;
-                case LoadingScreenSelect:
+                case ToolBarSelectedButton.LoadingScreen:
                     OnGuiLoadingScreenSelect();
                     break;
-                case BuildSelect:
-<<<<<<< HEAD
+                case ToolBarSelectedButton.Build:
                     OnGuiCreateBuildSelect();
-=======
-                    EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
-                    EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
-                    EditorGUILayout.Space();
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-                    EditorGUILayout.TextField("c:\\base.apk", GUILayout.MinWidth(FieldMinWidth));
-                    EditorGUILayout.EndHorizontal();
-                    EditorGUILayout.Space();
-                    GUILayout.Button ("Build Base APK", GUILayout.Width(ButtonWidth));
->>>>>>> 611042ab9120bdde53d86a6cc6d1580228ac46ac
                     break;
             }
         }
