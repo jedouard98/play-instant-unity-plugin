@@ -23,8 +23,13 @@ namespace GooglePlayInstant.Editor
         private static readonly ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
             "Loading Screen", "Build"};
 
+<<<<<<< HEAD
         public const int CreateBundleSelect = 0;
         public const int DeployBundleSelect = 1;
+=======
+        public const int BundleCreateSelect = 0;
+        public const int BundleDeploySelect = 1;
+>>>>>>> 611042ab9120bdde53d86a6cc6d1580228ac46ac
         public const int VerifyBundleSelect = 2;
         public const int LoadingScreenSelect = 3;
         public const int BuildSelect = 4;
@@ -57,7 +62,19 @@ namespace GooglePlayInstant.Editor
                     OnGuiLoadingScreenSelect();
                     break;
                 case BuildSelect:
+<<<<<<< HEAD
                     OnGuiCreateBuildSelect();
+=======
+                    EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
+                    EditorGUILayout.Space();
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
+                    EditorGUILayout.TextField("c:\\base.apk", GUILayout.MinWidth(FieldMinWidth));
+                    EditorGUILayout.EndHorizontal();
+                    EditorGUILayout.Space();
+                    GUILayout.Button ("Build Base APK", GUILayout.Width(ButtonWidth));
+>>>>>>> 611042ab9120bdde53d86a6cc6d1580228ac46ac
                     break;
             }
         }
