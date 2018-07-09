@@ -29,7 +29,7 @@ namespace GooglePlayInstant.Editor
             DeployBundle,
             VerifyBundle,
             LoadingScreen,
-            Build,
+            Build
         }
 
         private const int FieldMinWidth = 100;
@@ -100,7 +100,7 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("PCloud Credentials", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             GUILayout.Button ("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
