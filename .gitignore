@@ -2,3 +2,8 @@
 *.meta
 .DS_Store
 .gradle
+
+# Ignoring Cloud Storage DLL Fils which will have to be built and moved manually
+*.dll
+*.pdb
+*.mdb

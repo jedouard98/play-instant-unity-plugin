@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
+using GooglePlayInstant.Deployer;
+using Debug = UnityEngine.Debug;
 
 namespace GooglePlayInstant.Editor
 {
@@ -73,9 +76,18 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(string.Format("AssetBundle Browser version: {0}", "not found"), EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            GUILayout.Button ("Download AssetBundle Browser", GUILayout.Width(ButtonWidth));
+            var downloadAssetBundleBrowser =  GUILayout.Button ("Download AssetBundle Browser", GUILayout.Width(ButtonWidth));
+            if (downloadAssetBundleBrowser)
+            {
+                Process.Start("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
+            }
+
             EditorGUILayout.Space();
-            GUILayout.Button ("Open AssetBundle Browser", GUILayout.Width(ButtonWidth));
+            var openAssetBundleBrowser = GUILayout.Button ("Open AssetBundle Browser", GUILayout.Width(ButtonWidth));
+            if (openAssetBundleBrowser)
+            {
+                Debug.LogError("Sorry! Gotta figure this out!");
+            }
         }
 
         private void OnGuiDeployBundleSelect() 
@@ -84,28 +96,50 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
                 "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\mygame.assetbundle", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Local Path to Asset Bundle File: ", GUILayout.MinWidth(FieldMinWidth));
+            DeveloperFieldInputs.LocalAssetBundlePath = EditorGUILayout.TextField(DeveloperFieldInputs.LocalAssetBundlePath, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mycorp_awesome_game", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Preferred Google Cloud Bucket Name: ", GUILayout.MinWidth(FieldMinWidth));
+            DeveloperFieldInputs.RemoteBucketName = EditorGUILayout.TextField(DeveloperFieldInputs.RemoteBucketName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Cloud Storage File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mainscene", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Preferred Google Cloud Object Name: ", GUILayout.MinWidth(FieldMinWidth));
+            DeveloperFieldInputs.RemoteObjectName = EditorGUILayout.TextField(DeveloperFieldInputs.RemoteObjectName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("PCloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Google Cloud Project Id: ", GUILayout.MinWidth(FieldMinWidth));
+            DeveloperFieldInputs.RemoteProjectId = EditorGUILayout.TextField(DeveloperFieldInputs.RemoteProjectId, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button ("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
             EditorGUILayout.Space();
-            GUILayout.Button ("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));     
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Path to Google Cloud Credentials: ", GUILayout.MinWidth(FieldMinWidth));
+            DeveloperFieldInputs.CredentialsPath = EditorGUILayout.TextField(DeveloperFieldInputs.CredentialsPath, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.EndHorizontal();
+            var uploadButtonClicked = GUILayout.Button ("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
+            if (uploadButtonClicked)
+            {
+                // Deploy the bundle to the cloud now
+                CloudClient.DeployBundle();
+            }
+
+            EditorGUILayout.Space();
+            var openCloudStorageClicked = GUILayout.Button ("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
+            if (openCloudStorageClicked)
+            {
+                // Open the link to cloud storage in the developer's default browser
+                var linkToOpen = $"https://console.cloud.google.com/storage/browser?project={DeveloperFieldInputs.RemoteProjectId}";
+                Process.Start(linkToOpen);
+            }
         }
 
         private void OnGuiVerifyBundleSelect() 
@@ -115,12 +149,14 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
                 "metadata including file version and compression type.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene", 
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginVertical();
             GUILayout.Button ("Verify AssetBundle", GUILayout.Width(ButtonWidth));
             EditorGUILayout.EndVertical();
@@ -132,6 +168,7 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
                 "specified below while downloading and opening the main scene.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Name", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.TextField("c:\\loading.png", GUILayout.MinWidth(FieldMinWidth));
