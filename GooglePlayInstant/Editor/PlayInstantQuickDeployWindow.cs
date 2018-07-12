@@ -70,10 +70,10 @@ namespace GooglePlayInstant.Editor
         private void OnGuiCreateBundleSelect() 
         {
             EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Use the Unity AssetBundles Browser to select your game's main scene " + 
+            EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " + 
                                        "and bundle it (and its dependencies) into an AssetBundle file.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField(string.Format("AssetBundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion ),  EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(string.Format("Asset Bundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion ),  EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             
             // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
