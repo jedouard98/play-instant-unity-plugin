@@ -35,6 +35,7 @@ namespace GooglePlayInstant.Editor
 
         private const int FieldMinWidth = 100;
         private const int ButtonWidth = 200;
+        private const int LongButtonWidth = 300;
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
@@ -72,23 +73,30 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("Use the Unity AssetBundles Browser to select your game's main scene " + 
                                        "and bundle it (and its dependencies) into an AssetBundle file.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField($"AssetBundle Browser version: { AssetBundleBrowserClient.BundleBrowserVersion }",  EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(string.Format("AssetBundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion ),  EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             
             // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
             if (AssetBundleBrowserClient.BundleBrowserIsPresent())
             {
-                var openAssetBundleBrowser = GUILayout.Button ("Open AssetBundles Browser", GUILayout.Width(ButtonWidth));
+                var openAssetBundleBrowser = GUILayout.Button ("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth));
                 if (openAssetBundleBrowser)
                 {
                     AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                 }
-            } else 
+            } else
             {
-                var downloadAssetBundleBrowser =  GUILayout.Button ("Download AssetBundles Browser", GUILayout.Width(ButtonWidth));
+                var downloadAssetBundleBrowser =  GUILayout.Button ("Download Asset Bundle Browser from GitHub", GUILayout.Width(LongButtonWidth));
                 if (downloadAssetBundleBrowser)
                 {
-                    Process.Start("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
+                    Application.OpenURL("https://github.com/Unity-Technologies/AssetBundles-Browser/releases");
+                }
+                EditorGUILayout.Space();
+                
+                var viewAssetBundleBrowserDocumentation =  GUILayout.Button ("Open Asset Bundle Browser Documentation", GUILayout.Width(LongButtonWidth));
+                if (viewAssetBundleBrowserDocumentation)
+                {
+                    Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
                 EditorGUILayout.Space();
             } 

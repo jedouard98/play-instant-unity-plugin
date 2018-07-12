@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,21 +23,26 @@ namespace GooglePlayInstant.Editor
 {
     public static class AssetBundleBrowserClient
     {
-        private const string AssetBundleBrowserMenuItem = "Window/AssetBundle Browser";
         private static bool? _assetBundleBrowserIsPresent;
-
+        private const string AssetBundleBrowserName = "com.unity.assetbundlebrowser";
+        private const string AssetBundleBrowserMenuItem = "Window/AssetBundle Browser";
+        public static readonly string AssetBundleBrowserVersion = GetBrowserVersion();
 
         // Detects AssetBundleBrowser Namespace and the AssetBundleBrowserMain Class
         public static bool BundleBrowserIsPresent()
         {
-            if (_assetBundleBrowserIsPresent.HasValue) return _assetBundleBrowserIsPresent.Value;
+            if (_assetBundleBrowserIsPresent.HasValue)
+            {
+                return _assetBundleBrowserIsPresent.Value;
+            }
+
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (assembly == null) continue;
                 foreach (var type in assembly.GetTypes())
                 {
                     // Look for AssetBundleBrowserMain in the AssetBundleBrowser Namespace
-                    if (type != null && type.Namespace != null && type.Namespace.Equals("AssetBundleBrowser") &&
+                    if (type != null && string.Equals(type.Namespace, "AssetBundleBrowser") &&
                         type.Name.Equals("AssetBundleBrowserMain"))
                     {
                         _assetBundleBrowserIsPresent = true;
@@ -49,53 +55,64 @@ namespace GooglePlayInstant.Editor
             return false;
         }
 
-        public static string BundleBrowserVersion => GetBrowserVersion(GetAssetBundlesBrowserPackageDotSONFiles()); 
-        
-
-        // Get package.json files related to AssetBundles Browser
-        private static string[] GetAssetBundlesBrowserPackageDotSONFiles()
+        // Evaluates whether a folder has "AssetBundles-Browser" in its name, making it
+        // a candidate for the Asset Bundles Browser Folder
+        private static bool IsAssetBundleBrowserFolder(string folderName)
         {
-            var assetsPath = Application.dataPath;
-            var files = Directory.GetFiles(assetsPath, "package.json", SearchOption.AllDirectories);
-            return files.Where(f => f.Contains("AssetBundle") && f.Contains("Browser")).ToArray();
+            const string pattern = @"AssetBundles-Browser";
+            var rx = new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matches = rx.Matches(folderName);
+            return matches.Count > 0;
         }
 
-        // Extract the version from the package.json.
-        // Goes line by line since there is no guarantee that any given file will be a valid well formatted JSON file
-        private static string GetBrowserVersion(string[] filePaths)
+        // Extracts AssetBundleBrowser version name from the Asset Bundle Browser package.json file
+        private static string GetBrowserVersion()
         {
-            foreach (var filePath in filePaths)
+            var assetsPath = Application.dataPath;
+            var assetBundleBrowserFolderPaths =
+                Directory.GetDirectories(assetsPath).ToArray().Where(IsAssetBundleBrowserFolder);
+
+            foreach (var folderPath in assetBundleBrowserFolderPaths)
             {
-                var allText = File.ReadAllText(filePath);
-                if (!allText.ToLower().Contains("\"name\": \"com.unity.assetbundlebrowser\"")) continue;
-                var fileStream = new StreamReader(filePath);
-                const string versionMatcher = "version\":";
-                string line;
-                while ((line = fileStream.ReadLine()) != null)
+                var expectedPackageDotJsonPath = Path.Combine(folderPath, "package.json");
+                if (!File.Exists(expectedPackageDotJsonPath)) continue;
+                var data = File.ReadAllText(expectedPackageDotJsonPath);
+                try
                 {
-                    if (line.Contains(versionMatcher))
+                    var json = JsonUtility.FromJson<PackageDotJSsonContents>(data);
+
+                    if (string.Equals(json.name, AssetBundleBrowserName))
                     {
-                        var versionBeginIndex = line.IndexOf(versionMatcher) + versionMatcher.Length;
-                        var version = line.Substring(versionBeginIndex);
-                        if (!version.Trim().Equals(""))
-                        {
-                            return version.Trim().Replace(",", "");
-                        }
+                        return json.version;
                     }
+                }
+                catch (Exception)
+                {
                 }
             }
 
             return "not found";
         }
-        
-        // Displays AssetBundleBrowser
+
+        // Displays AssetBundleBrowser Window
         public static void DisplayAssetBundleBrowser()
         {
             if (!BundleBrowserIsPresent())
             {
-                throw new Exception("Cannot detect AssetBundleBrowser Context");
+                throw new Exception("Cannot detect Unity Asset Bundle Browser");
             }
+
             EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
+        }
+
+        // Allows to create a serializable object from containing only name and version attributes from package.json
+        // Suppress warnings about non-initialization of fields
+#pragma warning disable CS0649 
+        [Serializable]
+        private class PackageDotJSsonContents
+        {
+            public string version;
+            public string name;
         }
     }
 }
