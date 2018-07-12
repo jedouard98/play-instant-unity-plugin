@@ -18,7 +18,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-
 namespace GooglePlayInstant.Editor
 {
     public static class AssetBundleBrowserClient
