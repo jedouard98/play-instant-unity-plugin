@@ -14,6 +14,7 @@
 
 using UnityEditor;
 using UnityEngine;
+using System.Diagnostics;
 
 namespace GooglePlayInstant.Editor
 {
@@ -68,14 +69,29 @@ namespace GooglePlayInstant.Editor
         private void OnGuiCreateBundleSelect() 
         {
             EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " + 
-                "and bundle it (and its dependencies) into an AssetBundle file.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField("Use the Unity AssetBundles Browser to select your game's main scene " + 
+                                       "and bundle it (and its dependencies) into an AssetBundle file.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField(string.Format("AssetBundle Browser version: {0}", "not found"), EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField($"AssetBundle Browser version: { AssetBundleBrowserClient.BundleBrowserVersion }",  EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            GUILayout.Button ("Download AssetBundle Browser", GUILayout.Width(ButtonWidth));
-            EditorGUILayout.Space();
-            GUILayout.Button ("Open AssetBundle Browser", GUILayout.Width(ButtonWidth));
+            
+            // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
+            if (AssetBundleBrowserClient.BundleBrowserIsPresent())
+            {
+                var openAssetBundleBrowser = GUILayout.Button ("Open AssetBundles Browser", GUILayout.Width(ButtonWidth));
+                if (openAssetBundleBrowser)
+                {
+                    AssetBundleBrowserClient.DisplayAssetBundleBrowser();
+                }
+            } else 
+            {
+                var downloadAssetBundleBrowser =  GUILayout.Button ("Download AssetBundles Browser", GUILayout.Width(ButtonWidth));
+                if (downloadAssetBundleBrowser)
+                {
+                    Process.Start("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
+                }
+                EditorGUILayout.Space();
+            } 
         }
 
         private void OnGuiDeployBundleSelect() 
