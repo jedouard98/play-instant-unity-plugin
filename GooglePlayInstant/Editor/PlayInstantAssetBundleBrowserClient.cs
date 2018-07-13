@@ -90,7 +90,6 @@ namespace GooglePlayInstant.Editor
                 {
                 }
             }
-
             return "not found";
         }
 
@@ -101,7 +100,6 @@ namespace GooglePlayInstant.Editor
             {
                 throw new Exception("Cannot detect Unity Asset Bundle Browser");
             }
-
             EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
         }
 
