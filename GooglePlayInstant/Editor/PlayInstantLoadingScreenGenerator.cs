@@ -68,9 +68,9 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
+        //TODO: add better handling of finding assets folder
         private static void GenerateLoadingScreenScript(string assetBundleUrl)
         {
-            //TODO: add better handling of finding assets folder
             var newloadingScreenScriptDir = Directory.GetCurrentDirectory() + "/Assets/GooglePlayInstantScript/LoadingScreenScript.cs";
             if (Directory.GetFiles(Directory.GetCurrentDirectory(), "GenericLoadingScreenScript.cs",
                     SearchOption.AllDirectories).Length == 0)
