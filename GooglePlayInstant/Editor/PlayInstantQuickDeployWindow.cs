@@ -22,8 +22,8 @@ namespace GooglePlayInstant.Editor
         private static int _toolbarSelectedButtonIndex = 0;
         private static readonly string[] ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
             "Loading Screen", "Build"};
-        private static string pathToLoadingScreenImage;
-        private static string assetBundleUrl;
+        private static string _pathToLoadingScreenImage;
+        private static string _assetBundleUrl;
         
         public enum ToolBarSelectedButton
         {
@@ -137,17 +137,25 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
             {
-                pathToLoadingScreenImage =
+                _pathToLoadingScreenImage =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
+
+            if (_pathToLoadingScreenImage == null)
+            {
+                EditorGUILayout.LabelField("No file specified", GUILayout.MinWidth(FieldMinWidth));
+            }
+            else
+            {
+                EditorGUILayout.LabelField(_pathToLoadingScreenImage, GUILayout.MinWidth(FieldMinWidth));  
+            }
             
-            EditorGUILayout.LabelField(pathToLoadingScreenImage, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(pathToLoadingScreenImage, assetBundleUrl);
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_pathToLoadingScreenImage, _assetBundleUrl);
             }
         }
 

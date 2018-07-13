@@ -1,16 +1,12 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Networking;
-using System.Threading;
-using System.IO;
 
 public class GenericLoadingScreenScript : MonoBehaviour {
     private AssetBundle bundle;
     IEnumerator Start () 
     {
-        Debug.Log("Looking for Resources");
         yield return StartCoroutine(GetAssetBundle());
         GoToGame();
     }
@@ -30,7 +26,6 @@ public class GenericLoadingScreenScript : MonoBehaviour {
 
     void GoToGame()
     {
-        string[] scenePaths = bundle.GetAllScenePaths();
-        SceneManager.LoadScene(scenePaths[0]);
+        SceneManager.LoadScene(bundle.GetAllScenePaths()[0]);
     }
 }

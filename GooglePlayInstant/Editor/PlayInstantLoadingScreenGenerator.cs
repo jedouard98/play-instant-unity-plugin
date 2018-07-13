@@ -1,8 +1,21 @@
-﻿using UnityEditor;
+﻿// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using UnityEditor;
 using UnityEngine;
 using UnityEditor.SceneManagement;
 using UnityEngine.UI;
-using System;
 using System.IO;
 
 namespace GooglePlayInstant.Editor
@@ -11,14 +24,25 @@ namespace GooglePlayInstant.Editor
     {
         public static void GenerateLoadingScreenScene(string pathToLoadingScreenImage, string assetBundleUrl)
         {
-            var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
-            var loadingScreenGO = new GameObject("Canvas");
+            if (!File.Exists(pathToLoadingScreenImage))
+            {
+                Debug.LogError("Loading screen image file cannot be found.");
+            }
+            else if (EditorSceneManager.GetSceneByName("instant-play-loading-screen-scene").IsValid())
+            {
+                Debug.LogError("A generated loading scene already exists.");
+            }
+            else
+            {
+                var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                var loadingScreenGO = new GameObject("Canvas");
             
-            GenerateLoadingScreenScript(assetBundleUrl);
-            AddBackgroundImageToScene(loadingScreenGO, pathToLoadingScreenImage);
-            AddLoadingScreenScript(loadingScreenGO);
+                GenerateLoadingScreenScript(assetBundleUrl);
+                AddBackgroundImageToScene(loadingScreenGO, pathToLoadingScreenImage);
+                AddLoadingScreenScript(loadingScreenGO);
 
-            EditorSceneManager.SaveScene(loadingScreenScene, "instant-play-loading-screen-scene.unity");
+                EditorSceneManager.SaveScene(loadingScreenScene, "instant-play-loading-screen-scene.unity");
+            }
         }
         
         //TODO: get rid of error message associated with using the LoadingScreenScript reference
