@@ -11,11 +11,20 @@ namespace GooglePlayInstant.Editor
     {
         public static void GenerateLoadingScreenScene(string pathToLoadingScreenImage, string assetBundleUrl)
         {
-            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+            var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
             var loadingScreenGO = new GameObject("Canvas");
             
             GenerateLoadingScreenScript(assetBundleUrl);
             AddBackgroundImageToScene(loadingScreenGO, pathToLoadingScreenImage);
+            AddLoadingScreenScript(loadingScreenGO);
+
+            EditorSceneManager.SaveScene(loadingScreenScene, "instant-play-loading-screen-scene.unity");
+        }
+        
+        //TODO: get rid of error message associated with using the LoadingScreenScript reference
+        private static void AddLoadingScreenScript(GameObject loadingScreenGO)
+        {
+            loadingScreenGO.AddComponent<LoadingScreenScript>();
         }
         
         private static void AddBackgroundImageToScene(GameObject loadingScreenGO, string pathToLoadingScreenImage)
