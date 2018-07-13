@@ -68,7 +68,7 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
-        //TODO: add better handling of finding assets folder
+        //TODO: add better handling of finding assets folder and figure out possible alternative AssetDatabase synchronous importing
         private static void GenerateLoadingScreenScript(string assetBundleUrl)
         {
             var newloadingScreenScriptDir = Directory.GetCurrentDirectory() + "/Assets/GooglePlayInstantScript/LoadingScreenScript.cs";
@@ -77,15 +77,17 @@ namespace GooglePlayInstant.Editor
             {
                 Debug.LogError("Cannot find Generic Loading Script from Google Play Instant Plugin.");
             }
-            
-            var genericloadingScreenScriptDir = Directory.GetFiles(Directory.GetCurrentDirectory(), "GenericLoadingScreenScript.cs", SearchOption.AllDirectories)[0];
-            Directory.CreateDirectory(Directory.GetParent(newloadingScreenScriptDir).FullName);
+            else
+            {
+                var genericloadingScreenScriptDir = Directory.GetFiles(Directory.GetCurrentDirectory(), "GenericLoadingScreenScript.cs", SearchOption.AllDirectories)[0];
+                Directory.CreateDirectory(Directory.GetParent(newloadingScreenScriptDir).FullName);
 
-            var genericLoadingScreenScript = File.ReadAllText(genericloadingScreenScriptDir);
-            var newLoadingScreenScript = genericLoadingScreenScript.Replace("__ASSETBUNDLEURL__", assetBundleUrl)
-                .Replace("GenericLoadingScreenScript", "LoadingScreenScript");
-            File.WriteAllText(newloadingScreenScriptDir, newLoadingScreenScript);
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                var genericLoadingScreenScript = File.ReadAllText(genericloadingScreenScriptDir);
+                var newLoadingScreenScript = genericLoadingScreenScript.Replace("__ASSETBUNDLEURL__", assetBundleUrl)
+                    .Replace("GenericLoadingScreenScript", "LoadingScreenScript");
+                File.WriteAllText(newloadingScreenScriptDir, newLoadingScreenScript);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            }
         }
     }
 }
