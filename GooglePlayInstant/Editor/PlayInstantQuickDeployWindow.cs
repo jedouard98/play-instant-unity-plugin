@@ -23,6 +23,7 @@ namespace GooglePlayInstant.Editor
         private static readonly string[] ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
             "Loading Screen", "Build"};
         private static string pathToLoadingScreenImage;
+        private static string assetBundleUrl;
         
         public enum ToolBarSelectedButton
         {
@@ -146,7 +147,7 @@ namespace GooglePlayInstant.Editor
             
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(pathToLoadingScreenImage, assetBundleUrl);
             }
         }
 
