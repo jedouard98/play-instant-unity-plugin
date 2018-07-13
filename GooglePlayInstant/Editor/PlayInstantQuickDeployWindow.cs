@@ -22,6 +22,7 @@ namespace GooglePlayInstant.Editor
         private static int _toolbarSelectedButtonIndex = 0;
         private static readonly string[] ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
             "Loading Screen", "Build"};
+        private static string pathToLoadingScreenImage;
         
         public enum ToolBarSelectedButton
         {
@@ -132,12 +133,21 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
                 "specified below while downloading and opening the main scene.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Image File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\loading.png", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button ("Create Loading Scene", GUILayout.Width(ButtonWidth));
+            if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
+            {
+                pathToLoadingScreenImage =
+                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+            }
+            
+            EditorGUILayout.LabelField(pathToLoadingScreenImage, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
+            {
+                
+            }
         }
 
         private void OnGuiCreateBuildSelect() 
