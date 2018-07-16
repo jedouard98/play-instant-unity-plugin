@@ -23,22 +23,45 @@ namespace GooglePlayInstant.Editor
 {
     public static class AssetBundleBrowserClient
     {
-        private static bool? _assetBundleBrowserIsPresent;
         private const string AssetBundleBrowserName = "com.unity.assetbundlebrowser";
         private const string AssetBundleBrowserMenuItem = "Window/AssetBundle Browser";
-        public static readonly string AssetBundleBrowserVersion = GetBrowserVersion();
+        private static bool? _assetBundleBrowserIsPresent;
+        private static string _assetBundleBrowserVersion;
+
+        /// <summary>
+        /// Whether or not Asset Bundle Browser is present
+        /// </summary>
+        public static bool AssetBundleBrowserIsPresent
+        {
+            get { return BundleBrowserIsPresent(); }
+        }
+
+        /// <summary>
+        /// The detected version of Asset Bundle Browser.
+        /// </summary>
+        public static string AssetBundleBrowserVersion
+        {
+            get { return GetBrowserVersion(); }
+        }
+
 
         // Detects AssetBundleBrowser Namespace and the AssetBundleBrowserMain Class
-        public static bool BundleBrowserIsPresent()
+        private static bool BundleBrowserIsPresent(bool useCurrentValueIfPresent = true)
         {
-            if (_assetBundleBrowserIsPresent.HasValue)
+            if (useCurrentValueIfPresent && _assetBundleBrowserIsPresent.HasValue)
             {
                 return _assetBundleBrowserIsPresent.Value;
             }
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                if (assembly == null) continue;
+                // Checking that assembly != null since we do not want to rely on iteration through
+                // AppDomain.CurrentDomain.GetAssemblies() to yield non-null items for this function to work
+                if (assembly == null)
+                {
+                    continue;
+                }
+
                 foreach (var type in assembly.GetTypes())
                 {
                     // Look for AssetBundleBrowserMain in the AssetBundleBrowser Namespace
@@ -59,15 +82,18 @@ namespace GooglePlayInstant.Editor
         // a candidate for the Asset Bundles Browser Folder
         private static bool IsAssetBundleBrowserFolder(string folderName)
         {
-            const string pattern = @"AssetBundles-Browser";
-            var rx = new Regex(pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var matches = rx.Matches(folderName);
-            return matches.Count > 0;
+            var regex = new Regex(@"AssetBundles-Browser", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            return regex.Matches(folderName).Count > 0;
         }
 
         // Extracts AssetBundleBrowser version name from the Asset Bundle Browser package.json file
-        private static string GetBrowserVersion()
+        private static string GetBrowserVersion(bool useCurrentValueIfPresent = true)
         {
+            if (useCurrentValueIfPresent && _assetBundleBrowserVersion != null)
+            {
+                return _assetBundleBrowserVersion;
+            }
+
             var assetsPath = Application.dataPath;
             var assetBundleBrowserFolderPaths =
                 Directory.GetDirectories(assetsPath).ToArray().Where(IsAssetBundleBrowserFolder);
@@ -75,42 +101,67 @@ namespace GooglePlayInstant.Editor
             foreach (var folderPath in assetBundleBrowserFolderPaths)
             {
                 var expectedPackageDotJsonPath = Path.Combine(folderPath, "package.json");
-                if (!File.Exists(expectedPackageDotJsonPath)) continue;
+                if (!File.Exists(expectedPackageDotJsonPath))
+                {
+                    continue;
+                }
+
                 var data = File.ReadAllText(expectedPackageDotJsonPath);
                 try
                 {
-                    var json = JsonUtility.FromJson<PackageDotJSsonContents>(data);
+                    var json = JsonUtility.FromJson<PackageDotJSsonContent>(data);
 
                     if (string.Equals(json.name, AssetBundleBrowserName))
                     {
-                        return json.version;
+                        _assetBundleBrowserVersion = json.version;
+                        return _assetBundleBrowserVersion;
                     }
                 }
-                catch (Exception)
+                catch (ArgumentException e)
                 {
+                    Debug.LogWarning(string.Format(
+                        "Unable to read Asset Bundle Browser version contents from {0}. \n {1}",
+                        expectedPackageDotJsonPath, e.Message));
                 }
             }
-            return "not found";
+
+            _assetBundleBrowserVersion = "not found";
+            return _assetBundleBrowserVersion;
         }
 
-        // Displays AssetBundleBrowser Window
+        /// <summary>
+        /// Display the Asset Bundle Browser Window
+        /// </summary>
         public static void DisplayAssetBundleBrowser()
         {
             if (!BundleBrowserIsPresent())
             {
-                throw new Exception("Cannot detect Unity Asset Bundle Browser");
+                Debug.LogError("Cannot detect Unity Asset Bundle Browser");
             }
+
             EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
         }
 
-        // Allows to create a serializable object from containing only name and version attributes from package.json
-        // Suppress warnings about non-initialization of fields
+
+        // CallBack method to re-update static values when this tab is re-opened
+        /// <summary>
+        /// Reload and update Asset Bundle Browser information
+        /// </summary>
+        public static void ReloadAndUpdateBrowserInfo()
+        {
+            _assetBundleBrowserIsPresent = BundleBrowserIsPresent(false);
+            _assetBundleBrowserVersion = GetBrowserVersion(false);
+        }
+
+        // Represents name and version fields from the package.json file of the Asset Bundle Browser project:
+        // https://github.com/Unity-Technologies/AssetBundles-Browser/blob/master/package.json
+        // Suppress warnings about non-initialization of fields.
 #pragma warning disable CS0649 
         [Serializable]
-        private class PackageDotJSsonContents
+        private class PackageDotJSsonContent
         {
-            public string version;
             public string name;
+            public string version;
         }
     }
 }

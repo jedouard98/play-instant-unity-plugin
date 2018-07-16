@@ -21,9 +21,13 @@ namespace GooglePlayInstant.Editor
     public class PlayInstantQuickDeployWindow : EditorWindow
     {
         private static int _toolbarSelectedButtonIndex = 0;
-        private static readonly string[] ToolbarButtonNames = {"Create Bundle", "Deploy Bundle", "Verify Bundle", 
-            "Loading Screen", "Build"};
-        
+
+        private static readonly string[] ToolbarButtonNames =
+        {
+            "Create Bundle", "Deploy Bundle", "Verify Bundle",
+            "Loading Screen", "Build"
+        };
+
         public enum ToolBarSelectedButton
         {
             CreateBundle,
@@ -47,9 +51,10 @@ namespace GooglePlayInstant.Editor
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
-            switch((ToolBarSelectedButton) _toolbarSelectedButtonIndex) 
+            switch ((ToolBarSelectedButton) _toolbarSelectedButtonIndex)
             {
                 case ToolBarSelectedButton.CreateBundle:
+                    AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
                 case ToolBarSelectedButton.DeployBundle:
@@ -67,46 +72,55 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        private void OnGuiCreateBundleSelect() 
+        private void OnGuiCreateBundleSelect()
         {
             EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " + 
-                                       "and bundle it (and its dependencies) into an AssetBundle file.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
+                                       "and bundle it (and its dependencies) into an AssetBundle file.",
+                EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField(string.Format("Asset Bundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion ),  EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(
+                string.Format("Asset Bundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion),
+                EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            
+
             // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
-            if (AssetBundleBrowserClient.BundleBrowserIsPresent())
+            if (AssetBundleBrowserClient.AssetBundleBrowserIsPresent)
             {
-                var openAssetBundleBrowser = GUILayout.Button ("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth));
+                var openAssetBundleBrowser =
+                    GUILayout.Button("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth));
                 if (openAssetBundleBrowser)
                 {
                     AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                 }
-            } else
+            }
+            else
             {
-                var downloadAssetBundleBrowser =  GUILayout.Button ("Download Asset Bundle Browser from GitHub", GUILayout.Width(LongButtonWidth));
+                var downloadAssetBundleBrowser = GUILayout.Button("Download Asset Bundle Browser from GitHub",
+                    GUILayout.Width(LongButtonWidth));
                 if (downloadAssetBundleBrowser)
                 {
                     Application.OpenURL("https://github.com/Unity-Technologies/AssetBundles-Browser/releases");
                 }
+
                 EditorGUILayout.Space();
-                
-                var viewAssetBundleBrowserDocumentation =  GUILayout.Button ("Open Asset Bundle Browser Documentation", GUILayout.Width(LongButtonWidth));
+
+                var viewAssetBundleBrowserDocumentation = GUILayout.Button("Open Asset Bundle Browser Documentation",
+                    GUILayout.Width(LongButtonWidth));
                 if (viewAssetBundleBrowserDocumentation)
                 {
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
+
                 EditorGUILayout.Space();
-            } 
+            }
         }
 
-        private void OnGuiDeployBundleSelect() 
+        private void OnGuiDeployBundleSelect()
         {
             EditorGUILayout.LabelField("AssetBundle Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
-                "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
+                                       "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
@@ -127,44 +141,46 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("PCloud Credentials", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button ("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
             EditorGUILayout.Space();
-            GUILayout.Button ("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));     
+            GUILayout.Button("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
         }
 
-        private void OnGuiVerifyBundleSelect() 
+        private void OnGuiVerifyBundleSelect()
         {
             EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
-                "metadata including file version and compression type.", EditorStyles.wordWrappedLabel);
+                                       "metadata including file version and compression type.",
+                EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene", 
+            EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene",
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
-            GUILayout.Button ("Verify AssetBundle", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth));
             EditorGUILayout.EndVertical();
         }
 
-        private void OnGuiLoadingScreenSelect() 
+        private void OnGuiLoadingScreenSelect()
         {
             EditorGUILayout.LabelField("Loading Screen", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
-                "specified below while downloading and opening the main scene.", EditorStyles.wordWrappedLabel);
+                                       "specified below while downloading and opening the main scene.",
+                EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Name", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.TextField("c:\\loading.png", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button ("Create Loading Scene", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth));
         }
 
-        private void OnGuiCreateBuildSelect() 
+        private void OnGuiCreateBuildSelect()
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
@@ -174,7 +190,7 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.TextField("c:\\base.apk", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button ("Build Base APK", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth));
         }
     }
 }
