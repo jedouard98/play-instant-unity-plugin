@@ -18,7 +18,9 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// A GenericLoadingScreenScript that is
+/// A GenericLoadingScreenScript that contains engine code which is copied over from the plugin folder into the
+/// client's "Assets" file. Before the copying occurs, the assetbundle url is inserted into the script at
+/// __ASSETBUNDLEURL__and "Generic" is removed from the script's name.
 /// </summary>
 public class GenericLoadingScreenScript : MonoBehaviour
 {

@@ -21,8 +21,16 @@ using UnityEngine.UI;
 
 namespace GooglePlayInstant.Editor
 {
+    /// <summary>
+    /// Class that generates Unity loading scenes for Instant Apps.
+    /// </summary>
     public class PlayInstantLoadingScreenGenerator
     {
+        /// <summary>
+        /// Creates a scene in the current project that acts as a loading scene until assetbundles are
+        /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
+        /// and an assetbundle URL.
+        /// </summary>
         public static void GenerateLoadingScreenScene(string loadingScreenImagePath, string assetBundleUrl)
         {
             if (!File.Exists(loadingScreenImagePath))
