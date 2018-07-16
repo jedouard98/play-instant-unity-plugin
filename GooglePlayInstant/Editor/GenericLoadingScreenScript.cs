@@ -14,26 +14,31 @@
 
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
-public class GenericLoadingScreenScript : MonoBehaviour {
+public class GenericLoadingScreenScript : MonoBehaviour
+{
     private AssetBundle bundle;
-    IEnumerator Start () 
+
+    IEnumerator Start()
     {
         yield return StartCoroutine(GetAssetBundle());
         GoToGame();
     }
 
-    IEnumerator GetAssetBundle() 
+    IEnumerator GetAssetBundle()
     {
         UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
 
         yield return www.SendWebRequest();
-        if(www.isNetworkError || www.isHttpError) {
+
+        if (www.isNetworkError || www.isHttpError)
+        {
             Debug.Log(www.error);
         }
-        else {
+        else
+        {
             bundle = DownloadHandlerAssetBundle.GetContent(www);
         }
     }

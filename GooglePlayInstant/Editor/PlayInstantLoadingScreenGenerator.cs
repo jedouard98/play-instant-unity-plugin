@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using UnityEditor;
-using UnityEngine;
-using UnityEditor.SceneManagement;
-using UnityEngine.UI;
 using System.IO;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace GooglePlayInstant.Editor
 {
@@ -36,7 +36,7 @@ namespace GooglePlayInstant.Editor
             {
                 var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
                 var loadingScreenGO = new GameObject("Canvas");
-            
+
                 GenerateLoadingScreenScript(assetBundleUrl);
                 AddBackgroundImageToScene(loadingScreenGO, pathToLoadingScreenImage);
                 AddLoadingScreenScript(loadingScreenGO);
@@ -44,19 +44,19 @@ namespace GooglePlayInstant.Editor
                 EditorSceneManager.SaveScene(loadingScreenScene, "instant-play-loading-screen-scene.unity");
             }
         }
-        
+
         //TODO: get rid of error message associated with using the LoadingScreenScript reference
         private static void AddLoadingScreenScript(GameObject loadingScreenGO)
         {
             loadingScreenGO.AddComponent<LoadingScreenScript>();
         }
-        
+
         private static void AddBackgroundImageToScene(GameObject loadingScreenGO, string pathToLoadingScreenImage)
         {
             loadingScreenGO.AddComponent<Canvas>();
             var loadingScreenCanvas = loadingScreenGO.GetComponent<Canvas>();
             loadingScreenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            
+
             byte[] loadingScreenImageData = File.ReadAllBytes(pathToLoadingScreenImage);
             var tex = new Texture2D(1, 1);
             tex.LoadImage(loadingScreenImageData);
@@ -71,7 +71,8 @@ namespace GooglePlayInstant.Editor
         //TODO: add better handling of finding assets folder and figure out possible alternative AssetDatabase synchronous importing
         private static void GenerateLoadingScreenScript(string assetBundleUrl)
         {
-            var newloadingScreenScriptDir = Directory.GetCurrentDirectory() + "/Assets/GooglePlayInstantScript/LoadingScreenScript.cs";
+            var newloadingScreenScriptDir = Directory.GetCurrentDirectory() +
+                                            "/Assets/GooglePlayInstantScript/LoadingScreenScript.cs";
             if (Directory.GetFiles(Directory.GetCurrentDirectory(), "GenericLoadingScreenScript.cs",
                     SearchOption.AllDirectories).Length == 0)
             {
@@ -79,7 +80,8 @@ namespace GooglePlayInstant.Editor
             }
             else
             {
-                var genericloadingScreenScriptDir = Directory.GetFiles(Directory.GetCurrentDirectory(), "GenericLoadingScreenScript.cs", SearchOption.AllDirectories)[0];
+                var genericloadingScreenScriptDir = Directory.GetFiles(Directory.GetCurrentDirectory(),
+                    "GenericLoadingScreenScript.cs", SearchOption.AllDirectories)[0];
                 Directory.CreateDirectory(Directory.GetParent(newloadingScreenScriptDir).FullName);
 
                 var genericLoadingScreenScript = File.ReadAllText(genericloadingScreenScriptDir);
