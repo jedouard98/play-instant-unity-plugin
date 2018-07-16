@@ -19,16 +19,16 @@ namespace GooglePlayInstant.Editor
 {
     public class PlayInstantQuickDeployWindow : EditorWindow
     {
-        private static int _toolbarSelectedButtonIndex = 0;
-
         private static readonly string[] ToolbarButtonNames =
         {
             "Create Bundle", "Deploy Bundle", "Verify Bundle",
             "Loading Screen", "Build"
         };
+        
+        private static int _toolbarSelectedButtonIndex = 0;
 
-        private static string _pathToLoadingScreenImage;
-        private static string _assetBundleUrl;
+        private static string _loadingScreenImagePath;
+        private static string _assetBundleUrl = "https://storage.googleapis.com/my_unity_scenes/secondscene";
 
         public enum ToolBarSelectedButton
         {
@@ -146,25 +146,20 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
             {
-                _pathToLoadingScreenImage =
+                _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
+            EditorGUILayout.Space();
 
-            if (_pathToLoadingScreenImage == null)
-            {
-                EditorGUILayout.LabelField("No file specified", GUILayout.MinWidth(FieldMinWidth));
-            }
-            else
-            {
-                EditorGUILayout.LabelField(_pathToLoadingScreenImage, GUILayout.MinWidth(FieldMinWidth));
-            }
+            var displayedPath = _loadingScreenImagePath ?? "no file specified";
+            EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath), GUILayout.MinWidth(FieldMinWidth));
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_pathToLoadingScreenImage,
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_loadingScreenImagePath,
                     _assetBundleUrl);
             }
         }

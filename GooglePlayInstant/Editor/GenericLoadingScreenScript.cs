@@ -17,19 +17,22 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// A GenericLoadingScreenScript that is
+/// </summary>
 public class GenericLoadingScreenScript : MonoBehaviour
 {
-    private AssetBundle bundle;
+    private AssetBundle _bundle;
 
     IEnumerator Start()
     {
         yield return StartCoroutine(GetAssetBundle());
-        GoToGame();
+        SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
     }
 
     IEnumerator GetAssetBundle()
     {
-        UnityWebRequest www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
+        var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
 
         yield return www.SendWebRequest();
 
@@ -39,12 +42,7 @@ public class GenericLoadingScreenScript : MonoBehaviour
         }
         else
         {
-            bundle = DownloadHandlerAssetBundle.GetContent(www);
+            _bundle = DownloadHandlerAssetBundle.GetContent(www);
         }
-    }
-
-    void GoToGame()
-    {
-        SceneManager.LoadScene(bundle.GetAllScenePaths()[0]);
     }
 }
