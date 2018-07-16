@@ -28,7 +28,7 @@ namespace GooglePlayInstant.Editor
         private static int _toolbarSelectedButtonIndex = 0;
 
         private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl = "https://storage.googleapis.com/my_unity_scenes/secondscene";
+        private static string _assetBundleUrl;
 
         public enum ToolBarSelectedButton
         {
