@@ -14,7 +14,6 @@
 
 using UnityEditor;
 using UnityEngine;
-using System.Diagnostics;
 
 namespace GooglePlayInstant.Editor
 {
@@ -80,16 +79,15 @@ namespace GooglePlayInstant.Editor
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
-                string.Format("Asset Bundle Browser version: {0}", AssetBundleBrowserClient.AssetBundleBrowserVersion),
+                string.Format("Asset Bundle Browser version: {0}",
+                    AssetBundleBrowserClient.GetAssetBundleBrowserVersion()),
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
 
             // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
-            if (AssetBundleBrowserClient.AssetBundleBrowserIsPresent)
+            if (AssetBundleBrowserClient.AssetBundleBrowserIsPresent())
             {
-                var openAssetBundleBrowser =
-                    GUILayout.Button("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth));
-                if (openAssetBundleBrowser)
+                if (GUILayout.Button("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth)))
                 {
                     AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                 }
@@ -104,10 +102,7 @@ namespace GooglePlayInstant.Editor
                 }
 
                 EditorGUILayout.Space();
-
-                var viewAssetBundleBrowserDocumentation = GUILayout.Button("Open Asset Bundle Browser Documentation",
-                    GUILayout.Width(LongButtonWidth));
-                if (viewAssetBundleBrowserDocumentation)
+                if (GUILayout.Button("Open Asset Bundle Browser Documentation", GUILayout.Width(LongButtonWidth)))
                 {
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }

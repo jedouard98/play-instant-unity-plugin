@@ -21,51 +21,36 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor
 {
+    /// <summary>
+    /// A static class responsible for interactions with the Asset Bundle Browser
+    /// <see cref="https://github.com/Unity-Technologies/AssetBundles-Browser"/>, such as detecting whether the browser
+    /// is present or getting the current version of the Asset Bundle Browser.
+    /// </summary>
     public static class AssetBundleBrowserClient
     {
-        private const string AssetBundleBrowserName = "com.unity.assetbundlebrowser";
+        private const string AssetBundleBrowserPackageName = "com.unity.assetbundlebrowser";
         private const string AssetBundleBrowserMenuItem = "Window/AssetBundle Browser";
         private static bool? _assetBundleBrowserIsPresent;
         private static string _assetBundleBrowserVersion;
 
-        /// <summary>
-        /// Whether or not Asset Bundle Browser is present
-        /// </summary>
-        public static bool AssetBundleBrowserIsPresent
-        {
-            get { return BundleBrowserIsPresent(); }
-        }
-
-        /// <summary>
-        /// The detected version of Asset Bundle Browser.
-        /// </summary>
-        public static string AssetBundleBrowserVersion
-        {
-            get { return GetBrowserVersion(); }
-        }
-
-
-        // Detects AssetBundleBrowser Namespace and the AssetBundleBrowserMain Class
-        private static bool BundleBrowserIsPresent(bool useCurrentValueIfPresent = true)
+        /// <param name="useCurrentValueIfPresent">A boolean value corresponding to whether the caller wants to
+        /// to re-use the cached value if it is present. Using the default value(true) provides a significant
+        /// peformance improvement when calling this method from functions that are invoked so many times
+        /// such as EditorWindow.OnGUI().</param>
+        public static bool AssetBundleBrowserIsPresent(bool useCurrentValueIfPresent = true)
         {
             if (useCurrentValueIfPresent && _assetBundleBrowserIsPresent.HasValue)
             {
                 return _assetBundleBrowserIsPresent.Value;
             }
 
+            // Use Reflection to detect AssetBundleBrowserMain Class in the AssetBundleBrowser namespace.
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                // Checking that assembly != null since we do not want to rely on iteration through
-                // AppDomain.CurrentDomain.GetAssemblies() to yield non-null items for this function to work
-                if (assembly == null)
-                {
-                    continue;
-                }
-
                 foreach (var type in assembly.GetTypes())
                 {
-                    // Look for AssetBundleBrowserMain in the AssetBundleBrowser Namespace
-                    if (type != null && string.Equals(type.Namespace, "AssetBundleBrowser") &&
+                    // Look for AssetBundleBrowserMain in the AssetBundleBrowser Namespace.
+                    if (string.Equals(type.Namespace, "AssetBundleBrowser") &&
                         type.Name.Equals("AssetBundleBrowserMain"))
                     {
                         _assetBundleBrowserIsPresent = true;
@@ -79,39 +64,45 @@ namespace GooglePlayInstant.Editor
         }
 
         // Evaluates whether a folder has "AssetBundles-Browser" in its name, making it
-        // a candidate for the Asset Bundles Browser Folder
+        // a candidate for the Asset Bundles Browser Folder.
         private static bool IsAssetBundleBrowserFolder(string folderName)
         {
             var regex = new Regex(@"AssetBundles-Browser", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             return regex.Matches(folderName).Count > 0;
         }
 
-        // Extracts AssetBundleBrowser version name from the Asset Bundle Browser package.json file
-        private static string GetBrowserVersion(bool useCurrentValueIfPresent = true)
+        /// <summary>
+        /// Get the version of Asset Bundle Browser if available in the package information.
+        /// </summary>
+        /// <param name="useCurrentValueIfPresent">A boolean value corresponding to whether the caller wants to
+        /// to re-use the cached value if it is present. Using the default value(true) provides a significant
+        /// peformance improvement when calling this method from functions that are invoked so many times
+        /// such as EditorWindow.OnGUI().</param>
+        /// <returns>"not found" if the version cannot be found, otherwise returns the version.</returns>
+        public static string GetAssetBundleBrowserVersion(bool useCurrentValueIfPresent = true)
         {
             if (useCurrentValueIfPresent && _assetBundleBrowserVersion != null)
             {
                 return _assetBundleBrowserVersion;
             }
 
-            var assetsPath = Application.dataPath;
+            // Extract AssetBundleBrowser version name from the Asset Bundle Browser package.json file.
             var assetBundleBrowserFolderPaths =
-                Directory.GetDirectories(assetsPath).ToArray().Where(IsAssetBundleBrowserFolder);
-
+                Directory.GetDirectories(Application.dataPath).ToArray().Where(IsAssetBundleBrowserFolder);
             foreach (var folderPath in assetBundleBrowserFolderPaths)
             {
                 var expectedPackageDotJsonPath = Path.Combine(folderPath, "package.json");
                 if (!File.Exists(expectedPackageDotJsonPath))
                 {
+                    Debug.LogWarningFormat("Could not find file {0}", expectedPackageDotJsonPath);
                     continue;
                 }
 
                 var data = File.ReadAllText(expectedPackageDotJsonPath);
                 try
                 {
-                    var json = JsonUtility.FromJson<PackageDotJSsonContent>(data);
-
-                    if (string.Equals(json.name, AssetBundleBrowserName))
+                    var json = JsonUtility.FromJson<PackageDotJsonContent>(data);
+                    if (string.Equals(json.name, AssetBundleBrowserPackageName))
                     {
                         _assetBundleBrowserVersion = json.version;
                         return _assetBundleBrowserVersion;
@@ -119,9 +110,8 @@ namespace GooglePlayInstant.Editor
                 }
                 catch (ArgumentException e)
                 {
-                    Debug.LogWarning(string.Format(
-                        "Unable to read Asset Bundle Browser version contents from {0}. \n {1}",
-                        expectedPackageDotJsonPath, e.Message));
+                    Debug.LogWarningFormat("Unable to read Asset Bundle Browser version contents from {0}. \n {1}",
+                        expectedPackageDotJsonPath, e.Message);
                 }
             }
 
@@ -130,27 +120,27 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Display the Asset Bundle Browser Window
+        /// Display the Asset Bundle Browser window or log an error if not present.
         /// </summary>
         public static void DisplayAssetBundleBrowser()
         {
-            if (!BundleBrowserIsPresent())
+            if (!AssetBundleBrowserIsPresent())
             {
                 Debug.LogError("Cannot detect Unity Asset Bundle Browser");
+                return;
             }
 
             EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
         }
 
-
-        // CallBack method to re-update static values when this tab is re-opened
         /// <summary>
-        /// Reload and update Asset Bundle Browser information
+        /// Reload and update information about Asset Bundle Browser. Helpful as a callback method for when tabs relying
+        /// on information from this class are re-opened after changes about Asset Bundle Browser have taken place.
         /// </summary>
         public static void ReloadAndUpdateBrowserInfo()
         {
-            _assetBundleBrowserIsPresent = BundleBrowserIsPresent(false);
-            _assetBundleBrowserVersion = GetBrowserVersion(false);
+            _assetBundleBrowserIsPresent = AssetBundleBrowserIsPresent(false);
+            _assetBundleBrowserVersion = GetAssetBundleBrowserVersion(false);
         }
 
         // Represents name and version fields from the package.json file of the Asset Bundle Browser project:
@@ -158,7 +148,7 @@ namespace GooglePlayInstant.Editor
         // Suppress warnings about non-initialization of fields.
 #pragma warning disable CS0649 
         [Serializable]
-        private class PackageDotJSsonContent
+        private class PackageDotJsonContent
         {
             public string name;
             public string version;
