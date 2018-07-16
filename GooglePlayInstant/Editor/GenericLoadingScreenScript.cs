@@ -24,18 +24,24 @@ public class GenericLoadingScreenScript : MonoBehaviour
 {
     private AssetBundle _bundle;
 
-    IEnumerator Start()
+    private IEnumerator Start()
     {
         yield return StartCoroutine(GetAssetBundle());
         SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
     }
 
-    IEnumerator GetAssetBundle()
+    private IEnumerator GetAssetBundle()
     {
-        var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
-
+        #if UNITY_2018_2_OR_NEWER
+            var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
+            
+        #else
+            var www = UnityWebRequest.GetAssetBundle("__ASSETBUNDLEURL__");
+    
+        #endif
+        
         yield return www.SendWebRequest();
-
+        
         if (www.isNetworkError || www.isHttpError)
         {
             Debug.Log(www.error);
