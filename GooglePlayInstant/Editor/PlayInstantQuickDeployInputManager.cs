@@ -23,7 +23,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public static class DeployBundleTextFields
     {
-        private static readonly string dataStorageFilePath =".google_play_instant_quick_deploy_inputs.json";
+        private const string dataStorageFilePath =".google_play_instant_quick_deploy_inputs.json";
 
         private static string _oauth2CredentialsPath;
         private static string _localAssetBundlePath;
