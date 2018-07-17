@@ -41,6 +41,11 @@ namespace GooglePlayInstant.Editor
             }
             set
             {
+                if (string.Equals(_oauth2CredentialsPath, value))
+                {
+                    return;
+                }
+
                 _oauth2CredentialsPath = value;
                 UpdatePrefs("oauth2CredentialsPath", value);
             }
@@ -60,6 +65,11 @@ namespace GooglePlayInstant.Editor
             }
             set
             {
+                if (string.Equals(_localAssetBundlePath, value))
+                {
+                    return;
+                }
+
                 _localAssetBundlePath = value;
                 UpdatePrefs("localAssetBundlePath", value);
             }
@@ -79,6 +89,11 @@ namespace GooglePlayInstant.Editor
             }
             set
             {
+                if (string.Equals(_remoteBucketName, value))
+                {
+                    return;
+                }
+
                 _remoteBucketName = value;
                 UpdatePrefs("remoteBucketName", value);
             }
@@ -98,6 +113,11 @@ namespace GooglePlayInstant.Editor
             }
             set
             {
+                if (string.Equals(_remoteObjectName, value))
+                {
+                    return;
+                }
+
                 _remoteObjectName = value;
                 UpdatePrefs("remoteObjectName", value);
             }
