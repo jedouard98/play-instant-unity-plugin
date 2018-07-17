@@ -19,13 +19,15 @@ namespace GooglePlayInstant.Editor
 {
     public class PlayInstantQuickDeployWindow : EditorWindow
     {
-        private static int _toolbarSelectedButtonIndex = 0;
-
         private static readonly string[] ToolbarButtonNames =
         {
             "Create Bundle", "Deploy Bundle", "Verify Bundle",
             "Loading Screen", "Build"
         };
+
+        private static int _toolbarSelectedButtonIndex = 0;
+        private static string _loadingScreenImagePath;
+        private static string _assetBundleUrl;
 
         public enum ToolBarSelectedButton
         {
@@ -165,12 +167,27 @@ namespace GooglePlayInstant.Editor
                                        "specified below while downloading and opening the main scene.",
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Image File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\loading.png", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth));
+            if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
+            {
+                _loadingScreenImagePath =
+                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+            }
+
+            EditorGUILayout.Space();
+
+            var displayedPath = _loadingScreenImagePath ?? "no file specified";
+            EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
+                GUILayout.MinWidth(FieldMinWidth));
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
+            {
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_loadingScreenImagePath,
+                    _assetBundleUrl);
+            }
         }
 
         private void OnGuiCreateBuildSelect()
