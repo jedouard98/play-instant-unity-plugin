@@ -103,7 +103,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        // Set DataStoragePrefix + key to value in EditorPrefs if value is valid. Empty string or null removed key.
+        // Set DataStoragePrefix + key to value in EditorPrefs if value is not empty or null. Otherwise remove key.
         private static void UpdatePrefs(string key, string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -116,7 +116,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        // Set key's associated value from EditorPrefs and set it to field. Set field to "" if key not present.
+        // Set field to key's associated value from EditorPrefs. Set field to "" if key not present.
         private static void UpdateFieldFromPrefs(ref string field, string key)
         {
             field = EditorPrefs.HasKey(DataStoragePrefix + key) ? EditorPrefs.GetString(DataStoragePrefix + key) : "";
