@@ -27,7 +27,7 @@ namespace GooglePlayInstant.Editor
 
         private static int _toolbarSelectedButtonIndex = 0;
         private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl;
+        private static string _assetBundleUrl = "http://example.com/awesome-game";
 
         public enum ToolBarSelectedButton
         {
@@ -151,12 +151,15 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene",
-                GUILayout.MinWidth(FieldMinWidth));
+            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
-            GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth));
+            
+            if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
+            {
+                //TODO: implement this
+            }
             EditorGUILayout.EndVertical();
         }
 
