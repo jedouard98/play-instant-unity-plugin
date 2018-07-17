@@ -147,10 +147,15 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\base.apk", GUILayout.MinWidth(FieldMinWidth));
+            //Il2cppBuilder.ApkFileName =  EditorGUILayout.TextField(Il2cppBuilder.ApkFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button ("Build Base APK", GUILayout.Width(ButtonWidth));
+            if (GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth)))
+            {
+                Il2cppBuilder.BuildIl2cppApk();
+            }
+
+            ;
         }
     }
 }
