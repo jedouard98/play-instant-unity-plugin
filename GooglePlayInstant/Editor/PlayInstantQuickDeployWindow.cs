@@ -110,7 +110,8 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Path to Google Cloud Oauth2 Credentials JSON file", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Path to Google Cloud Oauth2 Credentials JSON file",
+                GUILayout.MinWidth(FieldMinWidth));
             DeployBundleTextFields.Oauth2CredentialsPath =
                 EditorGUILayout.TextField(DeployBundleTextFields.Oauth2CredentialsPath,
                     GUILayout.MinWidth(FieldMinWidth));
