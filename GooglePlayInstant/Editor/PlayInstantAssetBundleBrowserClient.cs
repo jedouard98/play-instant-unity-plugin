@@ -63,14 +63,6 @@ namespace GooglePlayInstant.Editor
             return false;
         }
 
-        // Evaluates whether a folder has "AssetBundles-Browser" in its name, making it
-        // a candidate for the Asset Bundles Browser Folder.
-        private static bool IsAssetBundleBrowserFolder(string folderName)
-        {
-            var regex = new Regex(@"AssetBundles-Browser", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            return regex.Matches(folderName).Count > 0;
-        }
-
         /// <summary>
         /// Get the version of Asset Bundle Browser if available in the package information.
         /// </summary>
@@ -87,8 +79,10 @@ namespace GooglePlayInstant.Editor
             }
 
             // Extract AssetBundleBrowser version name from the Asset Bundle Browser package.json file.
+            // All forlders with "AssetBundles-Browser" in their names are considered candidates
             var assetBundleBrowserFolderPaths =
-                Directory.GetDirectories(Application.dataPath).ToArray().Where(IsAssetBundleBrowserFolder);
+                Directory.GetDirectories(Application.dataPath).ToArray().Where(folderName =>
+                    Regex.IsMatch(folderName, "AssetBundles-Browser", RegexOptions.IgnoreCase));
             foreach (var folderPath in assetBundleBrowserFolderPaths)
             {
                 var expectedPackageDotJsonPath = Path.Combine(folderPath, "package.json");
