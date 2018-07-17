@@ -46,7 +46,7 @@ public class GenericLoadingScreenScript : MonoBehaviour
         // TODO: implement retry logic
         if (www.isNetworkError || www.isHttpError)
         {
-            Debug.LogErrorFormat("Error downloading asset bundle: {0}, www.error");
+            Debug.LogErrorFormat("Error downloading asset bundle: {0}", www.error);
         }
         else
         {

@@ -26,7 +26,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class PlayInstantLoadingScreenGenerator
     {
-        private const string loadingSceneName = "play-instant-loading-screen-scene";
+        private const string LoadingSceneName = "play-instant-loading-screen-scene";
 
         /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
@@ -42,7 +42,7 @@ namespace GooglePlayInstant.Editor
             else
             {
                 // Removes the loading scene if it is present, otherwise does nothing.
-                EditorSceneManager.CloseScene(SceneManager.GetSceneByName(loadingSceneName), true);
+                EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
 
                 var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
                 var loadingScreenGameObject = new GameObject("Canvas");
@@ -51,7 +51,7 @@ namespace GooglePlayInstant.Editor
                 AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
                 AddLoadingScreenScript(loadingScreenGameObject);
 
-                EditorSceneManager.SaveScene(loadingScreenScene, loadingSceneName + ".unity");
+                EditorSceneManager.SaveScene(loadingScreenScene, LoadingSceneName + ".unity");
             }
         }
 
