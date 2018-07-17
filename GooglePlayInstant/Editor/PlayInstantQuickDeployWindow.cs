@@ -24,7 +24,7 @@ namespace GooglePlayInstant.Editor
             "Create Bundle", "Deploy Bundle", "Verify Bundle",
             "Loading Screen", "Build"
         };
-        
+
         private static int _toolbarSelectedButtonIndex = 0;
 
         private static string _loadingScreenImagePath;
@@ -149,10 +149,12 @@ namespace GooglePlayInstant.Editor
                 _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
+
             EditorGUILayout.Space();
 
             var displayedPath = _loadingScreenImagePath ?? "no file specified";
-            EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath), GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
+                GUILayout.MinWidth(FieldMinWidth));
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();

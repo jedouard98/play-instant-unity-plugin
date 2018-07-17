@@ -32,21 +32,21 @@ public class GenericLoadingScreenScript : MonoBehaviour
         SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
     }
 
+    //TODO: Update function for unity 5.6 functionality
     private IEnumerator GetAssetBundle()
     {
-        #if UNITY_2018_2_OR_NEWER
-            var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
-            
-        #else
-            var www = UnityWebRequest.GetAssetBundle("__ASSETBUNDLEURL__");
-    
-        #endif
-        
+#if UNITY_2018_2_OR_NEWER
+        var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
+#else
+        var www = UnityWebRequest.GetAssetBundle("__ASSETBUNDLEURL__");
+#endif
+
         yield return www.SendWebRequest();
-        
+
+        // TODO: implement retry logic
         if (www.isNetworkError || www.isHttpError)
         {
-            Debug.Log(www.error);
+            Debug.LogErrorFormat("Error downloading asset bundle: {0}, www.error");
         }
         else
         {
