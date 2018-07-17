@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.IO;
-using UnityEngine;
+using UnityEditor;
 
 namespace GooglePlayInstant.Editor
 {
@@ -23,8 +21,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public static class DeployBundleTextFields
     {
-        private const string dataStorageFilePath = ".google_play_instant_quick_deploy_inputs.json";
-
+        private const string DataStoragePrefix = "GooglePlayInstant.Editor.QuickDeploy.";
         private static string _oauth2CredentialsPath;
         private static string _localAssetBundlePath;
         private static string _remoteBucketName;
@@ -32,88 +29,97 @@ namespace GooglePlayInstant.Editor
 
         public static string Oauth2CredentialsPath
         {
-            get { return getUpdatedValue(ref _oauth2CredentialsPath); }
-            set { updateNewValue(ref _oauth2CredentialsPath, value); }
+            get
+            {
+                if (_oauth2CredentialsPath != null)
+                {
+                    return _oauth2CredentialsPath;
+                }
+
+                UpdateFieldFromPrefs(ref _oauth2CredentialsPath, "oauth2CredentialsPath");
+                return _oauth2CredentialsPath;
+            }
+            set
+            {
+                _oauth2CredentialsPath = value;
+                UpdatePrefs("oauth2CredentialsPath", value);
+            }
         }
 
         public static string LocalAssetBundlePath
         {
-            get { return getUpdatedValue(ref _localAssetBundlePath); }
-            set { updateNewValue(ref _localAssetBundlePath, value); }
+            get
+            {
+                if (_localAssetBundlePath != null)
+                {
+                    return _localAssetBundlePath;
+                }
+
+                UpdateFieldFromPrefs(ref _localAssetBundlePath, "localAssetBundlePath");
+                return _localAssetBundlePath;
+            }
+            set
+            {
+                _localAssetBundlePath = value;
+                UpdatePrefs("localAssetBundlePath", value);
+            }
         }
 
         public static string RemoteBucketName
         {
-            get { return getUpdatedValue(ref _remoteBucketName); }
-            set { updateNewValue(ref _remoteBucketName, value); }
+            get
+            {
+                if (_remoteBucketName != null)
+                {
+                    return _remoteBucketName;
+                }
+
+                UpdateFieldFromPrefs(ref _remoteBucketName, "remoteBucketName");
+                return _remoteBucketName;
+            }
+            set
+            {
+                _remoteBucketName = value;
+                UpdatePrefs("remoteBucketName", value);
+            }
         }
 
         public static string RemoteObjectName
         {
-            get { return getUpdatedValue(ref _remoteObjectName); }
-            set { updateNewValue(ref _remoteObjectName, value); }
-        }
-
-
-        private static string getUpdatedValue(ref string field)
-        {
-            if (string.Equals(field, null))
+            get
             {
-                RetrieveTextFieldInputs();
+                if (_remoteObjectName != null)
+                {
+                    return _remoteObjectName;
+                }
+
+                UpdateFieldFromPrefs(ref _remoteObjectName, "remoteObjectName");
+                return _remoteObjectName;
             }
-
-            return field;
-        }
-
-        // Do nothing if value has not changed, otherwise update the value of the static field and write to file.
-        private static void updateNewValue(ref string field, string value)
-        {
-            if (string.Equals(field, value))
+            set
             {
-                return;
+                _remoteObjectName = value;
+                UpdatePrefs("remoteObjectName", value);
             }
-
-            field = value;
-            StoreTextFieldInputs();
         }
 
-        private static void StoreTextFieldInputs()
+        // Set DataStoragePrefix + key to value in EditorPrefs if value is valid. Empty string or null removed key.
+        private static void UpdatePrefs(string key, string value)
         {
-            var fieldsData = new TextFieldInputFileContent
+            if (string.IsNullOrEmpty(value))
             {
-                oauth2CredentialsPath = _oauth2CredentialsPath ?? "path_to_google_cloud_project_oauth2_credentials",
-                localAssetBundlePath = _localAssetBundlePath ?? "local_path_to_assetbundle",
-                remoteBucketName = _remoteBucketName ?? "remote_bucket_name",
-                remoteObjectName = _remoteObjectName ?? "remote_object_name",
-            };
-            File.WriteAllText(dataStorageFilePath, JsonUtility.ToJson(fieldsData));
-        }
-
-        private static void RetrieveTextFieldInputs()
-        {
-            if (!File.Exists(dataStorageFilePath))
-            {
-                StoreTextFieldInputs();
+                EditorPrefs.DeleteKey(DataStoragePrefix + key);
             }
-
-            var fieldInputObject =
-                JsonUtility.FromJson<TextFieldInputFileContent>(File.ReadAllText(dataStorageFilePath));
-            _oauth2CredentialsPath = fieldInputObject.oauth2CredentialsPath;
-            _localAssetBundlePath = fieldInputObject.localAssetBundlePath;
-            _remoteBucketName = fieldInputObject.remoteBucketName;
-            _remoteObjectName = fieldInputObject.remoteObjectName;
+            else
+            {
+                EditorPrefs.SetString(DataStoragePrefix + key, value);
+            }
         }
 
-        /// <summary>
-        /// Represents the contents of the file used to store text field inputs.
-        /// </summary>
-        [Serializable]
-        private class TextFieldInputFileContent
+        // Set key's associated value from EditorPrefs and set it to field. Set field to "" if key not present.
+        private static void UpdateFieldFromPrefs(ref string field, string key)
         {
-            public string oauth2CredentialsPath;
-            public string localAssetBundlePath;
-            public string remoteBucketName;
-            public string remoteObjectName;
+            field = EditorPrefs.HasKey(DataStoragePrefix + key) ? EditorPrefs.GetString(DataStoragePrefix + key) : "";
         }
     }
 }
