@@ -32,7 +32,11 @@ namespace GooglePlayInstant.Editor
         private const string AssetBundleBrowserMenuItem = "Window/AssetBundle Browser";
         private static bool? _assetBundleBrowserIsPresent;
         private static string _assetBundleBrowserVersion;
-
+        
+        
+        /// <summary>
+        /// Determine whether Asset Bundle Browser is present based on the currently loaded assemblies.
+        /// </summary>
         /// <param name="useCurrentValueIfPresent">A boolean value corresponding to whether the caller wants to
         /// to re-use the cached value if it is present. Using the default value(true) provides a significant
         /// peformance improvement when calling this method from functions that are invoked so many times
@@ -79,7 +83,7 @@ namespace GooglePlayInstant.Editor
             }
 
             // Extract AssetBundleBrowser version name from the Asset Bundle Browser package.json file.
-            // All forlders with "AssetBundles-Browser" in their names are considered candidates
+            // All folders with "AssetBundles-Browser" in their names are considered candidates.
             var assetBundleBrowserFolderPaths =
                 Directory.GetDirectories(Application.dataPath).ToArray().Where(folderName =>
                     Regex.IsMatch(folderName, "AssetBundles-Browser", RegexOptions.IgnoreCase));

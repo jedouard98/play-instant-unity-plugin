@@ -94,9 +94,7 @@ namespace GooglePlayInstant.Editor
             }
             else
             {
-                var downloadAssetBundleBrowser = GUILayout.Button("Download Asset Bundle Browser from GitHub",
-                    GUILayout.Width(LongButtonWidth));
-                if (downloadAssetBundleBrowser)
+                if (GUILayout.Button("Download Asset Bundle Browser from GitHub", GUILayout.Width(LongButtonWidth)))
                 {
                     Application.OpenURL("https://github.com/Unity-Technologies/AssetBundles-Browser/releases");
                 }
