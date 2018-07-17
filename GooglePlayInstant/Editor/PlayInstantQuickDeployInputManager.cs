@@ -23,7 +23,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public static class DeployBundleTextFields
     {
-        private const string dataStorageFilePath =".google_play_instant_quick_deploy_inputs.json";
+        private const string dataStorageFilePath = ".google_play_instant_quick_deploy_inputs.json";
 
         private static string _oauth2CredentialsPath;
         private static string _localAssetBundlePath;
@@ -81,7 +81,7 @@ namespace GooglePlayInstant.Editor
         {
             var fieldsData = new TextFieldInputFileContent
             {
-                oauth2CredentialsPath = _oauth2CredentialsPath?? "path_to_google_cloud_project_oauth2_credentials",
+                oauth2CredentialsPath = _oauth2CredentialsPath ?? "path_to_google_cloud_project_oauth2_credentials",
                 localAssetBundlePath = _localAssetBundlePath ?? "local_path_to_assetbundle",
                 remoteBucketName = _remoteBucketName ?? "remote_bucket_name",
                 remoteObjectName = _remoteObjectName ?? "remote_object_name",
@@ -103,7 +103,7 @@ namespace GooglePlayInstant.Editor
             _remoteBucketName = fieldInputObject.remoteBucketName;
             _remoteObjectName = fieldInputObject.remoteObjectName;
         }
-        
+
         /// <summary>
         /// Represents the contents of the file used to store text field inputs.
         /// </summary>
