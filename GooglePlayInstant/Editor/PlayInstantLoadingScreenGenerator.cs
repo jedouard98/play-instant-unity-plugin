@@ -55,10 +55,9 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        //TODO: get rid of error message associated with using the LoadingScreenScript reference
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
         {
-            loadingScreenGameObject.AddComponent<LoadingScreenScript>();
+            loadingScreenGameObject.AddComponent(System.Type.GetType("LoadingScreenScript, Assembly-CSharp"));
         }
 
         private static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
