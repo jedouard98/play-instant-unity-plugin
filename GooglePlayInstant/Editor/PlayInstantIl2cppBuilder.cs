@@ -9,12 +9,20 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public static class Il2cppBuilder
     {
+        private const string SplashScenePath = "play-instant-loading-screen-scene.unity";
         private static string _apkPathName = Path.GetFullPath("base.apk");
 
-        private static ScriptingImplementation _scriptingImplementation =
-            PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android);
+        private static bool _projectIsUsingIl2Cpp =
+            PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) == ScriptingImplementation.IL2CPP;
 
-        private const string SplashScenePath = "play-instant-loading-screen-scene.unity";
+        /// <summary>
+        /// Whether or not the project is using IL2CPP as scripting backend. Ther return value of this is Updated by a
+        /// call to Il2cppBuilder.UpdateScriptingBackendInformation
+        /// </summary>
+        public static bool ProjectIsUsingIl2cpp
+        {
+            get { return _projectIsUsingIl2Cpp; }
+        }
 
         /// <summary>
         /// The specified path name of the target apk to be built.
@@ -36,25 +44,19 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Determine whether the current project is using IL2CPP as the scripting backend.
-        /// </summary>
-        public static bool ProjectIsUsingIl2cpp()
-        {
-            return _scriptingImplementation == ScriptingImplementation.IL2CPP;
-        }
-
-        /// <summary>
-        /// Refreshe information about the current scripting backend. Useful for detecting changes in scripting backend
+        /// Reloads information about the current scripting backend. Useful for detecting changes in scripting backend
         /// information after player settings have changed.
         /// </summary>
-        public static void ReloadAndUpdateScriptingBackendInformation()
+        public static void UpdateScriptingBackendInformation()
         {
-            _scriptingImplementation = PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android);
+            _projectIsUsingIl2Cpp = PlayerSettings.GetScriptingBackend(BuildTargetGroup.Android) ==
+                                    ScriptingImplementation.IL2CPP;
         }
 
         /// <summary>
         /// Build an android apk with quick deploy. Produces a resulting apk that contains the splash scene
-        /// and functioanality that will load the game's asset bundle from the cloud atruntime.
+        /// and functionality that will load the game's asset bundle from the cloud at runtime.
+        /// Logs success message to the console with built apk's path when building apk is complete.
         /// </summary>
         public static void BuildQuickDeployInstantGameApk()
         {

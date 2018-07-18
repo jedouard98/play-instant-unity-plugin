@@ -69,7 +69,7 @@ namespace GooglePlayInstant.Editor
                     OnGuiLoadingScreenSelect();
                     break;
                 case ToolBarSelectedButton.Build:
-                    Il2cppBuilder.ReloadAndUpdateScriptingBackendInformation();
+                    Il2cppBuilder.UpdateScriptingBackendInformation();
                     OnGuiCreateBuildSelect();
                     break;
             }
@@ -211,10 +211,10 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (!Il2cppBuilder.ProjectIsUsingIl2cpp())
+            if (!Il2cppBuilder.ProjectIsUsingIl2cpp)
             {
                 EditorGUILayout.LabelField(
-                    "Warning: You are not using IL2CPP as scripting backend, which may result into a larger apk size than needed.",
+                    "Warning: You are not using IL2CPP as the project's scripting backend, and this may result into a larger apk size than necessary.",
                     EditorStyles.wordWrappedLabel);
             }
 
