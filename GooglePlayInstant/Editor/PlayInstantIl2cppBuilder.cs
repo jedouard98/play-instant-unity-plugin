@@ -5,7 +5,7 @@ using UnityEngine;
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// A handler for building an apk using quick deploy.
+    /// A handler for building apks using quick deploy.
     /// </summary>
     public static class Il2cppBuilder
     {
