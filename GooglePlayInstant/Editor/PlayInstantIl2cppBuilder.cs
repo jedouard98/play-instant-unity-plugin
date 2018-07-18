@@ -69,7 +69,7 @@ namespace GooglePlayInstant.Editor
             };
 
             BuildPipeline.BuildPlayer(buildPlayerOptions);
-            Debug.Log("Apk successfuly built at " + ApkPathName);
+            Debug.Log("Apk successfuly built at path " + ApkPathName);
         }
     }
 }
