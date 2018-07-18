@@ -42,6 +42,7 @@ namespace GooglePlayInstant.Editor
         private const int FieldMinWidth = 100;
         private const int ButtonWidth = 200;
         private const int LongButtonWidth = 300;
+        private const int ShortButtonWidth = 100;
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
@@ -201,7 +202,7 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
             Il2cppBuilder.ApkPathName =
                 EditorGUILayout.TextField(Il2cppBuilder.ApkPathName, GUILayout.MinWidth(FieldMinWidth));
-            if (GUILayout.Button("Browse", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 Il2cppBuilder.ApkPathName = EditorUtility.SaveFilePanel("Choose file name and location",
                     Path.GetDirectoryName(Il2cppBuilder.ApkPathName), Path.GetFileName(Il2cppBuilder.ApkPathName),
