@@ -13,9 +13,8 @@
 // limitations under the License.
 
 
-using System;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.Networking;
 
 namespace GooglePlayInstant.Editor
@@ -25,15 +24,16 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class PlayInstantAssetBundleUrlVerifierWindow : EditorWindow
     {
-        private static UnityWebRequest www;
-        private static string _errorDescription;
-        private static long _responseCode;
 
+        private static bool _assetBundleDownloadIsSuccessful;
         private static string _assetBundleUrl;
-
-        private static bool _assetBundleDownloadSuccessful;
+        private static long _responseCode;
+        private static string _errorDescription;
+        
         private static double _numOfBytes;
         private static double _numOfKilobytes;
+
+        private const int FieldMinWidth = 170;
 
 
         /// <summary>
@@ -42,88 +42,81 @@ namespace GooglePlayInstant.Editor
         public static void ShowWindow(string assetBundleUrl)
         {
             _assetBundleUrl = assetBundleUrl;
-            verifyAssetBundle();
+            getAssetBundleVerificationInfo();
             GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
         }
 
-        //TODO: improve on error descriptions and support older versions of Unity
-        private static void verifyAssetBundle()
+        //TODO: improve on error descriptions and support Unity 5.6+
+        private static void getAssetBundleVerificationInfo()
         {
-            www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
+            var www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             www.SendWebRequest();
             while (!www.isDone)
             {
-                //TODO: implement code to update some type of loading bar 
+                //TODO: implement loading bar 
             }
 
-            // check to see if item downloaded was an actual assetbundle object.
-            AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(www);
+            // Check to see if downloadeded item was an actual AssetBundle object.
+            var bundle = DownloadHandlerAssetBundle.GetContent(www);
             _responseCode = www.responseCode;
 
             if (www.isNetworkError || www.isHttpError)
             {
                 Debug.Log(www.error);
                 _errorDescription = www.error;
-                _assetBundleDownloadSuccessful = false;
+                _assetBundleDownloadIsSuccessful = false;
             }
             else if (bundle == null)
             {
                 _errorDescription = "Failed to decompress data for the AssetBundle.";
-                _assetBundleDownloadSuccessful = false;
+                _assetBundleDownloadIsSuccessful = false;
             }
             else
             {
                 _numOfBytes = www.downloadedBytes;
                 _numOfKilobytes = _numOfBytes / 1024;
-                _assetBundleDownloadSuccessful = true;
+                _assetBundleDownloadIsSuccessful = true;
             }
 
             // Discard AssetBundle from directory.
             bundle.Unload(false);
         }
 
-        //TODO: fix styling
         private void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle Download Status:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "SUCCESS" : "FAILED"));
+            EditorGUILayout.LabelField("AssetBundle Download Status:", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("URL for AssetBundle:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField(_assetBundleUrl);
+            EditorGUILayout.LabelField("AssetBundle URL:", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField(_assetBundleUrl, EditorStyles.wordWrappedLabel);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("HTTP Status Code:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("HTTP Status Code:", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.LabelField(_responseCode.ToString());
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Error Description:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "N/A" : _errorDescription));
+            EditorGUILayout.LabelField("Error Description:", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Number of Bytes:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfBytes.ToString() : "N/A"));
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Number of Kilobytes:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfKilobytes.ToString() : "N/A"));
+            EditorGUILayout.LabelField("Size (KB):", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _numOfKilobytes.ToString() : "N/A"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             if (GUILayout.Button("Refresh"))
             {
-                verifyAssetBundle();
+                getAssetBundleVerificationInfo();
             }
         }
     }
