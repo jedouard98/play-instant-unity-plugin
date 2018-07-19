@@ -47,7 +47,7 @@ namespace GooglePlayInstant.Editor
                 var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
                 var loadingScreenGameObject = new GameObject("Canvas");
 
-                GenerateLoadingScreenScript(assetBundleUrl);
+                GeneratePlayInstantConfigfile(assetBundleUrl);
                 AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
                 AddLoadingScreenScript(loadingScreenGameObject);
 
@@ -57,7 +57,7 @@ namespace GooglePlayInstant.Editor
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
         {
-            loadingScreenGameObject.AddComponent(System.Type.GetType("LoadingScreenScript, Assembly-CSharp"));
+            loadingScreenGameObject.AddComponent<LoadingScreenScript>();
         }
 
         private static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
@@ -78,29 +78,10 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
-        //TODO: add better handling of finding assets folder and figure out possible alternative AssetDatabase synchronous importing
-        private static void GenerateLoadingScreenScript(string assetBundleUrl)
+        private static void GeneratePlayInstantConfigfile(string assetBundleUrl)
         {
-            var newLoadingScreenScriptPath = "Assets/GooglePlayInstantScript/LoadingScreenScript.cs";
-            var genericLoadingScriptDirStrings = Directory.GetFiles(Directory.GetCurrentDirectory(),
-                "GenericLoadingScreenScript.cs",
-                SearchOption.AllDirectories);
-            if (genericLoadingScriptDirStrings.Length == 0)
-            {
-                Debug.LogErrorFormat("Generic Loading Script could not be found in current project directory: {0}",
-                    Directory.GetCurrentDirectory());
-            }
-            else
-            {
-                var genericLoadingScreenScriptDir = genericLoadingScriptDirStrings[0];
-                Directory.CreateDirectory(Directory.GetParent(newLoadingScreenScriptPath).FullName);
-
-                var genericLoadingScreenScript = File.ReadAllText(genericLoadingScreenScriptDir);
-                var newLoadingScreenScript = genericLoadingScreenScript.Replace("__ASSETBUNDLEURL__", assetBundleUrl)
-                    .Replace("GenericLoadingScreenScript", "LoadingScreenScript");
-                File.WriteAllText(newLoadingScreenScriptPath, newLoadingScreenScript);
-                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            }
+            
+            EditorJsonUtility.ToJson();
         }
     }
 }

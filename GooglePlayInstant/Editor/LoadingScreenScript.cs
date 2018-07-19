@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -22,23 +23,44 @@ using UnityEngine.SceneManagement;
 /// client's "Assets" file. Before the copying occurs, the assetbundle url is inserted into the script at
 /// __ASSETBUNDLEURL__and "Generic" is removed from the script's name.
 /// </summary>
-public class GenericLoadingScreenScript : MonoBehaviour
+public class LoadingScreenScript : MonoBehaviour
 {
     private AssetBundle _bundle;
 
+    [System.Serializable]
+    private class PlayInstantConfig
+    {
+        public string main_scene_asset_bundle_url;
+    }
+
     private IEnumerator Start()
     {
-        yield return StartCoroutine(GetAssetBundle());
+        var assetBundleUrl = parseUrlFromConfigJsonFile();
+        yield return StartCoroutine(GetAssetBundle(assetBundleUrl));
         SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
     }
 
+    private string parseUrlFromConfigJsonFile()
+    {
+        var configFilePathStrings = Directory.GetFiles(Directory.GetCurrentDirectory(), "play-instant-config.json");
+        if (configFilePathStrings.Length == 0)
+        {
+            Debug.LogErrorFormat(
+                "play-instant-config.json could not be found in current directory or its subdirectories: {0}",
+                Directory.GetCurrentDirectory());
+        }
+
+        var configJsonString = File.ReadAllText(configFilePathStrings[0]);
+        return JsonUtility.FromJson<PlayInstantConfig>(configJsonString).main_scene_asset_bundle_url;
+    }
+
     //TODO: Update function for unity 5.6 functionality
-    private IEnumerator GetAssetBundle()
+    private IEnumerator GetAssetBundle(string assetBundleUrl)
     {
 #if UNITY_2018_2_OR_NEWER
-        var www = UnityWebRequestAssetBundle.GetAssetBundle("__ASSETBUNDLEURL__");
+        var www = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
 #else
-        var www = UnityWebRequest.GetAssetBundle("__ASSETBUNDLEURL__");
+        var www = UnityWebRequest.GetAssetBundle(assetBundleUrl);
 #endif
 
         yield return www.SendWebRequest();
