@@ -27,7 +27,7 @@ namespace GooglePlayInstant.Editor
 
         private static int _toolbarSelectedButtonIndex = 0;
         private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl = "http://example.com/awesome-game";
+        private static string _assetBundleUrl = "https://storage.googleapis.com/my_unity_scenes/secondscene";
 
         public enum ToolBarSelectedButton
         {
@@ -158,7 +158,7 @@ namespace GooglePlayInstant.Editor
             
             if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
             {
-                //TODO: implement this
+                PlayInstantAssetBundleUrlVerifierWindow.ShowWindow(_assetBundleUrl);
             }
             EditorGUILayout.EndVertical();
         }
