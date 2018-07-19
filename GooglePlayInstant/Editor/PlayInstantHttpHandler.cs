@@ -217,12 +217,14 @@ namespace GooglePlayInstant.Editor
 
 
             _httpListener.Start();
-            var responseThread = new Thread(HandleResponse);
+            var responseThread = new Thread(HandleResponses);
             responseThread.Start();
         }
 
 
-        private void HandleResponse()
+        
+        // Handle concurrent responses with a thread pool.
+        private void HandleResponses()
         {
             while (true)
             {
@@ -231,6 +233,7 @@ namespace GooglePlayInstant.Editor
         }
 
 
+        // Process the current HttpListenerContext, update values and respond to the client;
         private void ProcessContext(object o)
         {
             var context = o as HttpListenerContext;
@@ -268,6 +271,10 @@ namespace GooglePlayInstant.Editor
         }
 
 
+        /// <summary>
+        /// Stops the server's listener. A next call to the Start() method will restart this server as a new instance
+        /// on a different endpoint.
+        /// </summary>
         public void Stop()
         {
             _responseQueue.Clear();
@@ -283,11 +290,47 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        // Whether or not the server is listening
+        
         private bool IsListening()
         {
             return _httpListener != null && _httpListener.IsListening;
         }
+
+        /// <summary>
+        /// Find out whether the server has received any authorization code responses so far. Error responses are also considered.
+        /// </summary>
+        /// <returns></returns>
+        public bool HasCodeResponse()
+        {
+            lock (_responseQueue)
+            {
+                return _responseQueue.Count >= 0;
+            }
+        }
+
+        /// <summary>
+        /// Returns a single code response dictionary from any responses that might have been picked up by the server.
+        /// A response is represented as a dictionary corresponding to query params with either code or error as keys that
+        /// has been picked up by the server
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidStateException"></exception>
+        public Dictionary<string, string> getSingleCodeResponse()
+        {
+            Dictionary<string, string> response;
+            lock (_responseQueue)
+            {
+                if (!HasCodeResponse())
+                {
+                    throw new InvalidStateException("Server has not received any responses yet");
+                }
+
+                response = _responseQueue.Dequeue();
+            }
+
+            return response;
+        }
+
 
 
         public static void launchServer()
@@ -298,7 +341,11 @@ namespace GooglePlayInstant.Editor
             //server.Stop();
         }
     }
-
+    
+    /// <summary>
+    /// Represents an exception that should be thrown when there are any inconsistencies between methods being executed
+    /// values being acceesed and the current state.
+    /// </summary>
     internal class InvalidStateException : Exception
     {
         public InvalidStateException(string message) : base(message)
