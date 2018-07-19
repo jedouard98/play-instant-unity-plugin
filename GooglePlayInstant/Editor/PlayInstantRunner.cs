@@ -85,6 +85,7 @@ namespace GooglePlayInstant.Editor
             Debug.LogFormat("Build and Run package location: {0}", apkPath);
 
             var buildPlayerOptions = CreateBuildPlayerOptions(apkPath);
+
 #if UNITY_2018_1_OR_NEWER
             var buildReport = BuildPipeline.BuildPlayer(buildPlayerOptions);
             switch (buildReport.summary.result)
@@ -99,7 +100,6 @@ namespace GooglePlayInstant.Editor
                         // No need to display a message since Unity will already have done this.
                         return;
                     }
-
                     // Actual success: continue on to the run step.
                     break;
                 case BuildResult.Failed:

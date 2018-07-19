@@ -21,23 +21,23 @@ using UnityEngine.Networking;
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// Window that verifies AssetBundles URLs.
+    /// Window that verifies that valid AssetBundles from given URLs.
     /// </summary>
     public class PlayInstantAssetBundleUrlVerifierWindow : EditorWindow
     {
         private static UnityWebRequest www;
         private static string _errorDescription;
         private static long _responseCode;
-        
+
         private static string _assetBundleUrl;
-        
+
         private static bool _assetBundleDownloadSuccessful;
         private static double _numOfBytes;
         private static double _numOfKilobytes;
-        
-        
+
+
         /// <summary>
-        /// Creates a dialog box that details the success or failure of an AssetBundle retrieval.
+        /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
         public static void ShowWindow(string assetBundleUrl)
         {
@@ -45,8 +45,8 @@ namespace GooglePlayInstant.Editor
             verifyAssetBundle();
             GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
         }
-        
-        //TODO: improve on error descriptions
+
+        //TODO: improve on error descriptions and support older versions of Unity
         private static void verifyAssetBundle()
         {
             www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
@@ -55,10 +55,11 @@ namespace GooglePlayInstant.Editor
             {
                 //TODO: implement code to update some type of loading bar 
             }
+
             // check to see if item downloaded was an actual assetbundle object.
             AssetBundle bundle = DownloadHandlerAssetBundle.GetContent(www);
             _responseCode = www.responseCode;
-            
+
             if (www.isNetworkError || www.isHttpError)
             {
                 Debug.Log(www.error);
@@ -71,12 +72,13 @@ namespace GooglePlayInstant.Editor
                 _assetBundleDownloadSuccessful = false;
             }
             else
-            {        
+            {
                 _numOfBytes = www.downloadedBytes;
                 _numOfKilobytes = _numOfBytes / 1024;
                 _assetBundleDownloadSuccessful = true;
             }
-            // discard AssetBundle from directory since it is not necessary anymore.
+
+            // Discard AssetBundle from directory.
             bundle.Unload(false);
         }
 
@@ -85,48 +87,48 @@ namespace GooglePlayInstant.Editor
             var windowStyle = EditorStyles.boldLabel;
             windowStyle.wordWrap = true;
             windowStyle.alignment = TextAnchor.MiddleLeft;
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle Download Status:", windowStyle);
             EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "SUCCESS" : "FAILED"), windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("URL for AssetBundle:", windowStyle);
             EditorGUILayout.LabelField(_assetBundleUrl, windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("HTTP Status Code:", windowStyle);
             EditorGUILayout.LabelField(_responseCode.ToString(), windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Error Description:", windowStyle);
             EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "N/A" : _errorDescription), windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Number of Bytes:", windowStyle);
             EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfBytes.ToString() : "N/A"), windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Number of Kilobytes:", windowStyle);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfKilobytes .ToString() : "N/A"), windowStyle);
+            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfKilobytes.ToString() : "N/A"),
+                windowStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             if (GUILayout.Button("Refresh"))
             {
                 verifyAssetBundle();
             }
         }
-        
     }
 }
