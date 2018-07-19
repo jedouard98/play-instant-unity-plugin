@@ -82,46 +82,42 @@ namespace GooglePlayInstant.Editor
             bundle.Unload(false);
         }
 
+        //TODO: fix styling
         private void OnGUI()
         {
-            var windowStyle = EditorStyles.boldLabel;
-            windowStyle.wordWrap = true;
-            windowStyle.alignment = TextAnchor.MiddleLeft;
-
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle Download Status:", windowStyle);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "SUCCESS" : "FAILED"), windowStyle);
+            EditorGUILayout.LabelField("AssetBundle Download Status:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "SUCCESS" : "FAILED"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("URL for AssetBundle:", windowStyle);
-            EditorGUILayout.LabelField(_assetBundleUrl, windowStyle);
+            EditorGUILayout.LabelField("URL for AssetBundle:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(_assetBundleUrl);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("HTTP Status Code:", windowStyle);
-            EditorGUILayout.LabelField(_responseCode.ToString(), windowStyle);
+            EditorGUILayout.LabelField("HTTP Status Code:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(_responseCode.ToString());
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Error Description:", windowStyle);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "N/A" : _errorDescription), windowStyle);
+            EditorGUILayout.LabelField("Error Description:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? "N/A" : _errorDescription));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Number of Bytes:", windowStyle);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfBytes.ToString() : "N/A"), windowStyle);
+            EditorGUILayout.LabelField("Number of Bytes:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfBytes.ToString() : "N/A"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Number of Kilobytes:", windowStyle);
-            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfKilobytes.ToString() : "N/A"),
-                windowStyle);
+            EditorGUILayout.LabelField("Number of Kilobytes:", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField((_assetBundleDownloadSuccessful ? _numOfKilobytes.ToString() : "N/A"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
