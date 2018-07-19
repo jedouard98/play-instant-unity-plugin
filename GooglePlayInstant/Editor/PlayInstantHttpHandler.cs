@@ -10,6 +10,9 @@ using System.Threading;
 using System.Web;
 using UnityEngine;
 using Random = System.Random;
+using NUnit.Framework;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor.Experimental.UIElements;
 
 [assembly:System.Runtime.CompilerServices.InternalsVisibleTo("GooglePlayInstant.Tests.Editor.HttpHandler")]
 namespace GooglePlayInstant.Editor
@@ -99,9 +102,9 @@ namespace GooglePlayInstant.Editor
 
     public class Oauth2CallbackEndpointServer
     {
-        private const string callbackResponseOnSuccess = "<h1>Authorization successful. You may close this window</h1>";
+        internal const string CallbackResponseOnSuccess = "<h1>Authorization successful. You may close this window</h1>";
 
-        private const string callBackResponseOnError =
+        internal const string CallBackResponseOnError =
             "<h1>Authorization Failed. Could not get necessary permissions</h1>";
 
         private string _endpointString;
@@ -110,7 +113,7 @@ namespace GooglePlayInstant.Editor
         private string _callbackEndpoint;
 
         //private List<Dictionary<string, string>> _responseList = new List<Dictionary<string, string>>();
-        private Queue<Dictionary<string, string>> _responseQueue = new Queue<Dictionary<string, string>>();
+        private readonly Queue<Oauth2AuthorizationOutcome> _responseQueue = new Queue<Oauth2AuthorizationOutcome>();
 
 
         /*
@@ -124,19 +127,13 @@ namespace GooglePlayInstant.Editor
         {
         }
 
-        private string GetRandomEndpoint()
+        internal static string GetRandomEndpoint()
         {
-            if (_endpointString != null)
-            {
-                return _endpointString;
-            }
-
-            _endpointString = GetMD5Hash(new Random().Next(0, 1000).ToString());
-            return _endpointString;
+            return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
         }
 
 
-        private string CallbackEndpoint
+        public string CallbackEndpoint
         {
             get
             {
@@ -163,7 +160,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        private static string GetRandomPortAsString()
+        internal static string GetRandomPortAsString()
         {
             const int minimumPort = 1024;
             const int maximumPort = 65535;
@@ -173,7 +170,7 @@ namespace GooglePlayInstant.Editor
 
 
         // Helper method to compute an MD5 digest of a string
-        private static string GetMD5Hash(string input)
+        internal static string GetMD5Hash(string input)
         {
             var inputAsBytes = Encoding.ASCII.GetBytes(input);
             var hashAsBytes = MD5.Create().ComputeHash(inputAsBytes);
@@ -253,18 +250,35 @@ namespace GooglePlayInstant.Editor
                 }
             }
 
-            string dictRepr = string.Join(",", queryDictionary.Select(pair => pair.Key + " = " + pair.Value).ToArray());
-            _responseQueue.Enqueue(queryDictionary);
+            context.Response.KeepAlive = false;
+            if (!queryDictionary.ContainsKey("code") && !queryDictionary.ContainsKey("error") ||
+                queryDictionary.Count != 1)
+            {
+                context.Response.StatusCode = 404;
+                context.Response.Close();
+                return;
+            }
+
+           
+            var enumerator = queryDictionary.GetEnumerator();
+            enumerator.MoveNext();
+            var current = enumerator.Current;
+            var response = new Oauth2AuthorizationOutcome
+            {
+                nature = current.Key,
+                value = current.Value
+            };
+            
+            _responseQueue.Enqueue(response);
+
 
             var responseArray = Encoding.UTF8.GetBytes(queryDictionary.ContainsKey("code")
-                ? callbackResponseOnSuccess + "<br> data: "+dictRepr
-                : callBackResponseOnError + "<br> data: "+dictRepr);
+                ? CallbackResponseOnSuccess
+                : CallBackResponseOnError);
             var outputStream = context.Response.OutputStream;
             outputStream.Write(responseArray, 0, responseArray.Length);
             outputStream.Flush();
             outputStream.Close();
-            Debug.Log("Flushed and closed outputstream");
-            context.Response.KeepAlive = false;
             context.Response.Close();
 
             Debug.Log("Respone given to a request.");
@@ -291,7 +305,7 @@ namespace GooglePlayInstant.Editor
         }
 
         
-        private bool IsListening()
+        internal bool IsListening()
         {
             return _httpListener != null && _httpListener.IsListening;
         }
@@ -300,7 +314,7 @@ namespace GooglePlayInstant.Editor
         /// Find out whether the server has received any authorization code responses so far. Error responses are also considered.
         /// </summary>
         /// <returns></returns>
-        public bool HasCodeResponse()
+        public bool HasOauth2AuthorizationOutcome()
         {
             lock (_responseQueue)
             {
@@ -315,12 +329,12 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidStateException"></exception>
-        public Dictionary<string, string> getSingleCodeResponse()
+        public Oauth2AuthorizationOutcome getAuthorizationResponse()
         {
-            Dictionary<string, string> response;
+            Oauth2AuthorizationOutcome response;
             lock (_responseQueue)
             {
-                if (!HasCodeResponse())
+                if (!HasOauth2AuthorizationOutcome())
                 {
                     throw new InvalidStateException("Server has not received any responses yet");
                 }
@@ -330,18 +344,63 @@ namespace GooglePlayInstant.Editor
 
             return response;
         }
-
-
-
+        
         public static void launchServer()
         {
             var server = new Oauth2CallbackEndpointServer();
             server.Start();
+            var failResponse = RemoteWwwRequestHandler.GetHttpResponse(server.CallbackEndpoint, null, null);
+            Debug.Log("Fail Response: "+failResponse);
+            Debug.Assert(failResponse.Equals(CallBackResponseOnError));
             Debug.Log("Endpoint: " + server.CallbackEndpoint);
+            while (!server.HasOauth2AuthorizationOutcome())
+            {
+                
+            }
+
+            var authResponse = server.getAuthorizationResponse();
+            Debug.Log(authResponse.ToString());
             //server.Stop();
+        }
+
+        private static string PrettifyDict(Dictionary<string, string> dict)
+        {
+            return "{" + string.Join(" , ", dict.Select(pair => pair.Key + " = "+pair.Value).ToArray()) + "}";
         }
     }
     
+    /// <summary>
+    /// Represents an authorization outcome received on this endpoint from Google Oauth's endpoint;
+    /// </summary>
+
+    [Serializable]
+    public class Oauth2AuthorizationOutcome
+    {
+        public string nature;
+        public string value;
+
+        public override string ToString()
+        {
+            return string.Format("{0}={1}", nature, value);
+        }
+
+        public bool IsAuthorizationCode()
+        {
+            return string.Equals(nature, "code");
+        }
+
+        public override bool Equals(object other)
+        {
+            var outcome = other as Oauth2AuthorizationOutcome;
+            return outcome != null && isSimilarTo(outcome);
+        }
+
+        private bool isSimilarTo(Oauth2AuthorizationOutcome other)
+        {
+            return string.Equals(nature, other.nature) && string.Equals(value, other.value);
+        }
+    }
+
     /// <summary>
     /// Represents an exception that should be thrown when there are any inconsistencies between methods being executed
     /// values being acceesed and the current state.
