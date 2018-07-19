@@ -28,7 +28,7 @@ public class LoadingScreenScript : MonoBehaviour
     private AssetBundle _bundle;
 
     [System.Serializable]
-    private class PlayInstantConfig
+    public class PlayInstantConfig
     {
         public string main_scene_asset_bundle_url;
     }

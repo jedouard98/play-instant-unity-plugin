@@ -80,8 +80,9 @@ namespace GooglePlayInstant.Editor
 
         private static void GeneratePlayInstantConfigfile(string assetBundleUrl)
         {
-            
-            EditorJsonUtility.ToJson();
+            var newConfigObj = new LoadingScreenScript.PlayInstantConfig().main_scene_asset_bundle_url = assetBundleUrl;
+            var newConfigJson = EditorJsonUtility.ToJson(newConfigObj);
+            File.WriteAllText("play-instant-config.json", newConfigJson);
         }
     }
 }
