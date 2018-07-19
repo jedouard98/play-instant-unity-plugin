@@ -20,18 +20,15 @@ using UnityEngine.Networking;
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// Window that verifies that valid AssetBundles from given URLs.
+    /// Window that verifies AssetBundles from given URLs.
     /// </summary>
     public class PlayInstantAssetBundleUrlVerifierWindow : EditorWindow
     {
-
         private static bool _assetBundleDownloadIsSuccessful;
         private static string _assetBundleUrl;
         private static long _responseCode;
         private static string _errorDescription;
-        
-        private static double _numOfBytes;
-        private static double _numOfKilobytes;
+        private static double _numOfMegabytes;
 
         private const int FieldMinWidth = 170;
 
@@ -58,28 +55,35 @@ namespace GooglePlayInstant.Editor
 
             // Check to see if downloadeded item was an actual AssetBundle object.
             var bundle = DownloadHandlerAssetBundle.GetContent(www);
+
             _responseCode = www.responseCode;
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.Log(www.error);
-                _errorDescription = www.error;
                 _assetBundleDownloadIsSuccessful = false;
+                _errorDescription = www.error;
+                Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _errorDescription,
+                    _assetBundleUrl);
             }
             else if (bundle == null)
             {
-                _errorDescription = "Failed to decompress data for the AssetBundle.";
                 _assetBundleDownloadIsSuccessful = false;
+                _errorDescription = "Failed to decompress data for the AssetBundle.";
+                // Debugging information is automatically logged.
             }
             else
             {
-                _numOfBytes = www.downloadedBytes;
-                _numOfKilobytes = _numOfBytes / 1024;
                 _assetBundleDownloadIsSuccessful = true;
-            }
+                _numOfMegabytes = ConvertBytesToMegabytes(www.downloadedBytes);
 
-            // Discard AssetBundle from directory.
-            bundle.Unload(false);
+                // Discard AssetBundle from directory since it is not in use.
+                bundle.Unload(false);
+            }
+        }
+
+        private static double ConvertBytesToMegabytes(ulong bytes)
+        {
+            return bytes / 1024f / 1024f;
         }
 
         private void OnGUI()
@@ -109,8 +113,8 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Size (KB):", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _numOfKilobytes.ToString() : "N/A"));
+            EditorGUILayout.LabelField("Size (MB):", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
