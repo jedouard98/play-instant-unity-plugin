@@ -46,7 +46,7 @@ namespace GooglePlayInstant.Editor
             GetWindow<PlayInstantQuickDeployWindow>("Quick Deploy");
             _toolbarSelectedButtonIndex = (int) select;
         }
-        
+
         // TODO: replace stub strings with real values
         void OnGUI()
         {
@@ -118,24 +118,31 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.assetbundleFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.assetbundleFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.assetBundleFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.cloudStorageBucketName = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageBucketName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageBucketName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.cloudStorageFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.cloudCredentials = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentials, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudCredentials =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentials, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth)))
+            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
             EditorGUILayout.Space();
             GUILayout.Button("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
         }
@@ -184,7 +191,8 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.Config.loadingScreenImageFileName,
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(
+                    QuickDeployConfig.Config.loadingScreenImageFileName,
                     QuickDeployConfig.Config.assetBundleUrl);
             }
         }
@@ -196,7 +204,8 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.APKFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.APKFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.apkFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName,
+                GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth));
