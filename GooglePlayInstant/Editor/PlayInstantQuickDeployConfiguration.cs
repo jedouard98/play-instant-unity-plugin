@@ -12,11 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.IO;
+using UnityEngine;
+
 namespace GooglePlayInstant.Editor
 {
-    public static class PlayInstantQuickDeployConfig
+    public static class PlayInstantQuickDeployConfiguration
     {
-        public string a;
+        private static Configuration _configuration = JsonUtility.FromJson<Configuration>("");
+        private static readonly string ConfigurationFilePath = Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
 
+        public static void SaveConfiguration()
+        {
+        }
+
+        private static Configuration LoadConfiguration()
+        {
+            if (!File.Exists(ConfigurationFilePath))
+            {
+                return new Configuration();
+            }
+            var configurationJson = File.ReadAllText(ConfigurationFilePath);
+            return JsonUtility.FromJson<Configuration>(configurationJson);
+        }
+
+
+        [Serializable]
+         public class Configuration
+        {
+            public string assetbundleFileName;
+            public string cloudStorageBucketName;
+            public string cloudStorageFileName;
+            public string cloudCredentials;
+            public string assetbundleUrl;
+            public string loadingScreenImageFileName;
+            public string APKFileName;
+        }
     }
 }
