@@ -20,33 +20,36 @@ namespace GooglePlayInstant.Editor
 {
     public static class PlayInstantQuickDeployConfiguration
     {
-        public static readonly Configuration configuration = LoadConfiguration();
-        private static readonly string ConfigurationFilePath = Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
+        private static readonly string ConfigurationFilePath =
+            Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
+
+        public static readonly Configuration Config = LoadConfiguration();
 
         public static void SaveConfiguration()
         {
-            File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(configuration, true));
+            Debug.Log("I ran.");
+            File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
         }
-        
+
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
             {
                 return new Configuration();
             }
+
             var configurationJson = File.ReadAllText(ConfigurationFilePath);
             return JsonUtility.FromJson<Configuration>(configurationJson);
         }
 
-
         [Serializable]
-         public class Configuration
+        public class Configuration
         {
             public string assetbundleFileName;
             public string cloudStorageBucketName;
             public string cloudStorageFileName;
             public string cloudCredentials;
-            public string assetbundleUrl;
+            public string assetBundleUrl;
             public string loadingScreenImageFileName;
             public string APKFileName;
         }

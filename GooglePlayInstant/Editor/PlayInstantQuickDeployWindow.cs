@@ -14,6 +14,7 @@
 
 using UnityEditor;
 using UnityEngine;
+using QuickDeployConfig = GooglePlayInstant.Editor.PlayInstantQuickDeployConfiguration;
 
 namespace GooglePlayInstant.Editor
 {
@@ -46,6 +47,11 @@ namespace GooglePlayInstant.Editor
         {
             GetWindow<PlayInstantQuickDeployWindow>("Quick Deploy");
             _toolbarSelectedButtonIndex = (int) select;
+        }
+
+        void Awake()
+        {
+            _assetBundleUrl = PlayInstantQuickDeployConfiguration.Config.assetBundleUrl;
         }
 
         // TODO: replace stub strings with real values
@@ -119,24 +125,27 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\mygame.assetbundle", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.assetbundleFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.assetbundleFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mycorp_awesome_game", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageBucketName = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mainscene", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudCredentials = EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentials, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
+            if (GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth)))
+            {
+                QuickDeployConfig.SaveConfiguration();
+            }
             EditorGUILayout.Space();
             GUILayout.Button("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
         }
