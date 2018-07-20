@@ -113,7 +113,7 @@ namespace GooglePlayInstant.Editor
         private string _callbackEndpoint;
 
         //private List<Dictionary<string, string>> _responseList = new List<Dictionary<string, string>>();
-        private readonly Queue<Oauth2AuthorizationOutcome> _responseQueue = new Queue<Oauth2AuthorizationOutcome>();
+        private readonly Queue<KeyValuePair<string, string>> _responseQueue = new Queue<KeyValuePair<string, string>>();
 
 
         /*
@@ -263,13 +263,7 @@ namespace GooglePlayInstant.Editor
             var enumerator = queryDictionary.GetEnumerator();
             enumerator.MoveNext();
             var current = enumerator.Current;
-            var response = new Oauth2AuthorizationOutcome
-            {
-                nature = current.Key,
-                value = current.Value
-            };
-            
-            _responseQueue.Enqueue(response);
+            _responseQueue.Enqueue(new KeyValuePair<string, string>(current.Key, current.Value));
 
 
             var responseArray = Encoding.UTF8.GetBytes(queryDictionary.ContainsKey("code")
@@ -329,9 +323,9 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidStateException"></exception>
-        public Oauth2AuthorizationOutcome getAuthorizationResponse()
+        public KeyValuePair<string, string> getAuthorizationResponse()
         {
-            Oauth2AuthorizationOutcome response;
+            KeyValuePair<string, string> response;
             lock (_responseQueue)
             {
                 if (!HasOauth2AuthorizationOutcome())
@@ -349,7 +343,9 @@ namespace GooglePlayInstant.Editor
         {
             var server = new Oauth2CallbackEndpointServer();
             server.Start();
-            var failResponse = RemoteWwwRequestHandler.GetHttpResponse(server.CallbackEndpoint, null, null);
+            var requestEndpoint = server.CallbackEndpoint + "?error=auth_error";
+            Debug.Log("Request Endpoint: "+requestEndpoint);
+            var failResponse = RemoteWwwRequestHandler.GetHttpResponse(requestEndpoint, null, null);
             Debug.Log("Fail Response: "+failResponse);
             Debug.Assert(failResponse.Equals(CallBackResponseOnError));
             Debug.Log("Endpoint: " + server.CallbackEndpoint);
@@ -357,50 +353,15 @@ namespace GooglePlayInstant.Editor
             {
                 
             }
+            
 
             var authResponse = server.getAuthorizationResponse();
-            Debug.Log(authResponse.ToString());
+            Debug.Log("Response value:  "+authResponse.Value);
+            Debug.Log(authResponse.Key + " ==  "+authResponse.Value);
             //server.Stop();
-        }
-
-        private static string PrettifyDict(Dictionary<string, string> dict)
-        {
-            return "{" + string.Join(" , ", dict.Select(pair => pair.Key + " = "+pair.Value).ToArray()) + "}";
         }
     }
     
-    /// <summary>
-    /// Represents an authorization outcome received on this endpoint from Google Oauth's endpoint;
-    /// </summary>
-
-    [Serializable]
-    public class Oauth2AuthorizationOutcome
-    {
-        public string nature;
-        public string value;
-
-        public override string ToString()
-        {
-            return string.Format("{0}={1}", nature, value);
-        }
-
-        public bool IsAuthorizationCode()
-        {
-            return string.Equals(nature, "code");
-        }
-
-        public override bool Equals(object other)
-        {
-            var outcome = other as Oauth2AuthorizationOutcome;
-            return outcome != null && isSimilarTo(outcome);
-        }
-
-        private bool isSimilarTo(Oauth2AuthorizationOutcome other)
-        {
-            return string.Equals(nature, other.nature) && string.Equals(value, other.value);
-        }
-    }
-
     /// <summary>
     /// Represents an exception that should be thrown when there are any inconsistencies between methods being executed
     /// values being acceesed and the current state.

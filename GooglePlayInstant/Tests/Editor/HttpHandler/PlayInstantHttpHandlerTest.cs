@@ -24,7 +24,7 @@ namespace GooglePlayInstant.Tests.Editor.HttpHandler
         }
 
         [Test]
-        public void TestServerBehavesCorrectlyOnValidRequests()
+        public void TestServerBehavesCorrectlyCodeResponses()
         {
             var server = new Oauth2CallbackEndpointServer();
             server.Start();
@@ -35,19 +35,13 @@ namespace GooglePlayInstant.Tests.Editor.HttpHandler
             Assert.True(server.HasOauth2AuthorizationOutcome());
 
             var actualResponse = server.getAuthorizationResponse();
-            Assert.True(actualResponse.IsAuthorizationCode());
-            var expectedResponse = new Oauth2AuthorizationOutcome
-            {
-                nature = "code",
-                value = Oauth2CallbackEndpointServer.GetMD5Hash("test")
-            };
-            Assert.AreEqual(expectedResponse, actualResponse, "Expected response with valid attributes");
+            var expectedResponse = new KeyValuePair<string, string>("code", Oauth2CallbackEndpointServer.GetMD5Hash("test"));
+            Assert.True(string.Equals(expectedResponse.Key, actualResponse.Key) && string.Equals(expectedResponse.Value, actualResponse.Value));
         }
 
         [Test]
-        public void TestServerBehavesCorrectlyOnErrorRequests()
+        public void TestServerBehavesCorrectlyOnErrorResponses()
         {
-            // TODO(audace): Change this to work for error
             var server = new Oauth2CallbackEndpointServer();
             server.Start();
             Assert.True(server.IsListening());
@@ -57,21 +51,10 @@ namespace GooglePlayInstant.Tests.Editor.HttpHandler
             Assert.True(server.HasOauth2AuthorizationOutcome());
 
             var actualResponse = server.getAuthorizationResponse();
-            Assert.True(actualResponse.IsAuthorizationCode());
-            var expectedResponse = new Oauth2AuthorizationOutcome
-            {
-                nature = "error",
-                value = Oauth2CallbackEndpointServer.GetMD5Hash("test")
-            };
-            Assert.AreEqual(expectedResponse, actualResponse, "Expected response with valid attributes");
-        }
+            var expectedResponse = new KeyValuePair<string, string>("error", Oauth2CallbackEndpointServer.GetMD5Hash("test"));
+            Assert.True(string.Equals(expectedResponse.Key, actualResponse.Key) &&
+                        string.Equals(expectedResponse.Value, actualResponse.Value));
 
-        [Test]
-        public void TestServerBehavesCorrectlyOnInvalidRequest()
-        {
-            var server = new Oauth2CallbackEndpointServer();
-            server.Start();
-            Assert.True(true);
         }
     }
 }
