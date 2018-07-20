@@ -27,8 +27,6 @@ namespace GooglePlayInstant.Editor
         };
 
         private static int _toolbarSelectedButtonIndex = 0;
-        private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl;
 
         public enum ToolBarSelectedButton
         {
@@ -48,12 +46,7 @@ namespace GooglePlayInstant.Editor
             GetWindow<PlayInstantQuickDeployWindow>("Quick Deploy");
             _toolbarSelectedButtonIndex = (int) select;
         }
-
-        void Awake()
-        {
-            _assetBundleUrl = PlayInstantQuickDeployConfiguration.Config.assetBundleUrl;
-        }
-
+        
         // TODO: replace stub strings with real values
         void OnGUI()
         {
