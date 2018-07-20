@@ -27,7 +27,6 @@ namespace GooglePlayInstant.Editor
 
         public static void SaveConfiguration()
         {
-            Debug.Log("I ran.");
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
         }
 
