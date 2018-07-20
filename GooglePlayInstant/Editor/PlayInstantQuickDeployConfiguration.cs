@@ -44,13 +44,13 @@ namespace GooglePlayInstant.Editor
         [Serializable]
         public class Configuration
         {
-            public string assetbundleFileName;
+            public string assetBundleFileName;
             public string cloudStorageBucketName;
             public string cloudStorageFileName;
             public string cloudCredentials;
             public string assetBundleUrl;
             public string loadingScreenImageFileName;
-            public string APKFileName;
+            public string ApkFileName;
         }
     }
 }
