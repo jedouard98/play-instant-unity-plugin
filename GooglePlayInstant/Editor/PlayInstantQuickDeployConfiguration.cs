@@ -20,13 +20,14 @@ namespace GooglePlayInstant.Editor
 {
     public static class PlayInstantQuickDeployConfiguration
     {
-        private static Configuration _configuration = JsonUtility.FromJson<Configuration>("");
+        public static readonly Configuration configuration = LoadConfiguration();
         private static readonly string ConfigurationFilePath = Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
 
         public static void SaveConfiguration()
         {
+            File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(configuration, true));
         }
-
+        
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
