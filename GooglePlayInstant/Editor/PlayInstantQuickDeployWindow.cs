@@ -47,7 +47,6 @@ namespace GooglePlayInstant.Editor
             _toolbarSelectedButtonIndex = (int) select;
         }
 
-        // TODO: replace stub strings with real values
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);

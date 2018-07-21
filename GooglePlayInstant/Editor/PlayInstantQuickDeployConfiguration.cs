@@ -18,6 +18,9 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor
 {
+    /// <summary>
+    /// Contains set of operations for storing and retrieving quick deploy configurations.
+    /// </summary>
     public static class PlayInstantQuickDeployConfiguration
     {
         private static readonly string ConfigurationFilePath =
@@ -25,11 +28,16 @@ namespace GooglePlayInstant.Editor
 
         public static readonly Configuration Config = LoadConfiguration();
 
+        /// <summary>
+        /// Commit the current state of quick deploy configurations to persistent storage.
+        /// </summary>
         public static void SaveConfiguration()
         {
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
         }
 
+        // Loads and returns Configuration representation of the configuration file if it exists, otherwise instantiate
+        // and return an empty Configuration instance.
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
@@ -41,6 +49,9 @@ namespace GooglePlayInstant.Editor
             return JsonUtility.FromJson<Configuration>(configurationJson);
         }
 
+        /// <summary>
+        /// Represents the contents of the quick deploy configuration file.
+        /// </summary>
         [Serializable]
         public class Configuration
         {
