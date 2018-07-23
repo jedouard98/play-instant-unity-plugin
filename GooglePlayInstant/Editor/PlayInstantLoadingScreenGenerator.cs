@@ -26,7 +26,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class PlayInstantLoadingScreenGenerator
     {
-        private const string LoadingSceneName = "play-instant-loading-screen-scene";
+        public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
         /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
