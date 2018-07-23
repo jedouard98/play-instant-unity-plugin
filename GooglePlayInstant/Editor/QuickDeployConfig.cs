@@ -52,6 +52,8 @@ namespace GooglePlayInstant.Editor
 
         /// <summary>
         /// Represents the contents of the quick deploy configuration file.
+        /// Contains assetBundleFileName, cloudStorageBucketName, cloudCredentialsFileName, assetBundleUrl,
+        /// and apkFileName.
         /// </summary>
         [Serializable]
         public class Configuration
