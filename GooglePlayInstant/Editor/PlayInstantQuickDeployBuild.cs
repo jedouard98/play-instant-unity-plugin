@@ -52,10 +52,10 @@ namespace GooglePlayInstant.Editor
             if (!ProjectIsUsingIl2cpp() || !PlayerSettings.stripEngineCode)
             {
                 var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog(
-                    "IL2CPP or engine stripping is disabled",
-                    "You have not enabled either IL2CPP as the project's scripting backend or you have not enabled " +
-                    "engine stripping. This may result into a larger apk size than necessary.",
-                    "Enable IL2CPP and engine stripping", "Continue with current configurations");
+                    "IL2CPP or engine stripping not enabled",
+                    "Your project is not using IL2CPP scripting runtime, or engine stripping is not enabled. Would " +
+                    "you like to build the APK with IL2CPP and Engine Stripping to improve game " +
+                    "performance and reduce APK size?", "Yes", "No");
                 if (enableIl2cppAndEngineStripping)
                 {
                     PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
