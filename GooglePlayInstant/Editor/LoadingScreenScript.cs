@@ -35,23 +35,9 @@ public class LoadingScreenScript : MonoBehaviour
 
     private IEnumerator Start()
     {
-        var assetBundleUrl = parseUrlFromConfigJsonFile();
+        var assetBundleUrl = { };
         yield return StartCoroutine(GetAssetBundle(assetBundleUrl));
         SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
-    }
-
-    private string parseUrlFromConfigJsonFile()
-    {
-        var configFilePathStrings = Directory.GetFiles(Directory.GetCurrentDirectory(), "play-instant-config.json");
-        if (configFilePathStrings.Length == 0)
-        {
-            Debug.LogErrorFormat(
-                "play-instant-config.json could not be found in current directory or its subdirectories: {0}",
-                Directory.GetCurrentDirectory());
-        }
-
-        var configJsonString = File.ReadAllText(configFilePathStrings[0]);
-        return JsonUtility.FromJson<PlayInstantConfig>(configJsonString).main_scene_asset_bundle_url;
     }
 
     //TODO: Update function for unity 5.6 functionality
