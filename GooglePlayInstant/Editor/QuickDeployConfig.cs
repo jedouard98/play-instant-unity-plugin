@@ -21,13 +21,16 @@ namespace GooglePlayInstant.Editor
     /// <summary>
     /// Contains set of operations for storing and retrieving quick deploy configurations.
     /// </summary>
-    public static class PlayInstantQuickDeployConfiguration
+    public static class QuickDeployConfig
     {
         private static readonly string ConfigurationFilePath =
             Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
 
+        // The Configuration singleton that should be used to read and modify Quick Deploy configuration.
+        // Modified values are persisted by calling SaveConfiguration.
         public static readonly Configuration Config = LoadConfiguration();
 
+        // TODO: call this method
         /// <summary>
         /// Commit the current state of quick deploy configurations to persistent storage.
         /// </summary>
@@ -36,8 +39,6 @@ namespace GooglePlayInstant.Editor
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
         }
 
-        // Loads and returns Configuration representation of the configuration file if it exists, otherwise instantiate
-        // and return an empty Configuration instance.
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
@@ -58,7 +59,7 @@ namespace GooglePlayInstant.Editor
             public string assetBundleFileName;
             public string cloudStorageBucketName;
             public string cloudStorageFileName;
-            public string cloudCredentials;
+            public string cloudCredentialsFileName;
             public string assetBundleUrl;
             public string loadingScreenImageFileName;
             public string apkFileName;

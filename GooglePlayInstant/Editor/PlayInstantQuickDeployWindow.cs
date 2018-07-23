@@ -14,7 +14,6 @@
 
 using UnityEditor;
 using UnityEngine;
-using QuickDeployConfig = GooglePlayInstant.Editor.PlayInstantQuickDeployConfiguration;
 
 namespace GooglePlayInstant.Editor
 {
@@ -138,8 +137,8 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.cloudCredentials =
-                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentials, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudCredentialsFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
             EditorGUILayout.Space();
