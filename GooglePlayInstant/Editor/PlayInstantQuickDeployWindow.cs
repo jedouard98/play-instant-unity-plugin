@@ -27,8 +27,6 @@ namespace GooglePlayInstant.Editor
         };
 
         private static int _toolbarSelectedButtonIndex = 0;
-        private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl;
 
         public enum ToolBarSelectedButton
         {
@@ -50,7 +48,6 @@ namespace GooglePlayInstant.Editor
             _toolbarSelectedButtonIndex = (int) select;
         }
 
-        // TODO: replace stub strings with real values
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
@@ -121,22 +118,30 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\mygame.assetbundle", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.assetBundleFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mycorp_awesome_game", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageBucketName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageBucketName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mainscene", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("PCloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudCredentialsFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
             EditorGUILayout.Space();
@@ -153,7 +158,7 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene",
+            QuickDeployConfig.Config.assetBundleUrl = EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleUrl,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -170,15 +175,14 @@ namespace GooglePlayInstant.Editor
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Choose Loading Image", GUILayout.Width(ButtonWidth)))
             {
-                _loadingScreenImagePath =
-                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                PlayInstantLoadingScreenGenerator.SetLoadingScreenImagePath();
             }
 
             EditorGUILayout.Space();
 
-            var displayedPath = _loadingScreenImagePath ?? "no file specified";
+            var displayedPath = PlayInstantLoadingScreenGenerator.loadingScreenImagePath ?? "no file specified";
             EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
                 GUILayout.MinWidth(FieldMinWidth));
 
@@ -187,8 +191,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_loadingScreenImagePath,
-                    _assetBundleUrl);
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.Config.assetBundleUrl);
             }
         }
 
@@ -199,20 +202,20 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployBuilder.ApkPathName =
-                EditorGUILayout.TextField(QuickDeployBuilder.ApkPathName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.apkFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName, GUILayout.MinWidth(FieldMinWidth));
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                QuickDeployBuilder.ApkPathName = EditorUtility.SaveFilePanel("Choose file name and location",
-                    Path.GetDirectoryName(QuickDeployBuilder.ApkPathName),
-                    Path.GetFileName(QuickDeployBuilder.ApkPathName),
+                QuickDeployConfig.Config.apkFileName = EditorUtility.SaveFilePanel("Choose file name and location",
+                    Path.GetDirectoryName(QuickDeployConfig.Config.apkFileName),
+                    Path.GetFileName(QuickDeployConfig.Config.apkFileName),
                     "apk");
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (!QuickDeployBuilder.ProjectIsUsingIl2cpp)
+            if (!QuickDeployBuilder.ProjectIsUsingIl2cpp())
             {
                 EditorGUILayout.LabelField(
                     "Warning: You are not using IL2CPP as the project's scripting backend, and this may result into a larger apk size than necessary.",
