@@ -69,7 +69,7 @@ namespace GooglePlayInstant.Editor
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = "Failed to decompress data for the AssetBundle.";
-                // Debugging information is automatically logged.
+                // Debugging information is automatically logged by Unity.
             }
             else
             {
