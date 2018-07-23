@@ -31,8 +31,10 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Build an android apk with quick deploy. Produces a resulting apk that contains the splash scene
-        /// and functionality that will load the game's asset bundle from the cloud at the game's runtime.
+        /// Build an android apk with quick deploy. Prompts the user to enable IL2CPP and engine stripping if not
+        /// enabled, and builds the apk with the settings that the user chooses.
+        /// Produces a resulting apk that contains the splash scene and functionality that will load the game's
+        /// asset bundle from the cloud at the game's runtime.
         /// Logs success message to the console with built apk's path when the apk is successfully built, otherwise logs
         /// error message.
         /// </summary>
@@ -45,6 +47,22 @@ namespace GooglePlayInstant.Editor
                 target = BuildTarget.Android,
                 options = BuildOptions.None
             };
+
+
+            if (!ProjectIsUsingIl2cpp() || !PlayerSettings.stripEngineCode)
+            {
+                var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog(
+                    "IL2CPP or engine stripping is disabled",
+                    "You have not enabled either IL2CPP as the project's scripting backend or you have not enabled " +
+                    "engine stripping. This may result into a larger apk size than necessary.",
+                    "Enable IL2CPP and engine stripping", "Continue with current configurations");
+                if (enableIl2cppAndEngineStripping)
+                {
+                    PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
+                    PlayerSettings.stripEngineCode = true;
+                }
+            }
+
             if (PlayInstantBuilder.Build(buildPlayerOptions))
             {
                 Debug.LogFormat("Apk successfully built at \"{0}\".", buildPlayerOptions.locationPathName);

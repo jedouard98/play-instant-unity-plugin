@@ -206,21 +206,15 @@ namespace GooglePlayInstant.Editor
                 EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName, GUILayout.MinWidth(FieldMinWidth));
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
+                const string defaultApkFileName = "base.apk";
                 QuickDeployConfig.Config.apkFileName = EditorUtility.SaveFilePanel("Choose file name and location",
-                    Path.GetDirectoryName(QuickDeployConfig.Config.apkFileName),
-                    Path.GetFileName(QuickDeployConfig.Config.apkFileName),
+                    Path.GetDirectoryName(defaultApkFileName),
+                    Path.GetFileName(defaultApkFileName),
                     "apk");
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-            if (!QuickDeployBuilder.ProjectIsUsingIl2cpp())
-            {
-                EditorGUILayout.LabelField(
-                    "Warning: You are not using IL2CPP as the project's scripting backend, and this may result into a larger apk size than necessary.",
-                    EditorStyles.wordWrappedLabel);
-            }
 
             if (GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth)))
             {
