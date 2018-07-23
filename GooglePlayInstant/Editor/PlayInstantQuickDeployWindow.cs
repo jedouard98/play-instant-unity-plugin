@@ -70,7 +70,6 @@ namespace GooglePlayInstant.Editor
                     OnGuiLoadingScreenSelect();
                     break;
                 case ToolBarSelectedButton.Build:
-                    Il2cppBuilder.UpdateScriptingBackendInformation();
                     OnGuiCreateBuildSelect();
                     break;
             }
@@ -200,19 +199,20 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            Il2cppBuilder.ApkPathName =
-                EditorGUILayout.TextField(Il2cppBuilder.ApkPathName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployBuilder.ApkPathName =
+                EditorGUILayout.TextField(QuickDeployBuilder.ApkPathName, GUILayout.MinWidth(FieldMinWidth));
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                Il2cppBuilder.ApkPathName = EditorUtility.SaveFilePanel("Choose file name and location",
-                    Path.GetDirectoryName(Il2cppBuilder.ApkPathName), Path.GetFileName(Il2cppBuilder.ApkPathName),
+                QuickDeployBuilder.ApkPathName = EditorUtility.SaveFilePanel("Choose file name and location",
+                    Path.GetDirectoryName(QuickDeployBuilder.ApkPathName),
+                    Path.GetFileName(QuickDeployBuilder.ApkPathName),
                     "apk");
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (!Il2cppBuilder.ProjectIsUsingIl2cpp)
+            if (!QuickDeployBuilder.ProjectIsUsingIl2cpp)
             {
                 EditorGUILayout.LabelField(
                     "Warning: You are not using IL2CPP as the project's scripting backend, and this may result into a larger apk size than necessary.",
@@ -221,7 +221,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth)))
             {
-                Il2cppBuilder.BuildQuickDeployInstantGameApk();
+                QuickDeployBuilder.BuildQuickDeployInstantGameApk();
             }
         }
     }
