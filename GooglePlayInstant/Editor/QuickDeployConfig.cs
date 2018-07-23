@@ -26,8 +26,10 @@ namespace GooglePlayInstant.Editor
         private static readonly string ConfigurationFilePath =
             Path.Combine("Library", "PlayInstantQuickDeployConfig.json");
 
-        // The Configuration singleton that should be used to read and modify Quick Deploy configuration.
-        // Modified values are persisted by calling SaveConfiguration.
+        /// <summary>
+        /// The Configuration singleton that should be used to read and modify Quick Deploy configuration.
+        /// Modified values are persisted by calling SaveConfiguration.
+        /// </summary>
         public static readonly Configuration Config = LoadConfiguration();
 
         // TODO: call this method
