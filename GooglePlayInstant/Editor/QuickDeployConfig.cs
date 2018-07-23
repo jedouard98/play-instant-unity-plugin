@@ -61,7 +61,6 @@ namespace GooglePlayInstant.Editor
             public string cloudStorageFileName;
             public string cloudCredentialsFileName;
             public string assetBundleUrl;
-            public string loadingScreenImageFileName;
             public string apkFileName;
         }
     }

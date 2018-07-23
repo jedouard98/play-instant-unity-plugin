@@ -172,15 +172,14 @@ namespace GooglePlayInstant.Editor
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Choose Loading Image", GUILayout.Width(ButtonWidth)))
             {
-                QuickDeployConfig.Config.loadingScreenImageFileName =
-                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                PlayInstantLoadingScreenGenerator.SetLoadingScreenImagePath();
             }
 
             EditorGUILayout.Space();
 
-            var displayedPath = QuickDeployConfig.Config.loadingScreenImageFileName ?? "no file specified";
+            var displayedPath = PlayInstantLoadingScreenGenerator.loadingScreenImagePath ?? "no file specified";
             EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
                 GUILayout.MinWidth(FieldMinWidth));
 
@@ -189,9 +188,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(
-                    QuickDeployConfig.Config.loadingScreenImageFileName,
-                    QuickDeployConfig.Config.assetBundleUrl);
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.Config.assetBundleUrl);
             }
         }
 
