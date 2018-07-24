@@ -47,7 +47,7 @@ namespace GooglePlayInstant.Editor
         public static AccessToken GetAccessToken()
         {
             Oauth2Credential credential =
-                JsonUtility.FromJson<Oauth2Credential>(QuickDeployConfig.Config.cloudCredentialsFileName);
+                JsonUtility.FromJson<Oauth2Credential>(File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName));
             string tokenEndpiont = credential.token_uri;
 
             AuthorizationCode authCode = GetAuthCode();
@@ -92,7 +92,7 @@ namespace GooglePlayInstant.Editor
 
         private static readonly QuickDeployConfig.Configuration Config = QuickDeployConfig.Config;
         
-        public void UploadBundle()
+        public static void UploadBundle()
         {
             _accessToken = QuickDeployTokenUtility.GetAccessToken();
             if (!BucketExists(Config.cloudStorageBucketName))
@@ -118,23 +118,23 @@ namespace GooglePlayInstant.Editor
             Debug.Log("Our result was: "+result);
         }
 
-        private bool AlwaysTrue()
+        private static bool AlwaysTrue()
         {
             return true;
         }
 
-        public void CreateBucket(string bucketName)
+        private static void CreateBucket(string bucketName)
         {
 
             Oauth2Credential credential = JsonUtility.FromJson<Oauth2Credential>(Config.cloudCredentialsFileName);
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}", credential.project_id);
             Dictionary<string, string> form = new Dictionary<string, string>();
-            form.Add("name", Config.cloudStorageBucketName);
+            form.Add("name", bucketName);
             string result =  QuickDeployWwwRequestHandler.SendHttpPostRequest(createBucketEndPoint, form, null);
             Debug.Log(result);
         }
 
-        public bool BucketExists(string bucketName)
+        private static bool BucketExists(string bucketName)
         {
             string bucketInfoUrl = string.Format("https://www.googleapis.com/storage/v1/b/{0}?fields=location", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
