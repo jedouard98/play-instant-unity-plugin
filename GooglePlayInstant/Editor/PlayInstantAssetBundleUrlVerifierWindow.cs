@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -28,6 +27,7 @@ namespace GooglePlayInstant.Editor
         private static string _assetBundleUrl;
         private static long _responseCode;
         private static string _errorDescription;
+        private static string _mainScene;
         private static double _numOfMegabytes;
 
         private const int FieldMinWidth = 170;
@@ -37,18 +37,11 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void ShowWindow()
         {
-            if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
-            {
-                Debug.LogError("Problem with verifying AssetBundle: AssetBundle URL cannot be empty.");
-            }
-            else
-            {
-                // Set AssetBundle url in a private variable so that information displayed in window is consistent with
-                // the url that this was called on. 
-                _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
-                UpdateAssetBundleVerificationInfoWindow();
-                GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
-            }
+            // Set AssetBundle url in a private variable so that information displayed in window is consistent with
+            // the url that this was called on. 
+            _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
+            UpdateAssetBundleVerificationInfoWindow();
+            GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
         }
 
         //TODO: Support Unity 5.6.0+
@@ -75,13 +68,16 @@ namespace GooglePlayInstant.Editor
             else if (bundle == null)
             {
                 _assetBundleDownloadIsSuccessful = false;
-                _errorDescription = "Failed to decompress data for the AssetBundle.";
+                _errorDescription = "Error extracting AssetBundle. See Console log for details.";
                 // No need to log since debugging information in this case is automatically logged by Unity.
             }
             else
             {
                 _assetBundleDownloadIsSuccessful = true;
                 _numOfMegabytes = ConvertBytesToMegabytes(www.downloadedBytes);
+
+                var scenes = bundle.GetAllScenePaths();
+                _mainScene = (scenes.Length == 0) ? "No Scenes in AssetBundle" : scenes[0];
 
                 // Free memory used by the AssetBundle since it will not be in use by the Editor. Set to true to destory
                 // all objects that were loaded from this bundle.
@@ -117,6 +113,12 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Error Description:", GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription));
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("First Scene:", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _mainScene : "N/A"));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
