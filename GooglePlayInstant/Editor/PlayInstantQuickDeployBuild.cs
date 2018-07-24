@@ -47,12 +47,17 @@ namespace GooglePlayInstant.Editor
                 options = BuildOptions.None
                 // TODO: include asset bundle manifest path in options.
             };
-
-
+            
+            const string recommendationDialogTitle = "Scripting Backend Recommendation";
+            const string textForYes = "Yes";
+            const string textForNo = "No";
+            
             if (!ProjectIsUsingIl2cpp())
             {
-                var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog("Scripting backend recommendation",
-                    "Current Scripting runtime is Mono. Want IL2CPP with engine stripping?", "Yes", "No");
+                var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog(recommendationDialogTitle,
+                    "Your project currently uses the Mono scripting backend. Would you like to switch to the IL2CPP " +
+                    "scripting backend with engine stripping to improve game performance and reduce APK size?",
+                    textForYes, textForNo);
                 if (enableIl2cppAndEngineStripping)
                 {
                     // Note: These changes are not undone after this build and will affect future builds.
@@ -64,9 +69,10 @@ namespace GooglePlayInstant.Editor
             {
                 if (!PlayerSettings.stripEngineCode)
                 {
-                    var stripEngineCode = EditorUtility.DisplayDialog("Engine stripping recommendation",
-                        "Current scripting runtime is IL2CPP without engine stripping. Want IL2CPP with engine stripping?",
-                        "Yes", "No");
+                    var stripEngineCode = EditorUtility.DisplayDialog(recommendationDialogTitle,
+                        "Your project currently uses the IL2CPP scripting backend without engine stripping. Would you " +
+                        "like to enable engine stripping to reduce APK size?",
+                        textForYes, textForNo);
                     if (stripEngineCode)
                     {
                         // Note: This change is not undone after this build and will affect future builds.
