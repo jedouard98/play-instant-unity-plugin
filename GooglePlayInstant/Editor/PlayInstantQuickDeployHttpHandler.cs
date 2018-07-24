@@ -32,26 +32,17 @@ namespace GooglePlayInstant.Editor
     public static class QuickDeployWwwRequestHandler
     {
         /// <summary>
-        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the byte array and header
         /// parameters
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent </param>
-        /// <param name="postForm">A dictionary representing a set of key-value pairs to be sent in the request body</param>
+        /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body</param>
         /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
         /// <returns></returns>
-        public static string SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
+        public static string SendHttpPostRequest(string endpoint, byte[] postData,
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
-
-            if (postForm != null)
-            {
-                foreach (var pair in postForm)
-                {
-                    form.AddField(pair.Key, pair.Value);
-                }
-            }
-
             if (postHeaders != null)
             {
                 foreach (var pair in postHeaders)
@@ -60,8 +51,31 @@ namespace GooglePlayInstant.Editor
                 }
             }
 
-            var www = new WWW(endpoint, form.data, form.headers);
+            var www = new WWW(endpoint, postData, form.headers);
             return GetResultWhenDone(www);
+        }
+
+        /// <summary>
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers
+        /// parameters
+        /// </summary>
+        /// <param name="endpoint">Endpoint to which the data should be sent </param>
+        /// <param name="postForm">A dictionary representing a set of key-value paris to be added to the request body</param>
+        /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
+        /// <returns></returns>
+        public static string SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
+            Dictionary<string, string> postHeaders)
+        {
+            var form = new WWWForm();
+            if (postForm != null)
+            {
+                foreach (var pair in postForm)
+                {
+                    form.AddField(pair.Key, pair.Value);
+                }
+            }
+
+            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, postHeaders);
         }
 
         /// <summary>
@@ -102,7 +116,7 @@ namespace GooglePlayInstant.Editor
         {
             while (!www.isDone)
             {
-                Debug.Log("Progress: " + (www.progress * 100).ToString() + "/100 completed");
+                Debug.LogFormat("Progress: {0}/100 completed", (www.progress*100).ToString());
             }
 
             return www.text;
