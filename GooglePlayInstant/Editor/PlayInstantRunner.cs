@@ -53,7 +53,6 @@ namespace GooglePlayInstant.Editor
             Debug.LogFormat("Build and Run package location: {0}", apkPath);
 
             var buildPlayerOptions = CreateBuildPlayerOptions(apkPath);
-            
             if (!PlayInstantBuilder.Build(buildPlayerOptions))
             {
                 return;
