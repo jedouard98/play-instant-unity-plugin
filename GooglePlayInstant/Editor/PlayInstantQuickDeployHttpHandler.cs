@@ -143,7 +143,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        internal static string GetRandomEndpoint()
+        internal static string GetRandomEndpointString()
         {
             return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
         }
@@ -185,7 +185,7 @@ namespace GooglePlayInstant.Editor
             // Keep trying available ports until you find one that works, and then break
             while (true)
             {
-                var endpointString = GetRandomEndpoint();
+                var endpointString = GetRandomEndpointString();
                 try
                 {
                     // Keep trying different ports until one works

@@ -34,9 +34,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestEndPointGenerator()
         {
-            var endPointString = QuickDeployOAuth2CallbackEndpointServer.GetRandomEndpoint();
+            var endPointString = QuickDeployOAuth2CallbackEndpointServer.GetRandomEndpointString();
             Assert.AreEqual(32, QuickDeployOAuth2CallbackEndpointServer.GetMD5Hash(endPointString).Length, 0.0,
-                "Should return a 32 long string");
+                "Should return a 32 character long string");
         }
 
         [Test]
