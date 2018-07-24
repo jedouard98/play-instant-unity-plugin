@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using UnityEditor;
-using UnityEngine;
 
 namespace GooglePlayInstant.Editor
 {
@@ -46,31 +45,38 @@ namespace GooglePlayInstant.Editor
                 locationPathName = QuickDeployConfig.Config.apkFileName,
                 target = BuildTarget.Android,
                 options = BuildOptions.None
+                // TODO: include asset bundle manifest path in options.
             };
 
 
-            if (!ProjectIsUsingIl2cpp() || !PlayerSettings.stripEngineCode)
+            if (!ProjectIsUsingIl2cpp())
             {
-                var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog(
-                    "IL2CPP or engine stripping not enabled",
-                    "Your project is not using IL2CPP scripting runtime, or engine stripping is not enabled. Would " +
-                    "you like to build the APK with IL2CPP and Engine Stripping to improve game " +
-                    "performance and reduce APK size?", "Yes", "No");
+                var enableIl2cppAndEngineStripping = EditorUtility.DisplayDialog("Scripting backend recommendation",
+                    "Current Scripting runtime is Mono. Want IL2CPP with engine stripping?", "Yes", "No");
                 if (enableIl2cppAndEngineStripping)
                 {
+                    // Note: These changes are not undone after this build and will affect future builds.
                     PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
                     PlayerSettings.stripEngineCode = true;
                 }
             }
-
-            if (PlayInstantBuilder.Build(buildPlayerOptions))
-            {
-                Debug.LogFormat("Apk successfully built at \"{0}\".", buildPlayerOptions.locationPathName);
-            }
             else
             {
-                Debug.LogError("Couldn't build apk.");
+                if (!PlayerSettings.stripEngineCode)
+                {
+                    var stripEngineCode = EditorUtility.DisplayDialog("Engine stripping recommendation",
+                        "Current scripting runtime is IL2CPP without engine stripping. Want IL2CPP with engine stripping?",
+                        "Yes", "No");
+                    if (stripEngineCode)
+                    {
+                        // Note: This change is not undone after this build and will affect future builds.
+                        PlayerSettings.stripEngineCode = true;
+                    }
+                }
             }
+
+            // Note: Do not print an error if build fails since Build() does this already
+            PlayInstantBuilder.Build(buildPlayerOptions);
         }
     }
 }

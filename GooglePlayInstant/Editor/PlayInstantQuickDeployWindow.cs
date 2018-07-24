@@ -208,7 +208,7 @@ namespace GooglePlayInstant.Editor
                 EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName, GUILayout.MinWidth(FieldMinWidth));
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                const string defaultApkFileName = "base.apk";
+                var defaultApkFileName = Path.GetFullPath("base.apk");
                 QuickDeployConfig.Config.apkFileName = EditorUtility.SaveFilePanel("Choose file name and location",
                     Path.GetDirectoryName(defaultApkFileName),
                     Path.GetFileName(defaultApkFileName),
