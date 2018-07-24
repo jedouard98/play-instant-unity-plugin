@@ -42,7 +42,6 @@ namespace GooglePlayInstant.Editor
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
-            
             GetWindow<PlayInstantQuickDeployWindow>("Quick Deploy");
             _toolbarSelectedButtonIndex = (int) select;
         }
