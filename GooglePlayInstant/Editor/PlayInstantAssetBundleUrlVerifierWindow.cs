@@ -32,19 +32,27 @@ namespace GooglePlayInstant.Editor
 
         private const int FieldMinWidth = 170;
 
-
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
-        public static void ShowWindow(string assetBundleUrl)
+        public static void ShowWindow()
         {
-            _assetBundleUrl = assetBundleUrl;
-            getAssetBundleVerificationInfo();
-            GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
+            if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
+            {
+                Debug.LogError("Problem with verifying AssetBundle: AssetBundle URL cannot be empty.");
+            }
+            else
+            {
+                // Set AssetBundle url in a private variable so that information displayed in window is consistent with
+                // the url that this was called on. 
+                _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
+                UpdateAssetBundleVerificationInfoWindow();
+                GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
+            }
         }
 
-        //TODO: improve on error descriptions and support Unity 5.6+
-        private static void getAssetBundleVerificationInfo()
+        //TODO: Support Unity 5.6.0+
+        private static void UpdateAssetBundleVerificationInfoWindow()
         {
             var www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             www.SendWebRequest();
@@ -53,7 +61,6 @@ namespace GooglePlayInstant.Editor
                 //TODO: implement loading bar 
             }
 
-            // Check to see if downloadeded item was an actual AssetBundle object.
             var bundle = DownloadHandlerAssetBundle.GetContent(www);
 
             _responseCode = www.responseCode;
@@ -62,22 +69,23 @@ namespace GooglePlayInstant.Editor
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = www.error;
-                Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _errorDescription,
-                    _assetBundleUrl);
+                Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _assetBundleUrl,
+                    _errorDescription);
             }
             else if (bundle == null)
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = "Failed to decompress data for the AssetBundle.";
-                // Debugging information is automatically logged by Unity.
+                // No need to log since debugging information in this case is automatically logged by Unity.
             }
             else
             {
                 _assetBundleDownloadIsSuccessful = true;
                 _numOfMegabytes = ConvertBytesToMegabytes(www.downloadedBytes);
 
-                // Discard AssetBundle from directory since it is not in use.
-                bundle.Unload(false);
+                // Free memory used by the AssetBundle since it will not be in use by the Editor. Set to true to destory
+                // all objects that were loaded from this bundle.
+                bundle.Unload(true);
             }
         }
 
@@ -120,7 +128,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Refresh"))
             {
-                getAssetBundleVerificationInfo();
+                UpdateAssetBundleVerificationInfoWindow();
             }
         }
     }
