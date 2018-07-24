@@ -143,9 +143,9 @@ namespace GooglePlayInstant.Editor
                 EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName,
                     GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth));
             EditorGUILayout.Space();
-            GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
         }
 
         private void OnGuiVerifyBundleSelect()
