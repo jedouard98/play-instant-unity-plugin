@@ -1,20 +1,29 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using System.Web;
 using UnityEngine;
 using Random = System.Random;
-using NUnit.Framework;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor.Experimental.UIElements;
 
-[assembly:System.Runtime.CompilerServices.InternalsVisibleTo("GooglePlayInstant.Tests.Editor.HttpHandler")]
+[assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.HttpHandler")]
+
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
@@ -100,39 +109,25 @@ namespace GooglePlayInstant.Editor
     }
 
 
-    public class Oauth2CallbackEndpointServer
+    /// <summary>
+    /// A class representing a server with the sole purpose of providing an endpoint that listens for the autorization
+    /// code from google's OAuth2 API's authorization page, on which the user grants an application access their data
+    /// in a given scope.
+    ///
+    /// <see cref="https://developers.google.com/identity/protocols/OAuth2"/> for an overview of OAuth2 protocol
+    /// </summary>
+    public class OAuth2CallbackEndpointServer
     {
-        internal const string CallbackResponseOnSuccess = "<h1>Authorization successful. You may close this window</h1>";
+        internal const string CallbackEndpointResponseOnSuccess =
+            "<h1>Authorization successful. You may close this window</h1>";
 
-        internal const string CallBackResponseOnError =
+        internal const string CallBackEndpointResponseOnError =
             "<h1>Authorization Failed. Could not get necessary permissions</h1>";
 
-        private string _endpointString;
-        private int? _port;
         private HttpListener _httpListener;
         private string _callbackEndpoint;
-
-        //private List<Dictionary<string, string>> _responseList = new List<Dictionary<string, string>>();
         private readonly Queue<KeyValuePair<string, string>> _responseQueue = new Queue<KeyValuePair<string, string>>();
-
-
-        /*
-         * Abstraction function:
-         * 
-         * Rep Invariant:
-         * Thread Safety Argument:
-         */
-
-        public static void CheckRep()
-        {
-        }
-
-        internal static string GetRandomEndpoint()
-        {
-            return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
-        }
-
-
+        
         public string CallbackEndpoint
         {
             get
@@ -146,20 +141,11 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-
-        private int PortNumber
+        internal static string GetRandomEndpoint()
         {
-            get
-            {
-                if (!_httpListener.IsListening)
-                {
-                    throw new InvalidStateException("Server is not running");
-                }
-
-                return _port.Value;
-            }
+            return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
         }
-
+        
         internal static string GetRandomPortAsString()
         {
             const int minimumPort = 1024;
@@ -167,8 +153,6 @@ namespace GooglePlayInstant.Editor
             var randomizer = new Random();
             return randomizer.Next(minimumPort, maximumPort).ToString();
         }
-
-
         // Helper method to compute an MD5 digest of a string
         internal static string GetMD5Hash(string input)
         {
@@ -185,7 +169,15 @@ namespace GooglePlayInstant.Editor
             return sb.ToString();
         }
 
+        
 
+        /// <summary>
+        /// Starts this server to make it listen for requests containing authorization code or error data that are
+        /// forwarded from google's OAuth2 authorization url.
+        ///
+        /// After a call to this method, the CallBackEndpoint property of this instance will provide the endpoint
+        /// at which this server is listening.
+        /// </summary>
         public void Start()
         {
             // Keep trying available ports until you find one that works, and then break
@@ -202,7 +194,8 @@ namespace GooglePlayInstant.Editor
                     _callbackEndpoint = fullEndpoint;
                     break;
                 }
-                catch (HttpListenerException e)
+                // thrown when port/endpoint is busy
+                catch (HttpListenerException)
                 {
                     if (_httpListener != null)
                     {
@@ -211,16 +204,13 @@ namespace GooglePlayInstant.Editor
                     }
                 }
             }
-
-
             _httpListener.Start();
             var responseThread = new Thread(HandleResponses);
             responseThread.Start();
         }
 
 
-        
-        // Handle concurrent responses with a thread pool.
+        // Handle concurrent requests with a thread pool.
         private void HandleResponses()
         {
             while (true)
@@ -228,9 +218,8 @@ namespace GooglePlayInstant.Editor
                 ThreadPool.QueueUserWorkItem(ProcessContext, _httpListener.GetContext());
             }
         }
-
-
-        // Process the current HttpListenerContext, update values and respond to the client;
+        
+        // Process the current HttpListenerContext, retain code or error response and respond to the client.
         private void ProcessContext(object o)
         {
             var context = o as HttpListenerContext;
@@ -239,18 +228,20 @@ namespace GooglePlayInstant.Editor
             {
                 query = query.Substring(1);
             }
+
             //var keyValuePairs = query.Split('&');
             var queryDictionary = new Dictionary<string, string>();
             foreach (var pair in query.Split('&'))
             {
                 if (pair.Contains("="))
                 {
-                    var keyValuePair = pair.Split('=');
-                    queryDictionary.Add(keyValuePair[0], keyValuePair[1]);
+                    var keyAndValue = pair.Split('=');
+                    queryDictionary.Add(keyAndValue[0], keyAndValue[1]);
                 }
             }
-
             context.Response.KeepAlive = false;
+            
+            // Only one query param is allowed, which is either ?code=auth_code or ?error=error_code.
             if (!queryDictionary.ContainsKey("code") && !queryDictionary.ContainsKey("error") ||
                 queryDictionary.Count != 1)
             {
@@ -259,29 +250,27 @@ namespace GooglePlayInstant.Editor
                 return;
             }
 
-           
-            var enumerator = queryDictionary.GetEnumerator();
-            enumerator.MoveNext();
-            var current = enumerator.Current;
-            _responseQueue.Enqueue(new KeyValuePair<string, string>(current.Key, current.Value));
-
-
-            var responseArray = Encoding.UTF8.GetBytes(queryDictionary.ContainsKey("code")
-                ? CallbackResponseOnSuccess
-                : CallBackResponseOnError);
+            KeyValuePair<string, string> keyValuePair;
+            foreach (var pair in queryDictionary)
+            {
+                keyValuePair = pair;
+            }
+            _responseQueue.Enqueue(new KeyValuePair<string, string>(keyValuePair.Key, keyValuePair.Value));
+            
+            var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", keyValuePair.Key)
+                ? CallbackEndpointResponseOnSuccess
+                : CallBackEndpointResponseOnError);
             var outputStream = context.Response.OutputStream;
             outputStream.Write(responseArray, 0, responseArray.Length);
             outputStream.Flush();
             outputStream.Close();
             context.Response.Close();
-
-            Debug.Log("Respone given to a request.");
         }
 
 
         /// <summary>
-        /// Stops the server's listener. A next call to the Start() method will restart this server as a new instance
-        /// on a different endpoint.
+        /// Stops the server. A future call of the Start() method on this instance will restart this server on a
+        /// different endpoint.
         /// </summary>
         public void Stop()
         {
@@ -297,7 +286,6 @@ namespace GooglePlayInstant.Editor
                 _httpListener = null;
             }
         }
-
         
         internal bool IsListening()
         {
@@ -305,10 +293,9 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Find out whether the server has received any authorization code responses so far. Error responses are also considered.
+        /// Find out whether the server has received any authorization code responses so far, including error responses.
         /// </summary>
-        /// <returns></returns>
-        public bool HasOauth2AuthorizationOutcome()
+        public bool HasOauth2AuthorizationResponse()
         {
             lock (_responseQueue)
             {
@@ -317,20 +304,19 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Returns a single code response dictionary from any responses that might have been picked up by the server.
-        /// A response is represented as a dictionary corresponding to query params with either code or error as keys that
-        /// has been picked up by the server
+        /// Returns a KeyValuePair instance corresponding to one of the responses containing authorization code or error
+        /// information that this server has received.
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="InvalidStateException"></exception>
+        /// <exception cref="InvalidStateException">This exception when the server hasn't received any authorization
+        /// response yet</exception>
         public KeyValuePair<string, string> getAuthorizationResponse()
         {
             KeyValuePair<string, string> response;
             lock (_responseQueue)
             {
-                if (!HasOauth2AuthorizationOutcome())
+                if (!HasOauth2AuthorizationResponse())
                 {
-                    throw new InvalidStateException("Server has not received any responses yet");
+                    throw new InvalidStateException("Server has not yet received any responses.");
                 }
 
                 response = _responseQueue.Dequeue();
@@ -338,30 +324,29 @@ namespace GooglePlayInstant.Editor
 
             return response;
         }
-        
+
         public static void launchServer()
         {
-            var server = new Oauth2CallbackEndpointServer();
+            var server = new OAuth2CallbackEndpointServer();
             server.Start();
             var requestEndpoint = server.CallbackEndpoint + "?error=auth_error";
-            Debug.Log("Request Endpoint: "+requestEndpoint);
+            Debug.Log("Request Endpoint: " + requestEndpoint);
             var failResponse = RemoteWwwRequestHandler.GetHttpResponse(requestEndpoint, null, null);
-            Debug.Log("Fail Response: "+failResponse);
-            Debug.Assert(failResponse.Equals(CallBackResponseOnError));
+            Debug.Log("Fail Response: " + failResponse);
+            Debug.Assert(failResponse.Equals(CallBackEndpointResponseOnError));
             Debug.Log("Endpoint: " + server.CallbackEndpoint);
-            while (!server.HasOauth2AuthorizationOutcome())
+            while (!server.HasOauth2AuthorizationResponse())
             {
-                
             }
-            
+
 
             var authResponse = server.getAuthorizationResponse();
-            Debug.Log("Response value:  "+authResponse.Value);
-            Debug.Log(authResponse.Key + " ==  "+authResponse.Value);
+            Debug.Log("Response value:  " + authResponse.Value);
+            Debug.Log(authResponse.Key + " ==  " + authResponse.Value);
             //server.Stop();
         }
     }
-    
+
     /// <summary>
     /// Represents an exception that should be thrown when there are any inconsistencies between methods being executed
     /// values being acceesed and the current state.
