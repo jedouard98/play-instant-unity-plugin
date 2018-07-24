@@ -92,46 +92,44 @@ namespace GooglePlayInstant.Editor
 
         private void OnGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle Download Status:", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED"));
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle URL:", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField(_assetBundleUrl, EditorStyles.wordWrappedLabel);
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("HTTP Status Code:", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField(_responseCode.ToString());
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Error Description:", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription));
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
             
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("First Scene:", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _mainScene : "N/A"));
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+            UpdateAssetBundleVerificationInfoWindow();
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Size (MB):", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.LabelField((_assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A"));
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+            AddVerifyComponentInfo("AssetBundle Download Status:",
+                _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
+
+            AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl, EditorStyles.wordWrappedLabel);
+
+            AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
+
+            AddVerifyComponentInfo("Error Description:", _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
+
+            AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
+
+            AddVerifyComponentInfo("Size (MB):",
+                _assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A");
 
             if (GUILayout.Button("Refresh"))
             {
                 UpdateAssetBundleVerificationInfoWindow();
             }
+        }
+
+        private void AddVerifyComponentInfo(string title, string response, GUIStyle layout = null)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(title, GUILayout.MinWidth(FieldMinWidth));
+            if (layout == null)
+            {
+                EditorGUILayout.LabelField(response);
+            }
+            else
+            {
+                EditorGUILayout.LabelField(response, layout);
+            }
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
         }
     }
 }
