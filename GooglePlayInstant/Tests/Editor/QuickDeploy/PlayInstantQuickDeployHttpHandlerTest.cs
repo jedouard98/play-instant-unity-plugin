@@ -20,7 +20,7 @@ using NUnit.Framework;
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     [TestFixture]
-    public class Oauth2CallbackEndPointServerTest
+    public class QuickDeployOauth2CallbackEndPointServerTest
     {
         [Test]
         public IEnumerator TestRandomPortGenerator()
