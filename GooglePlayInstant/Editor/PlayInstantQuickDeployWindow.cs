@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -39,6 +40,7 @@ namespace GooglePlayInstant.Editor
         private const int FieldMinWidth = 100;
         private const int ButtonWidth = 200;
         private const int LongButtonWidth = 300;
+        private const int ShortButtonWidth = 100;
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
@@ -114,8 +116,9 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
                                        "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            // TODO: Allow the user to browse to the asset bundle file without having to always manually enter the path 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Asset Bundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
             QuickDeployConfig.Config.assetBundleFileName =
                 EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleFileName,
                     GUILayout.MinWidth(FieldMinWidth));
@@ -135,14 +138,16 @@ namespace GooglePlayInstant.Editor
                     GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            // TODO: Allow the user to browse to credentials file without having to always manually enter the path
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Cloud Credentials", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Path to Google Cloud OAuth2 Credentials", GUILayout.MinWidth(FieldMinWidth));
             QuickDeployConfig.Config.cloudCredentialsFileName =
-                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth));
             EditorGUILayout.Space();
-            GUILayout.Button("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
         }
 
         private void OnGuiVerifyBundleSelect()
@@ -199,11 +204,22 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.Config.apkFileName = EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName,
-                GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.apkFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName, GUILayout.MinWidth(FieldMinWidth));
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                QuickDeployConfig.Config.apkFileName = EditorUtility.SaveFilePanel("Choose file name and location", "",
+                    "base.apk",
+                    "apk");
+            }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth));
+
+            if (GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth)))
+            {
+                QuickDeployBuilder.BuildQuickDeployInstantGameApk();
+            }
         }
     }
 }
