@@ -22,24 +22,24 @@ using System.Threading;
 using UnityEngine;
 using Random = System.Random;
 
-[assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.HttpHandler")]
+[assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// General handler for operations related to the WWW class, especially post and get requests
+    /// A Class with utility methods for sending GET and POST requests
     /// </summary>
-    public static class RemoteWwwRequestHandler
+    public static class QuickDeployWwwRequestHandler
     {
         /// <summary>
-        /// Sends a general post request to the provided endpoint, along with the data provided in the form and headers
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers
         /// parameters
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent </param>
         /// <param name="postForm">A dictionary representing a set of key-value pairs to be sent in the request body</param>
         /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
         /// <returns></returns>
-        public static string GetHttpPostResponse(string endpoint, Dictionary<string, string> postForm,
+        public static string SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
@@ -65,13 +65,13 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Sends a general get request to the specified endpoint along with specified parameters and headers
+        /// Sends a general GET request to the specified endpoint along with specified parameters and headers
         /// </summary>
         /// <param name="endpoint">The endpoint to with the get request should be sent</param>
         /// <param name="getParams"> A dictionary representing ke-value pairs that should be attached to the endpoint as GET parameters</param>
         /// <param name="getHeaders">A dictionary representing key-value pairs that constitude the data to be added to the request headers</param>
         /// <returns></returns>
-        public static string GetHttpResponse(string endpoint, Dictionary<string, string> getParams,
+        public static string SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
             var fullEndpoint = endpoint + "?";
@@ -97,6 +97,7 @@ namespace GooglePlayInstant.Editor
         }
 
 
+        // Waits until the WWW request is done and returns the results.
         private static string GetResultWhenDone(WWW www)
         {
             while (!www.isDone)
@@ -114,9 +115,10 @@ namespace GooglePlayInstant.Editor
     /// code from google's OAuth2 API's authorization page, on which the user grants an application access their data
     /// in a given scope.
     ///
-    /// <see cref="https://developers.google.com/identity/protocols/OAuth2"/> for an overview of OAuth2 protocol
+    /// <see cref="https://developers.google.com/identity/protocols/OAuth2"/> for an overview of OAuth2 protocol for
+    /// Google APIs.
     /// </summary>
-    public class OAuth2CallbackEndpointServer
+    public class QuickDeployOAuth2CallbackEndpointServer
     {
         internal const string CallbackEndpointResponseOnSuccess =
             "<h1>Authorization successful. You may close this window</h1>";
@@ -127,7 +129,7 @@ namespace GooglePlayInstant.Editor
         private HttpListener _httpListener;
         private string _callbackEndpoint;
         private readonly Queue<KeyValuePair<string, string>> _responseQueue = new Queue<KeyValuePair<string, string>>();
-        
+
         public string CallbackEndpoint
         {
             get
@@ -145,7 +147,7 @@ namespace GooglePlayInstant.Editor
         {
             return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
         }
-        
+
         internal static string GetRandomPortAsString()
         {
             const int minimumPort = 1024;
@@ -153,6 +155,7 @@ namespace GooglePlayInstant.Editor
             var randomizer = new Random();
             return randomizer.Next(minimumPort, maximumPort).ToString();
         }
+
         // Helper method to compute an MD5 digest of a string
         internal static string GetMD5Hash(string input)
         {
@@ -169,7 +172,6 @@ namespace GooglePlayInstant.Editor
             return sb.ToString();
         }
 
-        
 
         /// <summary>
         /// Starts this server to make it listen for requests containing authorization code or error data that are
@@ -204,6 +206,7 @@ namespace GooglePlayInstant.Editor
                     }
                 }
             }
+
             _httpListener.Start();
             var responseThread = new Thread(HandleResponses);
             responseThread.Start();
@@ -218,7 +221,7 @@ namespace GooglePlayInstant.Editor
                 ThreadPool.QueueUserWorkItem(ProcessContext, _httpListener.GetContext());
             }
         }
-        
+
         // Process the current HttpListenerContext, retain code or error response and respond to the client.
         private void ProcessContext(object o)
         {
@@ -239,8 +242,9 @@ namespace GooglePlayInstant.Editor
                     queryDictionary.Add(keyAndValue[0], keyAndValue[1]);
                 }
             }
+
             context.Response.KeepAlive = false;
-            
+
             // Only one query param is allowed, which is either ?code=auth_code or ?error=error_code.
             if (!queryDictionary.ContainsKey("code") && !queryDictionary.ContainsKey("error") ||
                 queryDictionary.Count != 1)
@@ -255,8 +259,9 @@ namespace GooglePlayInstant.Editor
             {
                 keyValuePair = pair;
             }
+
             _responseQueue.Enqueue(new KeyValuePair<string, string>(keyValuePair.Key, keyValuePair.Value));
-            
+
             var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", keyValuePair.Key)
                 ? CallbackEndpointResponseOnSuccess
                 : CallBackEndpointResponseOnError);
@@ -286,7 +291,7 @@ namespace GooglePlayInstant.Editor
                 _httpListener = null;
             }
         }
-        
+
         internal bool IsListening()
         {
             return _httpListener != null && _httpListener.IsListening;
@@ -323,27 +328,6 @@ namespace GooglePlayInstant.Editor
             }
 
             return response;
-        }
-
-        public static void launchServer()
-        {
-            var server = new OAuth2CallbackEndpointServer();
-            server.Start();
-            var requestEndpoint = server.CallbackEndpoint + "?error=auth_error";
-            Debug.Log("Request Endpoint: " + requestEndpoint);
-            var failResponse = RemoteWwwRequestHandler.GetHttpResponse(requestEndpoint, null, null);
-            Debug.Log("Fail Response: " + failResponse);
-            Debug.Assert(failResponse.Equals(CallBackEndpointResponseOnError));
-            Debug.Log("Endpoint: " + server.CallbackEndpoint);
-            while (!server.HasOauth2AuthorizationResponse())
-            {
-            }
-
-
-            var authResponse = server.getAuthorizationResponse();
-            Debug.Log("Response value:  " + authResponse.Value);
-            Debug.Log(authResponse.Key + " ==  " + authResponse.Value);
-            //server.Stop();
         }
     }
 
