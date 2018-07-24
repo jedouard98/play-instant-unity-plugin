@@ -17,11 +17,11 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 namespace GooglePlayInstant.Editor
-{
+{ 
     /// <summary>
     /// Window that verifies AssetBundles from given URLs.
     /// </summary>
-    public class PlayInstantAssetBundleUrlVerifierWindow : EditorWindow
+    public class AssetBundleVerifierWindow : EditorWindow
     {
         private static bool _assetBundleDownloadIsSuccessful;
         private static string _assetBundleUrl;
@@ -32,6 +32,8 @@ namespace GooglePlayInstant.Editor
 
         private const int FieldMinWidth = 170;
 
+        private static UnityWebRequest www;
+        
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
@@ -40,20 +42,22 @@ namespace GooglePlayInstant.Editor
             // Set AssetBundle url in a private variable so that information displayed in window is consistent with
             // the url that this was called on. 
             _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
-            UpdateAssetBundleVerificationInfoWindow();
-            GetWindow(typeof(PlayInstantAssetBundleUrlVerifierWindow), true, "Play Instant AssetBundle Verify");
+            
+            startAssetBundleVerificationDownload();
+             
+            GetWindow(typeof(AssetBundleVerifierWindow), true, "Play Instant AssetBundle Verify");
         }
 
         //TODO: Support Unity 5.6.0+
-        private static void UpdateAssetBundleVerificationInfoWindow()
+        private static void startAssetBundleVerificationDownload()
         {
-            var www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
+            www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             www.SendWebRequest();
-            while (!www.isDone)
-            {
-                //TODO: implement loading bar 
-            }
-
+        }
+        
+        //TODO: Support Unity 5.6.0+
+        private static void getAssetBundleInfoFromDownload()
+        {
             var bundle = DownloadHandlerAssetBundle.GetContent(www);
 
             _responseCode = www.responseCode;
@@ -83,6 +87,9 @@ namespace GooglePlayInstant.Editor
                 // all objects that were loaded from this bundle.
                 bundle.Unload(true);
             }
+            
+            // Turn request to null to be prepared for next call
+            www = null;
         }
 
         private static double ConvertBytesToMegabytes(ulong bytes)
@@ -90,15 +97,21 @@ namespace GooglePlayInstant.Editor
             return bytes / 1024f / 1024f;
         }
 
+        private void Update()
+        {
+            if (www != null && www.isDone)
+            {
+                getAssetBundleInfoFromDownload();
+                Repaint();
+            }
+        }
+
         private void OnGUI()
         {
-            
-            UpdateAssetBundleVerificationInfoWindow();
-
             AddVerifyComponentInfo("AssetBundle Download Status:",
                 _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
 
-            AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl, EditorStyles.wordWrappedLabel);
+            AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl);
 
             AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
 
@@ -111,7 +124,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Refresh"))
             {
-                UpdateAssetBundleVerificationInfoWindow();
+                startAssetBundleVerificationDownload();
             }
         }
 
@@ -119,15 +132,7 @@ namespace GooglePlayInstant.Editor
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(title, GUILayout.MinWidth(FieldMinWidth));
-            if (layout == null)
-            {
-                EditorGUILayout.LabelField(response);
-            }
-            else
-            {
-                EditorGUILayout.LabelField(response, layout);
-            }
-
+            EditorGUILayout.LabelField(response, EditorStyles.wordWrappedLabel);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
         }

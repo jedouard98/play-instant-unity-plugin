@@ -163,7 +163,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantAssetBundleUrlVerifierWindow.ShowWindow();
+                AssetBundleVerifierWindow.ShowWindow();
             }
 
             EditorGUILayout.EndVertical();
