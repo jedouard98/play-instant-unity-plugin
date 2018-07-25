@@ -260,8 +260,7 @@ namespace GooglePlayInstant.Editor
             context.Response.KeepAlive = false;
 
             // Only one query param is allowed, which is either ?code=auth_code or ?error=error_code.
-            if (!queryDictionary.ContainsKey("code") && !queryDictionary.ContainsKey("error") ||
-                queryDictionary.Count != 1)
+            if (!queryDictionary.ContainsKey("code") && !queryDictionary.ContainsKey("error"))
             {
                 context.Response.StatusCode = 404;
                 context.Response.Close();
