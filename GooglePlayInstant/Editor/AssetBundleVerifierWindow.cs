@@ -96,7 +96,9 @@ namespace GooglePlayInstant.Editor
         private void Update()
         {
             if (_webRequest == null || !_webRequest.isDone)
+            {
                 return;
+            }
 
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
