@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
+using System.Threading;
 using UnityEditor;
 using UnityEngine;
 
@@ -145,7 +145,13 @@ namespace GooglePlayInstant.Editor
                 EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName,
                     GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth));
+            if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
+            {
+                Thread thread = new Thread(() => { QuickDeployCloudUtility.UploadBundle(); });
+                thread.Start();
+            }
+
+            ;
             EditorGUILayout.Space();
             GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
         }
