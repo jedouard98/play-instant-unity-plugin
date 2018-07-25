@@ -205,7 +205,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.Config.assetBundleUrl);
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene();
             }
         }
 

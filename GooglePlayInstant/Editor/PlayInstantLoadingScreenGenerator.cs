@@ -49,7 +49,7 @@ namespace GooglePlayInstant.Editor
         /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
         /// and an assetbundle URL. Replaces the current loading scene with a new one if it exists.
         /// </summary>
-        public static void GenerateLoadingScreenScene(string assetBundleUrl)
+        public static void GenerateLoadingScreenScene()
         {
             if (!File.Exists(loadingScreenImagePath))
             {
