@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection.Emit;
 using System.Security.Cryptography;
+using System.Threading;
 using GooglePlayInstant.Editor.GooglePlayServices;
 using UnityEditor.U2D;
 using UnityEngine;
@@ -28,21 +29,24 @@ namespace GooglePlayInstant.Editor
                                  credentials.client_id;
             var authorizatonUrl = credentials.auth_uri + queryParams;
             Process.Start(authorizatonUrl);
-            while (server.HasOauth2AuthorizationResponse())
+            while (!server.HasOauth2AuthorizationResponse())
             {
+                Debug.Log("No response yet");
+                Thread.Sleep(1);
             }
-
+            Debug.Log("Response was returned");
             KeyValuePair<string, string> response = server.getAuthorizationResponse();
             if (!string.Equals("code", response.Key))
             {
                 throw new InvalidStateException("Could not receive needed permissions");
             }
-
-            return new AuthorizationCode
+            AuthorizationCode authCode =  new AuthorizationCode
             {
-                code = response.Key,
+                code = response.Value,
                 redirect_uri = redirect_uri
             };
+            Debug.Log("Authorization code: "+authCode.code);
+            return authCode;
         }
 
         public static AccessToken GetAccessToken()
