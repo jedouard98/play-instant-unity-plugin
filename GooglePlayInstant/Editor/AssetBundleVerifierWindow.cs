@@ -100,18 +100,18 @@ namespace GooglePlayInstant.Editor
         //TODO: fix malformed url behavior
         private void Update()
         {
-            // Performs download operation only once when webrequest is completed.
-            if (_webRequest != null)
+            if (_webRequest == null)
+                return;
+            if (!_webRequest.isDone)
             {
-                if (!_webRequest.isDone)
-                {
-                    _isLoading = true;
-                }
-                else
-                {
-                    GetAssetBundleInfoFromDownload();
-                    Repaint();
-                }
+                _isLoading = true;
+            }
+            else
+            {
+                // Performs download operation only once when webrequest is completed.
+                GetAssetBundleInfoFromDownload();
+                Repaint();
+                _isLoading = false;
             }
         }
 
@@ -120,13 +120,12 @@ namespace GooglePlayInstant.Editor
         {
             if (_isLoading)
             {
-                if (progress < secs)
-                    EditorUtility.DisplayProgressBar("Simple Progress Bar", "Shows a progress bar for the given seconds", progress / secs);
-                else
-                    EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayProgressBar("AssetBundle Download Progress Bar", "", _webRequest.downloadProgress);
             }
             else
             {  
+                EditorUtility.ClearProgressBar();
+                
                 AddVerifyComponentInfo("AssetBundle Download Status:",
                     _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
 
