@@ -108,6 +108,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
+        //TODO: add a loading state so client knows that some loading is going on behind the scenes.
         private void OnGUI()
         {
             AddVerifyComponentInfo("AssetBundle Download Status:",
