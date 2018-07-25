@@ -24,7 +24,7 @@ namespace GooglePlayInstant.Editor
     public class AssetBundleVerifierWindow : EditorWindow
     {
         private const int FieldMinWidth = 170;
-        
+
         private bool _assetBundleDownloadIsSuccessful;
         private string _assetBundleUrl;
         private long _responseCode;
@@ -57,6 +57,7 @@ namespace GooglePlayInstant.Editor
                 _errorDescription = "URL is null or empty.";
                 return;
             }
+
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
         }
@@ -104,11 +105,11 @@ namespace GooglePlayInstant.Editor
         {
             if (_webRequest == null || !_webRequest.isDone)
                 return;
-            
+
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
             Repaint();
-            
+
             // Turn request to null to signal ready for next call
             _webRequest.Dispose();
             _webRequest = null;
@@ -116,23 +117,25 @@ namespace GooglePlayInstant.Editor
 
         private void OnGUI()
         {
-            if (_webRequest!= null && !_webRequest.isDone)
+            if (_webRequest != null && !_webRequest.isDone)
             {
                 EditorUtility.DisplayProgressBar("AssetBundle Download Progress Bar", "",
                     _webRequest.downloadProgress);
             }
             else
-            {  
+            {
                 EditorUtility.ClearProgressBar();
-                
+
                 AddVerifyComponentInfo("AssetBundle Download Status:",
                     _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
 
-                AddVerifyComponentInfo("AssetBundle URL:", string.IsNullOrEmpty(_assetBundleUrl) ? "N/A" : _assetBundleUrl);
+                AddVerifyComponentInfo("AssetBundle URL:",
+                    string.IsNullOrEmpty(_assetBundleUrl) ? "N/A" : _assetBundleUrl);
 
                 AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
 
-                AddVerifyComponentInfo("Error Description:", _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
+                AddVerifyComponentInfo("Error Description:",
+                    _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
 
                 AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
 
