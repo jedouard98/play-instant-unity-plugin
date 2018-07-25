@@ -50,6 +50,13 @@ namespace GooglePlayInstant.Editor
         //TODO: Support Unity 5.6.0+
         private void StartAssetBundleVerificationDownload()
         {
+            if (string.IsNullOrEmpty(_assetBundleUrl))
+            {
+                _assetBundleDownloadIsSuccessful = false;
+                Debug.Log("Problem retrieving AssetBundle: URL is null or empty.");
+                _errorDescription = "URL is null or empty.";
+                return;
+            }
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
         }
@@ -93,7 +100,6 @@ namespace GooglePlayInstant.Editor
             return bytes / 1024f / 1024f;
         }
 
-        //TODO: fix malformed url behavior
         private void Update()
         {
             if (_webRequest == null || !_webRequest.isDone)
@@ -103,12 +109,11 @@ namespace GooglePlayInstant.Editor
             GetAssetBundleInfoFromDownload();
             Repaint();
             
-            // Turn request to null to be prepared for next call
+            // Turn request to null to signal ready for next call
             _webRequest.Dispose();
             _webRequest = null;
         }
 
-        //TODO: add a loading state so client knows that some loading is going on behind the scenes.
         private void OnGUI()
         {
             if (_webRequest!= null && !_webRequest.isDone)
@@ -123,7 +128,7 @@ namespace GooglePlayInstant.Editor
                 AddVerifyComponentInfo("AssetBundle Download Status:",
                     _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
 
-                AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl);
+                AddVerifyComponentInfo("AssetBundle URL:", string.IsNullOrEmpty(_assetBundleUrl) ? "N/A" : _assetBundleUrl);
 
                 AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
 
