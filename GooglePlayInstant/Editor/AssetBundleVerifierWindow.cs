@@ -99,6 +99,7 @@ namespace GooglePlayInstant.Editor
         //TODO: fix malformed url behavior
         private void Update()
         {
+            // Performs download operation only once when webrequest is completed.
             if ((_webRequest != null) && (_webRequest.isDone))
             {
                 GetAssetBundleInfoFromDownload();
