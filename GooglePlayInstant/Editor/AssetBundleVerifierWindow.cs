@@ -23,16 +23,15 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class AssetBundleVerifierWindow : EditorWindow
     {
+        private const int FieldMinWidth = 170;
+        
         private bool _assetBundleDownloadIsSuccessful;
         private string _assetBundleUrl;
         private long _responseCode;
         private string _errorDescription;
         private string _mainScene;
         private double _numOfMegabytes;
-
-        private UnityWebRequest www;
-
-        private const int FieldMinWidth = 170;
+        private UnityWebRequest _webRequest;
 
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
@@ -45,27 +44,27 @@ namespace GooglePlayInstant.Editor
                 "Play Instant AssetBundle Verify");
             window._assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
 
-            window.startAssetBundleVerificationDownload();
+            window.StartAssetBundleVerificationDownload();
         }
 
         //TODO: Support Unity 5.6.0+
-        private void startAssetBundleVerificationDownload()
+        private void StartAssetBundleVerificationDownload()
         {
-            www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
-            www.SendWebRequest();
+            _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
+            _webRequest.SendWebRequest();
         }
 
         //TODO: Support Unity 5.6.0+
-        private void getAssetBundleInfoFromDownload()
+        private void GetAssetBundleInfoFromDownload()
         {
-            var bundle = DownloadHandlerAssetBundle.GetContent(www);
+            var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
 
-            _responseCode = www.responseCode;
+            _responseCode = _webRequest.responseCode;
 
-            if (www.isNetworkError || www.isHttpError)
+            if (_webRequest.isNetworkError || _webRequest.isHttpError)
             {
                 _assetBundleDownloadIsSuccessful = false;
-                _errorDescription = www.error;
+                _errorDescription = _webRequest.error;
                 Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _assetBundleUrl,
                     _errorDescription);
             }
@@ -78,7 +77,7 @@ namespace GooglePlayInstant.Editor
             else
             {
                 _assetBundleDownloadIsSuccessful = true;
-                _numOfMegabytes = ConvertBytesToMegabytes(www.downloadedBytes);
+                _numOfMegabytes = ConvertBytesToMegabytes(_webRequest.downloadedBytes);
 
                 var scenes = bundle.GetAllScenePaths();
                 _mainScene = (scenes.Length == 0) ? "No scenes in AssetBundle" : scenes[0];
@@ -89,7 +88,7 @@ namespace GooglePlayInstant.Editor
             }
 
             // Turn request to null to be prepared for next call
-            www = null;
+            _webRequest.Dispose();
         }
 
         private double ConvertBytesToMegabytes(ulong bytes)
@@ -100,9 +99,9 @@ namespace GooglePlayInstant.Editor
         //TODO: fix malformed url behavior
         private void Update()
         {
-            if ((www != null) && (www.isDone))
+            if ((_webRequest != null) && (_webRequest.isDone))
             {
-                getAssetBundleInfoFromDownload();
+                GetAssetBundleInfoFromDownload();
                 Repaint();
             }
         }
@@ -126,11 +125,11 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Refresh"))
             {
-                startAssetBundleVerificationDownload();
+                StartAssetBundleVerificationDownload();
             }
         }
 
-        private void AddVerifyComponentInfo(string title, string response, GUIStyle layout = null)
+        private void AddVerifyComponentInfo(string title, string response)
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(title, GUILayout.MinWidth(FieldMinWidth));
