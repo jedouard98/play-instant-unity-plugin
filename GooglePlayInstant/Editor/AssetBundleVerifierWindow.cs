@@ -104,7 +104,9 @@ namespace GooglePlayInstant.Editor
         private void Update()
         {
             if (_webRequest == null || !_webRequest.isDone)
+            {
                 return;
+            }
 
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
@@ -119,7 +121,7 @@ namespace GooglePlayInstant.Editor
         {
             if (_webRequest != null && !_webRequest.isDone)
             {
-                EditorUtility.DisplayProgressBar("AssetBundle Download Progress Bar", "",
+                EditorUtility.DisplayProgressBar("AssetBundle Download", "",
                     _webRequest.downloadProgress);
             }
             else
