@@ -50,14 +50,6 @@ namespace GooglePlayInstant.Editor
         //TODO: Support Unity 5.6.0+
         private void StartAssetBundleVerificationDownload()
         {
-            if (string.IsNullOrEmpty(_assetBundleUrl))
-            {
-                _assetBundleDownloadIsSuccessful = false;
-                Debug.Log("Problem retrieving AssetBundle: URL is null or empty.");
-                _errorDescription = "URL is null or empty.";
-                return;
-            }
-
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
         }
@@ -104,9 +96,7 @@ namespace GooglePlayInstant.Editor
         private void Update()
         {
             if (_webRequest == null || !_webRequest.isDone)
-            {
                 return;
-            }
 
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
