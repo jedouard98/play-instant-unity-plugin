@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,8 +27,6 @@ namespace GooglePlayInstant.Editor
         };
 
         private static int _toolbarSelectedButtonIndex = 0;
-        private static string _loadingScreenImagePath;
-        private static string _assetBundleUrl;
 
         public enum ToolBarSelectedButton
         {
@@ -41,6 +40,7 @@ namespace GooglePlayInstant.Editor
         private const int FieldMinWidth = 100;
         private const int ButtonWidth = 200;
         private const int LongButtonWidth = 300;
+        private const int ShortButtonWidth = 100;
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
@@ -48,7 +48,6 @@ namespace GooglePlayInstant.Editor
             _toolbarSelectedButtonIndex = (int) select;
         }
 
-        // TODO: replace stub strings with real values
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
@@ -117,28 +116,38 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
                                        "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            // TODO: Allow the user to browse to the asset bundle file without having to always manually enter the path 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Asset Bundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\mygame.assetbundle", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Asset Bundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.assetBundleFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mycorp_awesome_game", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageBucketName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageBucketName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("mainscene", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudStorageFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudStorageFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            // TODO: Allow the user to browse to credentials file without having to always manually enter the path
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("PCloud Credentials", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\path\\to\\credentials.json", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Path to Google Cloud OAuth2 Credentials", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.cloudCredentialsFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.cloudCredentialsFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            GUILayout.Button("Upload to Cloud Storage", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth));
             EditorGUILayout.Space();
-            GUILayout.Button("Open Cloud Storage Console", GUILayout.Width(ButtonWidth));
+            GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
         }
 
         private void OnGuiVerifyBundleSelect()
@@ -151,12 +160,24 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("http://storage.googleapis.com/mycorp_awesome_game/mainscene",
+            QuickDeployConfig.Config.assetBundleUrl = EditorGUILayout.TextField(QuickDeployConfig.Config.assetBundleUrl,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
-            GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth));
+
+            if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
+            {
+                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
+                {
+                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+                }
+                else
+                {
+                    AssetBundleVerifierWindow.ShowWindow();
+                }
+            }
+
             EditorGUILayout.EndVertical();
         }
 
@@ -168,15 +189,14 @@ namespace GooglePlayInstant.Editor
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            if (GUILayout.Button("Upload Loading Image", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Choose Loading Image", GUILayout.Width(ButtonWidth)))
             {
-                _loadingScreenImagePath =
-                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                PlayInstantLoadingScreenGenerator.SetLoadingScreenImagePath();
             }
 
             EditorGUILayout.Space();
 
-            var displayedPath = _loadingScreenImagePath ?? "no file specified";
+            var displayedPath = PlayInstantLoadingScreenGenerator.loadingScreenImagePath ?? "no file specified";
             EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
                 GUILayout.MinWidth(FieldMinWidth));
 
@@ -185,8 +205,7 @@ namespace GooglePlayInstant.Editor
 
             if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
             {
-                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(_loadingScreenImagePath,
-                    _assetBundleUrl);
+                PlayInstantLoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.Config.assetBundleUrl);
             }
         }
 
@@ -197,10 +216,22 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField("c:\\base.apk", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.Config.apkFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.Config.apkFileName, GUILayout.MinWidth(FieldMinWidth));
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                QuickDeployConfig.Config.apkFileName = EditorUtility.SaveFilePanel("Choose file name and location", "",
+                    "base.apk",
+                    "apk");
+            }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth));
+
+            if (GUILayout.Button("Build Base APK", GUILayout.Width(ButtonWidth)))
+            {
+                QuickDeployBuilder.BuildQuickDeployInstantGameApk();
+            }
         }
     }
 }
