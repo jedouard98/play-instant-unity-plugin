@@ -12,28 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
 namespace GooglePlayInstant.Editor
-{ 
+{
     /// <summary>
     /// Window that verifies AssetBundles from given URLs.
     /// </summary>
     public class AssetBundleVerifierWindow : EditorWindow
     {
-        private static bool _assetBundleDownloadIsSuccessful;
-        private static string _assetBundleUrl;
-        private static long _responseCode;
-        private static string _errorDescription;
-        private static string _mainScene;
-        private static double _numOfMegabytes;
+        private bool _assetBundleDownloadIsSuccessful;
+        private string _assetBundleUrl;
+        private long _responseCode;
+        private string _errorDescription;
+        private string _mainScene;
+        private double _numOfMegabytes;
+
+        private UnityWebRequest www;
 
         private const int FieldMinWidth = 170;
 
-        private static UnityWebRequest www;
-        
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
@@ -41,22 +42,22 @@ namespace GooglePlayInstant.Editor
         {
             // Set AssetBundle url in a private variable so that information displayed in window is consistent with
             // the url that this was called on. 
-            _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
-            
-            startAssetBundleVerificationDownload();
-             
-            GetWindow(typeof(AssetBundleVerifierWindow), true, "Play Instant AssetBundle Verify");
+            var window = (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true,
+                "Play Instant AssetBundle Verify");
+            window._assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
+
+            window.startAssetBundleVerificationDownload();
         }
 
         //TODO: Support Unity 5.6.0+
-        private static void startAssetBundleVerificationDownload()
+        private void startAssetBundleVerificationDownload()
         {
             www = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             www.SendWebRequest();
         }
-        
+
         //TODO: Support Unity 5.6.0+
-        private static void getAssetBundleInfoFromDownload()
+        private void getAssetBundleInfoFromDownload()
         {
             var bundle = DownloadHandlerAssetBundle.GetContent(www);
 
@@ -87,19 +88,20 @@ namespace GooglePlayInstant.Editor
                 // all objects that were loaded from this bundle.
                 bundle.Unload(true);
             }
-            
+
             // Turn request to null to be prepared for next call
             www = null;
         }
 
-        private static double ConvertBytesToMegabytes(ulong bytes)
+        private double ConvertBytesToMegabytes(ulong bytes)
         {
             return bytes / 1024f / 1024f;
         }
 
+        //TODO: fix weird malformed url behavior
         private void Update()
         {
-            if (www != null && www.isDone)
+            if ((www != null) && (www.isDone))
             {
                 getAssetBundleInfoFromDownload();
                 Repaint();
