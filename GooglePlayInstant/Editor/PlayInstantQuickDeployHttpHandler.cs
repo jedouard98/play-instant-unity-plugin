@@ -321,7 +321,7 @@ namespace GooglePlayInstant.Editor
         {
             lock (_responseQueue)
             {
-                return _responseQueue.Count >= 0;
+                return _responseQueue.Count > 0;
             }
         }
 
