@@ -30,11 +30,13 @@ namespace GooglePlayInstant.Editor
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
-        private static readonly string LoadingScreenDirectory = Path.Combine("Assets", "LoadingScreenAssets");
+        private static readonly string LoadingScreenDirectory = Path.Combine("Assets", "PlayInstantLoadingScreenAssets");
 
         public static string loadingScreenImagePath;
 
-        //TODO: add documentation
+        /// <summary>
+        /// Sets the loadingScreenImagePath target for future generated loading screens.
+        /// </summary>
         public static void SetLoadingScreenImagePath()
         {
             loadingScreenImagePath =
