@@ -32,6 +32,7 @@ namespace GooglePlayInstant.Editor
         private string _mainScene;
         private double _numOfMegabytes;
         private UnityWebRequest _webRequest;
+        private bool _isLoading;
 
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
@@ -100,33 +101,50 @@ namespace GooglePlayInstant.Editor
         private void Update()
         {
             // Performs download operation only once when webrequest is completed.
-            if ((_webRequest != null) && (_webRequest.isDone))
+            if (_webRequest != null)
             {
-                GetAssetBundleInfoFromDownload();
-                Repaint();
+                if (!_webRequest.isDone)
+                {
+                    _isLoading = true;
+                }
+                else
+                {
+                    GetAssetBundleInfoFromDownload();
+                    Repaint();
+                }
             }
         }
 
         //TODO: add a loading state so client knows that some loading is going on behind the scenes.
         private void OnGUI()
         {
-            AddVerifyComponentInfo("AssetBundle Download Status:",
-                _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
-
-            AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl);
-
-            AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
-
-            AddVerifyComponentInfo("Error Description:", _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
-
-            AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
-
-            AddVerifyComponentInfo("Size (MB):",
-                _assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A");
-
-            if (GUILayout.Button("Refresh"))
+            if (_isLoading)
             {
-                StartAssetBundleVerificationDownload();
+                if (progress < secs)
+                    EditorUtility.DisplayProgressBar("Simple Progress Bar", "Shows a progress bar for the given seconds", progress / secs);
+                else
+                    EditorUtility.ClearProgressBar();
+            }
+            else
+            {  
+                AddVerifyComponentInfo("AssetBundle Download Status:",
+                    _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
+
+                AddVerifyComponentInfo("AssetBundle URL:", _assetBundleUrl);
+
+                AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
+
+                AddVerifyComponentInfo("Error Description:", _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
+
+                AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
+
+                AddVerifyComponentInfo("Size (MB):",
+                    _assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A");
+
+                if (GUILayout.Button("Refresh"))
+                {
+                    StartAssetBundleVerificationDownload();
+                }
             }
         }
 
