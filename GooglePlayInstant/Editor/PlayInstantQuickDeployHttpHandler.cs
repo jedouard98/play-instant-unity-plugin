@@ -39,8 +39,8 @@ namespace GooglePlayInstant.Editor
         /// <param name="endpoint">Endpoint to which the data should be sent </param>
         /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body</param>
         /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
-        /// <returns></returns>
-        public static string SendHttpPostRequest(string endpoint, byte[] postData,
+        /// <returns>A reference to the WWW instance representing the request in progress.</returns>
+        public static WWW SendHttpPostRequest(string endpoint, byte[] postData,
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
@@ -53,18 +53,18 @@ namespace GooglePlayInstant.Editor
             }
 
             var www = new WWW(endpoint, postData, form.headers);
-            return GetResultWhenDone(www);
+            return www;
         }
 
         /// <summary>
-        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers.
         /// parameters
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent </param>
         /// <param name="postForm">A dictionary representing a set of key-value paris to be added to the request body</param>
         /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
-        /// <returns></returns>
-        public static string SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
+        /// <returns>A reference to the WWW instance representing the request in progress.</returns>
+        public static WWW SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
@@ -80,13 +80,13 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Sends a general GET request to the specified endpoint along with specified parameters and headers
+        /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
         /// <param name="endpoint">The endpoint to with the get request should be sent</param>
         /// <param name="getParams"> A dictionary representing ke-value pairs that should be attached to the endpoint as GET parameters</param>
         /// <param name="getHeaders">A dictionary representing key-value pairs that constitude the data to be added to the request headers</param>
-        /// <returns></returns>
-        public static string SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
+        /// <returns>A reference to the WWW instance representing the request in progress.</returns>
+        public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
             var fullEndpoint = endpoint + "?";
@@ -108,19 +108,7 @@ namespace GooglePlayInstant.Editor
             }
 
             var www = new WWW(fullEndpoint, null, form.headers);
-            return GetResultWhenDone(www);
-        }
-
-
-        // Waits until the WWW request is done and returns the results.
-        private static string GetResultWhenDone(WWW www)
-        {
-            while (!www.isDone)
-            {
-                Debug.LogFormat("Progress: {0}/100 completed", (www.progress * 100).ToString());
-            }
-
-            return www.text;
+            return www;
         }
     }
 
@@ -330,7 +318,7 @@ namespace GooglePlayInstant.Editor
         /// information that this server has received.
         /// </summary>
         /// <exception cref="InvalidStateException">This exception when the server hasn't received any authorization
-        /// response yet</exception>
+        /// response yet.</exception>
         public KeyValuePair<string, string> getAuthorizationResponse()
         {
             KeyValuePair<string, string> response;
