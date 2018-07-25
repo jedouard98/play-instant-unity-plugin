@@ -13,25 +13,24 @@
 // limitations under the License.
 
 using System.IO;
+using GooglePlayInstant.LoadingScreenEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using GooglePlayInstant.LoadingScreenEngine;
 
 namespace GooglePlayInstant.Editor
 {
-    //TODO: Resolve conversation about upload vs setting path
     /// <summary>
     /// Class that generates Unity loading scenes for instant apps.
     /// </summary>
     public class PlayInstantLoadingScreenGenerator
     {
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
-        private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
-        private readonly string LoadingScreenDirectory = Path.Combine("Assets", "LoadingScreenAssets");
 
+        private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        private static readonly string LoadingScreenDirectory = Path.Combine("Assets", "LoadingScreenAssets");
 
         public static string loadingScreenImagePath;
 
@@ -59,8 +58,9 @@ namespace GooglePlayInstant.Editor
                 // Removes the loading scene if it is present, otherwise does nothing.
                 EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
 
-                GenerateLoadingScreenConfigfile(QuickDeployConfig.Config.assetBundleUrl);
+                Directory.CreateDirectory(LoadingScreenDirectory);
 
+                GenerateLoadingScreenConfigfile();
 
                 var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
                 var loadingScreenGameObject = new GameObject("Canvas");
@@ -68,7 +68,8 @@ namespace GooglePlayInstant.Editor
                 AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
                 AddLoadingScreenScript(loadingScreenGameObject);
 
-                EditorSceneManager.SaveScene(loadingScreenScene, LoadingSceneName + ".unity");
+                EditorSceneManager.SaveScene(loadingScreenScene,
+                    Path.Combine(LoadingScreenDirectory, LoadingSceneName + ".unity"));
             }
         }
 
@@ -96,17 +97,15 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
-        private static void GenerateLoadingScreenConfigfile(string assetBundleUrl)
-        {
+        private static void GenerateLoadingScreenConfigfile()
+        {            
             var newLoadingScreenConfigObj =
-                new LoadingScreenConfig() {assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl};
-            var newLoadingScreenConfigJson = EditorJsonUtility.ToJson(newLoadingScreenConfigObj);
-            Directory.CreateDirectory("")
-            File.WriteAllText("play-instant-config.json", newConfigJson);
-            
-            
+                new LoadingScreenConfig {assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl};
 
-//            File.WriteAllText("play-instant-config.json", newConfigJson);
+            var newLoadingScreenConfigJson = EditorJsonUtility.ToJson(newLoadingScreenConfigObj);
+
+            File.WriteAllText(Path.Combine(LoadingScreenDirectory, LoadingScreenJsonFileName),
+                newLoadingScreenConfigJson);
         }
     }
 }
