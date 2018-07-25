@@ -18,6 +18,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using GooglePlayInstant.LoadingScreenEngine;
 
 namespace GooglePlayInstant.Editor
 {
@@ -28,9 +29,12 @@ namespace GooglePlayInstant.Editor
     public class PlayInstantLoadingScreenGenerator
     {
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
+        private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        private readonly string LoadingScreenDirectory = Path.Combine("Assets", "LoadingScreenAssets");
+
 
         public static string loadingScreenImagePath;
-        
+
         //TODO: add documentation
         public static void SetLoadingScreenImagePath()
         {
@@ -55,10 +59,12 @@ namespace GooglePlayInstant.Editor
                 // Removes the loading scene if it is present, otherwise does nothing.
                 EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
 
+                GenerateLoadingScreenConfigfile(QuickDeployConfig.Config.assetBundleUrl);
+
+
                 var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
                 var loadingScreenGameObject = new GameObject("Canvas");
 
-                GeneratePlayInstantConfigfile(assetBundleUrl);
                 AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
                 AddLoadingScreenScript(loadingScreenGameObject);
 
@@ -71,7 +77,7 @@ namespace GooglePlayInstant.Editor
             loadingScreenGameObject.AddComponent<LoadingScreenScript>();
         }
 
-        
+
         private static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
@@ -90,11 +96,17 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
-        private static void GeneratePlayInstantConfigfile(string assetBundleUrl)
+        private static void GenerateLoadingScreenConfigfile(string assetBundleUrl)
         {
-            var newConfigObj = new LoadingScreenScript.PlayInstantConfig().main_scene_asset_bundle_url = assetBundleUrl;
-            var newConfigJson = EditorJsonUtility.ToJson(newConfigObj);
+            var newLoadingScreenConfigObj =
+                new LoadingScreenConfig() {assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl};
+            var newLoadingScreenConfigJson = EditorJsonUtility.ToJson(newLoadingScreenConfigObj);
+            Directory.CreateDirectory("")
             File.WriteAllText("play-instant-config.json", newConfigJson);
+            
+            
+
+//            File.WriteAllText("play-instant-config.json", newConfigJson);
         }
     }
 }
