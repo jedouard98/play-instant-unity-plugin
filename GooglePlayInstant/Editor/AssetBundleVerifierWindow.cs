@@ -97,7 +97,7 @@ namespace GooglePlayInstant.Editor
             return bytes / 1024f / 1024f;
         }
 
-        //TODO: fix weird malformed url behavior
+        //TODO: fix malformed url behavior
         private void Update()
         {
             if ((www != null) && (www.isDone))
