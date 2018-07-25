@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using Random = System.Random;
 
@@ -116,7 +117,7 @@ namespace GooglePlayInstant.Editor
         {
             while (!www.isDone)
             {
-                Debug.LogFormat("Progress: {0}/100 completed", (www.progress*100).ToString());
+                Debug.LogFormat("Progress: {0}/100 completed", (www.progress * 100).ToString());
             }
 
             return www.text;
@@ -267,15 +268,18 @@ namespace GooglePlayInstant.Editor
                 return;
             }
 
-            KeyValuePair<string, string> keyValuePair;
+            KeyValuePair<string, string> responsePair;
             foreach (var pair in queryDictionary)
             {
-                keyValuePair = pair;
+                if (string.Equals("code", pair.Key) || string.Equals("error", pair.Key))
+                {
+                    responsePair = pair;
+                    _responseQueue.Enqueue(pair);
+                    break;
+                }
             }
 
-            _responseQueue.Enqueue(new KeyValuePair<string, string>(keyValuePair.Key, keyValuePair.Value));
-
-            var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", keyValuePair.Key)
+            var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", responsePair.Key)
                 ? CallbackEndpointResponseOnSuccess
                 : CallBackEndpointResponseOnError);
             var outputStream = context.Response.OutputStream;
