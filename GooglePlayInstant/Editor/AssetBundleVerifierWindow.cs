@@ -32,7 +32,6 @@ namespace GooglePlayInstant.Editor
         private string _mainScene;
         private double _numOfMegabytes;
         private UnityWebRequest _webRequest;
-        private bool _isLoading;
 
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
@@ -87,9 +86,6 @@ namespace GooglePlayInstant.Editor
                 // all objects that were loaded from this bundle.
                 bundle.Unload(true);
             }
-
-            // Turn request to null to be prepared for next call
-            _webRequest.Dispose();
         }
 
         private double ConvertBytesToMegabytes(ulong bytes)
@@ -100,27 +96,25 @@ namespace GooglePlayInstant.Editor
         //TODO: fix malformed url behavior
         private void Update()
         {
-            if (_webRequest == null)
+            if (_webRequest == null || !_webRequest.isDone)
                 return;
-            if (!_webRequest.isDone)
-            {
-                _isLoading = true;
-            }
-            else
-            {
-                // Performs download operation only once when webrequest is completed.
-                GetAssetBundleInfoFromDownload();
-                Repaint();
-                _isLoading = false;
-            }
+            
+            // Performs download operation only once when webrequest is completed.
+            GetAssetBundleInfoFromDownload();
+            Repaint();
+            
+            // Turn request to null to be prepared for next call
+            _webRequest.Dispose();
+            _webRequest = null;
         }
 
         //TODO: add a loading state so client knows that some loading is going on behind the scenes.
         private void OnGUI()
         {
-            if (_isLoading)
+            if (_webRequest!= null && !_webRequest.isDone)
             {
-                EditorUtility.DisplayProgressBar("AssetBundle Download Progress Bar", "", _webRequest.downloadProgress);
+                EditorUtility.DisplayProgressBar("AssetBundle Download Progress Bar", "",
+                    _webRequest.downloadProgress);
             }
             else
             {  
