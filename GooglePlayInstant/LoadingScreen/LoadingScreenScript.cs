@@ -38,18 +38,20 @@ namespace GooglePlayInstant.LoadingScreen
                 throw new FileNotFoundException("LoadingScreenConfig.json missing in Resources folder.");
             }
 
-            var loadingScreenConfig = loadingScreenConfigJsonTextAsset.ToString();
+            var loadingScreenConfigJson = loadingScreenConfigJsonTextAsset.ToString();
 
-            var loadingScreenConfigJsonObj = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfig);
+            var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
 
-            yield return StartCoroutine(GetAssetBundle(loadingScreenConfigJsonObj.assetBundleUrl));
+            yield return StartCoroutine(GetAssetBundle(loadingScreenConfig.assetBundleUrl));
 
             if (_bundle == null)
             {
                 Debug.LogError("AssetBundle failed to be downloaded.");
             }
-
-            SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
+            else
+            {
+                SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
+            }
         }
 
         //TODO: Update function for unity 5.6 functionality

@@ -36,23 +36,10 @@ namespace GooglePlayInstant.Editor
 
         private static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
 
-        private static string _loadingScreenImagePath;
-
         /// <summary>
-        /// Sets the loadingScreenImagePath target for future generated loading screens.
+        /// The path to a fullscreen image displayed in the background while the game loads.
         /// </summary>
-        public static void SetLoadingScreenImagePath(string loadingScreenImagePath)
-        {
-            _loadingScreenImagePath = loadingScreenImagePath;
-        }
-        
-        /// <summary>
-        /// Returns the loadingScreenImagePath string
-        /// </summary>
-        public static string GetLoadingScreenImagePath()
-        {
-            return _loadingScreenImagePath;
-        }
+        public static string LoadingScreenImagePath { get; set; }
 
         //TODO: fix wasteful sprite creation by deleting previous unused ones
         /// <summary>
@@ -60,11 +47,11 @@ namespace GooglePlayInstant.Editor
         /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
         /// and an assetbundle URL. Replaces the current loading scene with a new one if it exists.
         /// </summary>
-        public static void GenerateLoadingScreenScene()
+        public static void GenerateLoadingScreenScene(string assetBundleUrl)
         {
-            if (!File.Exists(_loadingScreenImagePath))
+            if (!File.Exists(LoadingScreenImagePath))
             {
-                Debug.LogErrorFormat("Loading screen image file cannot be found: {0}", _loadingScreenImagePath);
+                Debug.LogErrorFormat("Loading screen image file cannot be found: {0}", LoadingScreenImagePath);
                 return;
             }
 
@@ -73,12 +60,12 @@ namespace GooglePlayInstant.Editor
 
             Directory.CreateDirectory(LoadingScreenResourcesPath);
 
-            GenerateLoadingScreenConfigFile();
+            GenerateLoadingScreenConfigFile(assetBundleUrl);
 
             var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
             var loadingScreenGameObject = new GameObject("Canvas");
 
-            AddLoadingScreenImageToScene(loadingScreenGameObject, _loadingScreenImagePath);
+            AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
             AddLoadingScreenScript(loadingScreenGameObject);
 
             EditorSceneManager.SaveScene(loadingScreenScene,
@@ -109,10 +96,10 @@ namespace GooglePlayInstant.Editor
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
-        private static void GenerateLoadingScreenConfigFile()
+        private static void GenerateLoadingScreenConfigFile(string assetBundleUrl)
         {
             var loadingScreenConfig =
-                new LoadingScreenConfig {assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl};
+                new LoadingScreenConfig {assetBundleUrl = assetBundleUrl};
 
             var loadingScreenConfigJson = EditorJsonUtility.ToJson(loadingScreenConfig);
 
