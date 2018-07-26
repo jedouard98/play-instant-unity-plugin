@@ -30,9 +30,9 @@ namespace GooglePlayInstant.Editor
         /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and header
         /// parameters.
         /// </summary>
-        /// <param name="endpoint">Endpoint to which the data should be sent </param>
-        /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body</param>
-        /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
+        /// <param name="endpoint">Endpoint to which the data should be sent.</param>
+        /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body.</param>
+        /// <param name="postHeaders">A collection of key-value pairs to be added to the request headers.</param>
         /// <returns>A reference to the WWW instance representing the request in progress.</returns>
         public static WWW SendHttpPostRequest(string endpoint, byte[] postData,
             Dictionary<string, string> postHeaders)
