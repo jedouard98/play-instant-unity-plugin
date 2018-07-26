@@ -141,7 +141,7 @@ namespace GooglePlayInstant.Editor
         {
             var context = o as HttpListenerContext;
             context.Response.KeepAlive = false;
-            if (UriRespectsPolicies(context.Request.Url))
+            if (UriContainsValidQueryParams(context.Request.Url))
             {
                 context.Response.StatusCode = 404;
                 context.Response.Close();
@@ -170,10 +170,9 @@ namespace GooglePlayInstant.Editor
             context.Response.Close();
         }
 
-        // Detemine whether the URI contains valid params
-        private bool UriRespectsPolicies(Uri uri)
+        private bool UriContainsValidQueryParams(Uri uri)
         {
-            // Policy 1: URI must contain query params (query starts with ?).
+            // Policy 1: URI must contain query params (query starts with "?").
             // Policy 2: The only acceptable query params "code", "error", and "scope".
 
             var allowedQueries = new[] {"code", "error", "scope"};
@@ -185,7 +184,7 @@ namespace GooglePlayInstant.Editor
             return uriRespectsPolicies;
         }
 
-        // Extract uri and return query params.
+        // Extract uri and return query params. Provided Uri instance must contain query params.
         private static Dictionary<string, string> GetQueryParamsFromUri(Uri uri, ref Dictionary<string, string> result)
         {
             if (result != null)
@@ -194,7 +193,7 @@ namespace GooglePlayInstant.Editor
             }
 
             result = new Dictionary<string, string>();
-            foreach (var pair in uri.Query.Split('&'))
+            foreach (var pair in uri.Query.Substring(1).Split('&'))
             {
                 if (pair.Contains("="))
                 {
