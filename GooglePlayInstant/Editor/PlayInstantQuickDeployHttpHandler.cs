@@ -135,6 +135,14 @@ namespace GooglePlayInstant.Editor
             _www = www;
             _title = title;
             _info = info;
+        }
+
+        /// <summary>
+        /// Add instance to tracked requests in progress. After this call, a call to DisplayProgressForTrackedRequests
+        /// will display information for this request if it's not completed.
+        /// </summary>
+        public void Track()
+        {
             _requestsInProgress.Add(this);
         }
 
@@ -170,9 +178,9 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Display a progress bar and request information for each of the class-wide contained requests in progress.
+        /// Display a progress bar and request information for all class-wide tracked requests in progress.
         /// </summary>
-        public static void DisplayProgressForAllRequests()
+        public static void DisplayProgressForTrackedRequests()
         {
             foreach (var requestInProgress in _requestsInProgress)
             {
