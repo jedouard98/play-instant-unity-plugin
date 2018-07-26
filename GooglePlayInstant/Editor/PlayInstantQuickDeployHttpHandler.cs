@@ -27,11 +27,12 @@ namespace GooglePlayInstant.Editor
     public static class QuickDeployWwwRequestHandler
     {
         /// <summary>
-        /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and header
-        /// parameters.
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and
+        /// header parameters.
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent.</param>
-        /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body.</param>
+        /// <param name="postData">An array of bytes representing the data that will be passed in the POST request
+        /// body.</param>
         /// <param name="postHeaders">A collection of key-value pairs to be added to the request headers.</param>
         /// <returns>A reference to the WWW instance representing the request in progress.</returns>
         public static WWW SendHttpPostRequest(string endpoint, byte[] postData,
@@ -77,7 +78,8 @@ namespace GooglePlayInstant.Editor
         /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
         /// <param name="endpoint">The endpoint to with the get request should be sent.</param>
-        /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET parameters.</param>
+        /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET
+        /// parameters.</param>
         /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
         /// <returns>A reference to the WWW instance representing the request.</returns>
         public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
@@ -125,8 +127,8 @@ namespace GooglePlayInstant.Editor
         /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
         /// <param name="title">The high level action of the request. This is displayed as the title when displaying
         ///     the progress bar for this request in progress.</param>
-        /// <param name="info">A description of what this request is doing. This is displayed in the body when displaying
-        ///     the progress bar for this request in progress.</param>
+        /// <param name="info">A description of what this request is doing. This is displayed in the body when
+        /// displaying the progress bar for this request in progress.</param>
         public WwwRequestInProgress(WWW www, string title, string info)
         {
             _www = www;
