@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GooglePlayInstant.Engine
+namespace GooglePlayInstant.LoadingScreenEngine
 {
     [Serializable]
     public class LoadingScreenConfig

@@ -18,22 +18,28 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-namespace GooglePlayInstant.Engine
+namespace GooglePlayInstant.LoadingScreenEngine
 {
     public class LoadingScreenScript : MonoBehaviour
     {
         private AssetBundle _bundle;
 
-        [System.Serializable]
-        public class PlayInstantConfig
-        {
-            public string main_scene_asset_bundle_url;
-        }
-
         private IEnumerator Start()
         {
-            var assetBundleUrl = { };
-            yield return StartCoroutine(GetAssetBundle(assetBundleUrl));
+            var loadingScreenConfigJsonTextAsset =
+                Resources.Load<TextAsset>("LoadingScreenConfig");
+
+            if (loadingScreenConfigJsonTextAsset == null)
+            {
+                throw new FileNotFoundException(
+                    "Error on Loading Screen: Could not find LoadingScreenConfig.json file in Resources folder.");
+            }
+
+            var loadingScreenConfigJson = loadingScreenConfigJsonTextAsset.ToString();
+
+            var loadingScreenConfigJsonObj = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
+
+            yield return StartCoroutine(GetAssetBundle(loadingScreenConfigJsonObj.assetBundleUrl));
             SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
         }
 
@@ -41,11 +47,10 @@ namespace GooglePlayInstant.Engine
         private IEnumerator GetAssetBundle(string assetBundleUrl)
         {
 #if UNITY_2018_2_OR_NEWER
-        var www = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
+            var www = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
 #else
             var www = UnityWebRequest.GetAssetBundle(assetBundleUrl);
 #endif
-
             yield return www.SendWebRequest();
 
             // TODO: implement retry logic
