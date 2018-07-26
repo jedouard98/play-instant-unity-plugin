@@ -71,7 +71,8 @@ namespace GooglePlayInstant.Editor
 
             WWW www = QuickDeployWwwRequestHandler.SendHttpPostRequest(tokenEndpiont, formData, headers);
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token", "Getting access token to use for uploading asset bundle");
-            requestInProgress.Track();
+            requestInProgress.TrackProgress();
+            requestInProgress.OnDone(HandleWww);
 
             
             AccessToken token = null;          
@@ -85,6 +86,10 @@ namespace GooglePlayInstant.Editor
                 tokenReceivedCallback.Invoke(token);
             }
             
+        }
+
+        public static void HandleWww(WWW www)
+        {
         }
 
         public static Oauth2Credentials ReadOauth2CredentialsFile()
