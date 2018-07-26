@@ -18,8 +18,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-namespace GooglePlayInstant.LoadingScreenEngine
+namespace GooglePlayInstant.LoadingScreen
 {
+    /// <summary>
+    /// Script that starts on the loading screen. It works to download the game's AssetBundle from a specified url and
+    /// loads the first scene to start the game.
+    /// </summary>
     public class LoadingScreenScript : MonoBehaviour
     {
         private AssetBundle _bundle;
@@ -31,15 +35,20 @@ namespace GooglePlayInstant.LoadingScreenEngine
 
             if (loadingScreenConfigJsonTextAsset == null)
             {
-                throw new FileNotFoundException(
-                    "Error on Loading Screen: Could not find LoadingScreenConfig.json file in Resources folder.");
+                throw new FileNotFoundException("LoadingScreenConfig.json missing in Resources folder.");
             }
 
-            var loadingScreenConfigJson = loadingScreenConfigJsonTextAsset.ToString();
+            var loadingScreenConfig = loadingScreenConfigJsonTextAsset.ToString();
 
-            var loadingScreenConfigJsonObj = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
+            var loadingScreenConfigJsonObj = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfig);
 
             yield return StartCoroutine(GetAssetBundle(loadingScreenConfigJsonObj.assetBundleUrl));
+
+            if (_bundle == null)
+            {
+                Debug.LogError("AssetBundle failed to be downloaded.");
+            }
+
             SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
         }
 
