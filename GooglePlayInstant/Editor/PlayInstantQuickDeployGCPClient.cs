@@ -25,7 +25,7 @@ namespace GooglePlayInstant.Editor
             QuickDeployOAuth2Server server = new QuickDeployOAuth2Server();
             server.Start();
             var redirect_uri = server.CallbackEndpoint;
-            Oauth2Credential credentials = ReadOauth2CredentialsFile();
+            Oauth2Credentials credentials = ReadOauth2CredentialsFile();
             string queryParams = "?scope=" + Scope + "&access_type=offline&include_granted_scopes=true" +
                                  "&redirect_uri=" + redirect_uri + "&response_type=code" + "&client_id=" +
                                  credentials.client_id;
@@ -71,7 +71,7 @@ namespace GooglePlayInstant.Editor
 
             WWW www = QuickDeployWwwRequestHandler.SendHttpPostRequest(tokenEndpiont, formData, headers);
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token", "Getting access token to use for uploading asset bundle");
-            requestInProgress.track();
+            requestInProgress.Track();
 
             
             AccessToken token = null;          
