@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,7 +25,7 @@ namespace GooglePlayInstant.Editor
             "Loading Screen", "Build"
         };
 
-        private static int _toolbarSelectedButtonIndex = 0;
+        private static int _toolbarSelectedButtonIndex;
 
         public enum ToolBarSelectedButton
         {

@@ -30,7 +30,10 @@ namespace GooglePlayInstant.Editor
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
-        private static readonly string LoadingScreenScenePath = Path.Combine("Assets", "PlayInstantLoadingScreenAssets");
+
+        private static readonly string LoadingScreenScenePath =
+            Path.Combine("Assets", "PlayInstantLoadingScreenAssets");
+
         private static readonly string LoadingScreenJsonPath = Path.Combine(LoadingScreenScenePath, "Resources");
 
         public static string LoadingScreenImagePath;
@@ -102,7 +105,7 @@ namespace GooglePlayInstant.Editor
         }
 
         private static void GenerateLoadingScreenConfigfile()
-        {            
+        {
             var newLoadingScreenConfigObj =
                 new LoadingScreenConfig {assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl};
 
@@ -110,10 +113,10 @@ namespace GooglePlayInstant.Editor
 
             File.WriteAllText(Path.Combine(LoadingScreenJsonPath, LoadingScreenJsonFileName),
                 newLoadingScreenConfigJson);
-            
-            // Force asset to import synchronously so that testing can be completed immediately after generating a loading screen.
-            AssetDatabase.ImportAsset(Path.Combine(LoadingScreenJsonPath, LoadingScreenJsonFileName), ImportAssetOptions.ForceSynchronousImport);
 
+            // Force asset to import synchronously so that testing can be completed immediately after generating a loading screen.
+            AssetDatabase.ImportAsset(Path.Combine(LoadingScreenJsonPath, LoadingScreenJsonFileName),
+                ImportAssetOptions.ForceSynchronousImport);
         }
     }
 }
