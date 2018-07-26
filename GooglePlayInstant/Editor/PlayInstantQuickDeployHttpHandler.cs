@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
@@ -21,13 +22,13 @@ using UnityEngine;
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// A Class with utility methods for sending GET and POST requests
+    /// A class with utility methods for sending GET and POST requests.
     /// </summary>
     public static class QuickDeployWwwRequestHandler
     {
         /// <summary>
-        /// Sends a general POST request to the provided endpoint, along with the data provided in the byte array and header
-        /// parameters
+        /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and header
+        /// parameters.
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent </param>
         /// <param name="postData">An array of bytes representing the data that will be passed in the POST request body</param>
@@ -50,13 +51,13 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Sends a general POST request to the provided endpoint, along with the data provided in the form and headers.
+        /// Send a general POST request to the provided endpoint, along with the data provided in the form and headers.
         /// parameters
         /// </summary>
-        /// <param name="endpoint">Endpoint to which the data should be sent </param>
-        /// <param name="postForm">A dictionary representing a set of key-value paris to be added to the request body</param>
-        /// <param name="postHeaders"> A dictionary representing a set of key-value pairs to be added to the request headers</param>
-        /// <returns>A reference to the WWW instance representing the request in progress.</returns>
+        /// <param name="endpoint">Endpoint to which the data should be sent.</param>
+        /// <param name="postForm">A set of key-value pairs to be added to the request body.</param>
+        /// <param name="postHeaders"> A set of key-value pairs to be added to the request headers.</param>
+        /// <returns>A reference to the WWW instance representing the request.</returns>
         public static WWW SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
             Dictionary<string, string> postHeaders)
         {
@@ -75,10 +76,10 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
-        /// <param name="endpoint">The endpoint to with the get request should be sent</param>
-        /// <param name="getParams"> A dictionary representing ke-value pairs that should be attached to the endpoint as GET parameters</param>
-        /// <param name="getHeaders">A dictionary representing key-value pairs that constitude the data to be added to the request headers</param>
-        /// <returns>A reference to the WWW instance representing the request in progress.</returns>
+        /// <param name="endpoint">The endpoint to with the get request should be sent.</param>
+        /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET parameters.</param>
+        /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
+        /// <returns>A reference to the WWW instance representing the request.</returns>
         public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
@@ -102,6 +103,78 @@ namespace GooglePlayInstant.Editor
 
             var www = new WWW(fullEndpoint, null, form.headers);
             return www;
+        }
+    }
+
+    /// <summary>
+    /// Provides functionality for tracking and visualizing useful information about WWW requests in progress.
+    /// </summary>
+    public class WwwRequestInProgress
+    {
+        // Thread Safety Note: Operations on this class are NOT threadsafe because they are are expected to be
+        // run on the main thread.
+
+        private static readonly List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
+        private WWW _www;
+        private string _title;
+        private string _info;
+
+        /// <summary>
+        /// Instantiate an instance of a RequestInProgress class.
+        /// </summary>
+        /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
+        /// <param name="title">The high level action of the request. This is displayed as the title when displaying
+        ///     the progress bar for this request in progress.</param>
+        /// <param name="info">A description of what this request is doing. This is displayed in the body when displaying
+        ///     the progress bar for this request in progress.</param>
+        public WwwRequestInProgress(WWW www, string title, string info)
+        {
+            _www = www;
+            _title = title;
+            _info = info;
+            _requestsInProgress.Add(this);
+        }
+
+        /// <summary>
+        /// Dispose completed requests and clear them from the class-global collection of requests in progress.
+        /// </summary>
+        public static void Update()
+        {
+            // First put done requests in another collection before removing them from the list in order to avoid
+            // concurrent modification exceptions.
+            var doneRequests = new List<WwwRequestInProgress>();
+            foreach (var requestInProgress in _requestsInProgress)
+            {
+                if (requestInProgress._www.isDone)
+                {
+                    doneRequests.Add(requestInProgress);
+                }
+            }
+
+            foreach (var doneRequest in doneRequests)
+            {
+                doneRequest._www.Dispose();
+                _requestsInProgress.Remove(doneRequest);
+            }
+        }
+
+        /// <summary>
+        /// Display the progress bar for the contained request along with information about this request in progress.
+        /// </summary>
+        public void DisplayProgress()
+        {
+            EditorUtility.DisplayProgressBar(_title, _info, _www.progress);
+        }
+
+        /// <summary>
+        /// Display a progress bar and request information for each of the class-wide contained requests in progress.
+        /// </summary>
+        public static void DisplayProgressForAllRequests()
+        {
+            foreach (var requestInProgress in _requestsInProgress)
+            {
+                requestInProgress.DisplayProgress();
+            }
         }
     }
 }
