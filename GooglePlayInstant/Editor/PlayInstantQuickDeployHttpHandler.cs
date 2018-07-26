@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
@@ -39,14 +41,7 @@ namespace GooglePlayInstant.Editor
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
-            if (postHeaders != null)
-            {
-                foreach (var pair in postHeaders)
-                {
-                    form.headers.Add(pair.Key, pair.Value);
-                }
-            }
-
+            AddHeadersToWwwForm(form, postHeaders);
             var www = new WWW(endpoint, postData, form.headers);
             return www;
         }
@@ -77,7 +72,7 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
-        /// <param name="endpoint">The endpoint to with the get request should be sent.</param>
+        /// <param name="endpoint">The endpoint where the GET request should be sent. Must have no query params</param>
         /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET
         /// parameters.</param>
         /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
@@ -85,26 +80,29 @@ namespace GooglePlayInstant.Editor
         public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
-            var fullEndpoint = endpoint + "?";
-            var form = new WWWForm();
-            if (getHeaders != null)
+            var endPointbuilder = new UriBuilder(endpoint);
+            if (getParams != null)
             {
-                foreach (var pair in getHeaders)
+                endPointbuilder.Query = string.Join("&",
+                    getParams.Select(kvp => string.Format("{0}={1}", WWW.EscapeURL(kvp.Key), WWW.EscapeURL(kvp.Value)))
+                        .ToArray());
+            }
+
+            var form = new WWWForm();
+            AddHeadersToWwwForm(form, getHeaders);
+            var www = new WWW(endPointbuilder.ToString(), null, form.headers);
+            return www;
+        }
+
+        private static void AddHeadersToWwwForm(WWWForm form, Dictionary<string, string> headers)
+        {
+            if (headers != null)
+            {
+                foreach (var pair in headers)
                 {
                     form.headers.Add(pair.Key, pair.Value);
                 }
             }
-
-            if (getParams != null)
-            {
-                foreach (var pair in getParams)
-                {
-                    fullEndpoint += pair.Key + "=" + pair.Value + "&";
-                }
-            }
-
-            var www = new WWW(fullEndpoint, null, form.headers);
-            return www;
         }
     }
 
