@@ -196,7 +196,7 @@ namespace GooglePlayInstant.Editor
 
             EditorGUILayout.Space();
 
-            var displayedPath = PlayInstantLoadingScreenGenerator.loadingScreenImagePath ?? "no file specified";
+            var displayedPath = PlayInstantLoadingScreenGenerator.LoadingScreenImagePath ?? "no file specified";
             EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
                 GUILayout.MinWidth(FieldMinWidth));
 
