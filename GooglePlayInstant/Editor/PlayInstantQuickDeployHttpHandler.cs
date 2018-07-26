@@ -114,7 +114,10 @@ namespace GooglePlayInstant.Editor
         // Thread Safety Note: Operations on this class are NOT threadsafe because they are are expected to be
         // run on the main thread.
 
-        private static readonly List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
+        // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
+        // Shouldn't be readonly because it is mutable.
+        private static List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
+
         private WWW _www;
         private string _title;
         private string _info;
