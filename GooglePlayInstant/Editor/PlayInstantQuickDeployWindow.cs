@@ -165,7 +165,19 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
-            GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth));
+
+            if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
+            {
+                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
+                {
+                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+                }
+                else
+                {
+                    AssetBundleVerifierWindow.ShowWindow();
+                }
+            }
+
             EditorGUILayout.EndVertical();
         }
 
