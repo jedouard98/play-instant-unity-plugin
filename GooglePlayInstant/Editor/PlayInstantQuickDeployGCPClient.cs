@@ -17,10 +17,12 @@ namespace GooglePlayInstant.Editor
         private const string GrantType = "authorization_code";
         private const string Scope = "https://www.googleapis.com/auth/devstorage.read_write";
 
-
-        public static AuthorizationCode GetAuthCode()
+        public delegate void AuthCodeReceivedCallback(AuthorizationCode authorizationCode);
+        public delegate void TokenReceivedCallback(AccessToken accessToken);
+        
+        public static void GetAuthCode(AuthCodeReceivedCallback authCodeReceivedCallback)
         {
-            QuickDeployOAuth2CallbackEndpointServer server = new QuickDeployOAuth2CallbackEndpointServer();
+            QuickDeployOAuth2Server server = new QuickDeployOAuth2Server();
             server.Start();
             var redirect_uri = server.CallbackEndpoint;
             Oauth2Credential credentials = ReadOauth2CredentialsFile();
@@ -34,8 +36,8 @@ namespace GooglePlayInstant.Editor
                 Debug.Log("No response yet");
                 Thread.Sleep(1);
             }
-            Debug.Log("Response was returned");
-            KeyValuePair<string, string> response = server.getAuthorizationResponse();
+            
+            KeyValuePair<string, string> response = server.GetAuthorizationResponse();
             if (!string.Equals("code", response.Key))
             {
                 throw new InvalidStateException("Could not receive needed permissions");
@@ -45,66 +47,50 @@ namespace GooglePlayInstant.Editor
                 code = response.Value,
                 redirect_uri = redirect_uri
             };
-            Debug.Log("Authorization code: "+authCode.code);
-            return authCode;
+            if (authCodeReceivedCallback != null)
+            {
+                authCodeReceivedCallback.Invoke(authCode);
+            }
         }
 
-        public static AccessToken GetAccessToken()
+        public static void GetAccessToken(AuthorizationCode authCode, TokenReceivedCallback tokenReceivedCallback)
         {
-            Oauth2Credential credential = ReadOauth2CredentialsFile();
+            Oauth2Credentials credentials = ReadOauth2CredentialsFile();
 
-            string tokenEndpiont = credential.token_uri;
-
-            AuthorizationCode authCode = GetAuthCode();
+            string tokenEndpiont = credentials.token_uri;
             Dictionary<string, string> headers = new Dictionary<string, string>();
 
             //headers.Add("Content-Type", "application/x-www-form-urlencoded");
 
             Dictionary<string, string> formData = new Dictionary<string, string>();
             formData.Add("code", authCode.code);
-            formData.Add("client_id", credential.client_id);
-            formData.Add("client_secret", credential.client_secret);
+            formData.Add("client_id", credentials.client_id);
+            formData.Add("client_secret", credentials.client_secret);
             formData.Add("redirect_uri", authCode.redirect_uri);
             formData.Add("grant_type", GrantType);
 
-            AccessToken token =
-                JsonUtility.FromJson<AccessToken>(
-                    QuickDeployWwwRequestHandler.SendHttpPostRequest(tokenEndpiont, formData, headers));
+            WWW www = QuickDeployWwwRequestHandler.SendHttpPostRequest(tokenEndpiont, formData, headers);
+            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token", "Getting access token to use for uploading asset bundle");
+            requestInProgress.track();
+
+            
+            AccessToken token = null;          
             if (string.IsNullOrEmpty(token.access_token))
             {
                 throw new Exception("Error retrieving the access token");
             }
 
-            return token;
+            if (tokenReceivedCallback != null)
+            {
+                tokenReceivedCallback.Invoke(token);
+            }
+            
         }
 
-        public static Oauth2Credential ReadOauth2CredentialsFile()
+        public static Oauth2Credentials ReadOauth2CredentialsFile()
         {
-            var filePrefix = "{\"installed\":";
-            var fileSuffix = "}";
-            string fileContents = File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName);
-            if (!fileContents.StartsWith(filePrefix) || !fileContents.EndsWith(fileSuffix))
-            {
-                throw new Exception("The file is not well formatted. Exiting");
-            }
-
-            Debug.Log("File contents are " + fileContents);
-
-            var toPrint = "string length: " + fileContents.Length.ToString() + " prefix length " +
-                          filePrefix.Length.ToString() + " suffixLength " + fileSuffix.Length.ToString();
-            Debug.Log(toPrint);
-
-            var startIndex = filePrefix.Length-1;
-            var length = fileContents.Length - filePrefix.Length - fileSuffix.Length-1;
-            Debug.Log("StartIndex: " + startIndex.ToString() + " length: " + length.ToString());
-
-            var jsonContents = fileContents.Substring(filePrefix.Length + 1, length);
-            Debug.Log("Json Contents are: {" + jsonContents);
-
-
-            Oauth2Credential credential =  JsonUtility.FromJson<Oauth2Credential>("{"+jsonContents);
-            Debug.Log("Auth uri: "+credential.auth_uri);
-            return credential;
+            return JsonUtility.FromJson<Oauth2File>(
+                File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName)).installed;
         }
     }
 
@@ -152,6 +138,8 @@ namespace GooglePlayInstant.Editor
             var result = QuickDeployWwwRequestHandler.SendHttpPostRequest(uploadEndpoint, bytes, headers);
             Debug.Log("Our result was: " + result);
         }
+        
+        
 
         private static bool AlwaysTrue()
         {
@@ -160,7 +148,7 @@ namespace GooglePlayInstant.Editor
 
         private static void CreateBucket(string bucketName)
         {
-            Oauth2Credential credential = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
+            Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                 credential.project_id);
             Dictionary<string, string> form = new Dictionary<string, string>();
@@ -198,12 +186,18 @@ namespace GooglePlayInstant.Editor
 
 
     [Serializable]
-    public class Oauth2Credential
+    public class Oauth2Credentials
     {
         public string client_id;
         public string client_secret;
         public string auth_uri;
         public string token_uri;
         public string project_id;
+    }
+
+    [Serializable]
+    public class Oauth2File
+    {
+        public Oauth2Credentials installed;
     }
 }
