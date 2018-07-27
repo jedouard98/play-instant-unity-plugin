@@ -19,11 +19,18 @@ namespace GooglePlayInstant.Editor
         private const string GrantType = "authorization_code";
         private const string Scope = "https://www.googleapis.com/auth/devstorage.read_write";
         private static AccessToken _accessToken;
+
         public delegate void AuthCodeReceivedCallback(AuthorizationCode authorizationCode);
 
         public delegate void TokenReceivedCallback(AccessToken accessToken);
 
-        public static void GetAuthCode(AuthCodeReceivedCallback authCodeReceivedCallback)
+        public static AccessToken AccessToken
+        {
+            get { return _accessToken; }
+        }
+
+
+        public static void ScheduleAuthCode(AuthCodeReceivedCallback authCodeReceivedCallback)
         {
             QuickDeployOAuth2Server server = new QuickDeployOAuth2Server();
             server.Start();
@@ -57,7 +64,7 @@ namespace GooglePlayInstant.Editor
             }
         }
 
-        public static void GetAccessToken(AuthorizationCode authCode, TokenReceivedCallback tokenReceivedCallback)
+        public static void ScheduleAccessToken(AuthorizationCode authCode, TokenReceivedCallback tokenReceivedCallback)
         {
             Oauth2Credentials credentials = ReadOauth2CredentialsFile();
 
@@ -82,12 +89,13 @@ namespace GooglePlayInstant.Editor
                 var token = JsonUtility.FromJson<AccessToken>(doneWww.text);
                 if (string.IsNullOrEmpty(token.access_token))
                 {
-                    throw new Exception(string.Format("Attempted to get access token and got response with code {0} and text {1}", doneWww.text, doneWww.error);
+                    throw new Exception(string.Format(
+                        "Attempted to get access token and got response with code {0} and text {1}", doneWww.text,
+                        doneWww.error));
                 }
 
                 tokenReceivedCallback.Invoke(token);
             });
-           
         }
 
 
@@ -97,7 +105,7 @@ namespace GooglePlayInstant.Editor
                 File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName)).installed;
         }
 
-        public static void tokenAssigner(AccessToken accessToken)
+        public static void AssignToken(AccessToken accessToken)
         {
             _accessToken = accessToken;
         }
@@ -105,44 +113,24 @@ namespace GooglePlayInstant.Editor
 
     public abstract class QuickDeployCloudUtility
     {
-        private static AccessToken _accessToken;
+        private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
-        public static AccessToken AccessTokenValue
+        private static AccessToken AccessToken
         {
-            get
-            {
-                if (_accessToken != null)
-                {
-                    return _accessToken;
-                }
-
-                return QuickDeployTokenUtility.GetAccessToken();
-            }
+            get { return QuickDeployTokenUtility.AccessToken; }
         }
 
+        private delegate void WwwHandler(WWW request);
 
-        private static readonly QuickDeployConfig.Configuration Config = QuickDeployConfig.Config;
-
-        public static void UploadBundle(WWW tokenHolder)
+        /// <summary>
+        /// Upload bundle to the cloud, assuming TokenUtility has a valid access token.
+        /// </summary>
+        public static void UploadBundle()
         {
-            if (tokenHolder != null)
+            // TODO(audace): Split this into two tasks, one to carry out when the bucket exists, and one to carry out when the bucket happens to not exist
+            if (!BucketExists(_config.cloudStorageBucketName))
             {
-                _accessToken = JsonUtility.FromJson<AccessToken>(tokenHolder.text);
-            }
-
-            if (_accessToken == null)
-            {
-                throw new Exception("Attempted to upload without valid token");
-            }
-
-            if (string.IsNullOrEmpty(_accessToken.access_token))
-            {
-                Debug.LogFormat("Attempted to get access token and got error with code {0}", tokenHolder.error);
-            }
-
-            if (!BucketExists(Config.cloudStorageBucketName))
-            {
-                CreateBucket(Config.cloudStorageBucketName);
+                CreateBucket(_config.cloudStorageBucketName, result => { UploadBundle();});
             }
 
             if (AlwaysTrue())
@@ -152,41 +140,45 @@ namespace GooglePlayInstant.Editor
 
             var uploadEndpoint =
                 string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
-                    Config.cloudStorageBucketName, Config.cloudStorageFileName);
+                    _config.cloudStorageBucketName, _config.cloudStorageFileName);
 
 
-            byte[] bytes = File.ReadAllBytes(Config.assetBundleFileName);
+            byte[] bytes = File.ReadAllBytes(_config.assetBundleFileName);
             var headers = new Dictionary<string, string>();
-            headers.Add("Authorization", "Bearer " + _accessToken.access_token);
+            headers.Add("Authorization", "Bearer " + AccessToken.access_token);
             headers.Add("Content-Length", bytes.Length.ToString());
             var result = QuickDeployWwwRequestHandler.SendHttpPostRequest(uploadEndpoint, bytes, headers);
-            Debug.Log("Our result was: " + result);
+            
         }
-
 
         private static bool AlwaysTrue()
         {
             return true;
         }
 
-        // Expects
-        private static void CreateBucket(string bucketName)
+        // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token
+        private static void CreateBucket(string bucketName, WwwHandler resultHandler)
         {
             Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
-                credential.project_id);
+                credentials.project_id);
             Dictionary<string, string> form = new Dictionary<string, string>();
             form.Add("name", bucketName);
-            string result = QuickDeployWwwRequestHandler.SendHttpPostRequest(createBucketEndPoint, form, null);
-            Debug.Log(result);
+            WWW request = QuickDeployWwwRequestHandler.SendHttpPostRequest(createBucketEndPoint, form, null);
+            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
+                string.Format("Creating bucket with name {0}", bucketName),
+                "You have specified a bucket that does not exist yet. Please wait while it is being created");
+            requestInProgress.TrackProgress();
+            requestInProgress.ScheduleTaksOnDone(wwwResult => { resultHandler.Invoke(wwwResult); });
         }
 
+        // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
         private static bool BucketExists(string bucketName)
         {
             string bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}?fields=location", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenValue.access_token));
+            headers.Add("Authorization", string.Format("Bearer {0}", AccessToken.access_token));
             var result = QuickDeployWwwRequestHandler.SendHttpGetRequest(bucketInfoUrl, null, headers);
             Debug.LogFormat("Bucket exists result is {0} ", result);
             return false;
