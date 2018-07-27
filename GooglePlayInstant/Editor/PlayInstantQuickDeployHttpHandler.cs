@@ -42,8 +42,7 @@ namespace GooglePlayInstant.Editor
         {
             var form = new WWWForm();
             AddHeadersToWwwForm(form, postHeaders);
-            var www = new WWW(endpoint, postData, form.headers);
-            return www;
+            return new WWW(endpoint, postData, form.headers);
         }
 
         /// <summary>
@@ -80,18 +79,17 @@ namespace GooglePlayInstant.Editor
         public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
-            var endPointbuilder = new UriBuilder(endpoint);
+            var uriBuilder = new UriBuilder(endpoint);
             if (getParams != null)
             {
-                endPointbuilder.Query = string.Join("&",
+                uriBuilder.Query = string.Join("&",
                     getParams.Select(kvp => string.Format("{0}={1}", WWW.EscapeURL(kvp.Key), WWW.EscapeURL(kvp.Value)))
                         .ToArray());
             }
 
             var form = new WWWForm();
             AddHeadersToWwwForm(form, getHeaders);
-            var www = new WWW(endPointbuilder.ToString(), null, form.headers);
-            return www;
+            return  new WWW(uriBuilder.ToString(), null, form.headers);
         }
 
         private static void AddHeadersToWwwForm(WWWForm form, Dictionary<string, string> headers)
@@ -102,117 +100,6 @@ namespace GooglePlayInstant.Editor
                 {
                     form.headers.Add(pair.Key, pair.Value);
                 }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Provides functionality for tracking and visualizing useful information about WWW requests in progress.
-    /// </summary>
-    public class WwwRequestInProgress
-    {
-        // Thread Safety Note: Operations on this class are NOT threadsafe because they are are expected to be
-        // run on the main thread.
-
-        // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
-        // Shouldn't be readonly because it is mutable.
-        private static List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
-        
-        private WWW _www;
-        private string _title;
-        private string _info;
-
-        // a method to be executed on the _www field when it is done
-        public delegate void DoneWwwHandler(WWW www);
-        private List<DoneWwwHandler> _onDoneTasks = new List<DoneWwwHandler>();
-
-        /// <summary>
-        /// Instantiate an instance of a RequestInProgress class.
-        /// </summary>
-        /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
-        /// <param name="title">The high level action of the request. This is displayed as the title when displaying
-        ///     the progress bar for this request in progress.</param>
-        /// <param name="info">A description of what this request is doing. This is displayed in the body when
-        /// displaying the progress bar for this request in progress.</param>
-        public WwwRequestInProgress(WWW www, string title, string info)
-        {
-            _www = www;
-            _title = title;
-            _info = info;
-        }
-
-        /// <summary>
-        /// Add instance to tracked requests in progress. After this call, a call to DisplayProgressForTrackedRequests
-        /// will display information for this request if it's not completed.
-        /// </summary>
-        public void TrackProgress()
-        {
-            _requestsInProgress.Add(this);
-        }
-
-        /// <summary>
-        /// Schedule a task to invoke on the request when the request is done.
-        /// </summary>
-        public void ScheduleTaksOnDone(DoneWwwHandler wwwHandler)
-        {
-            _onDoneTasks.Add(wwwHandler);
-        }
-
-        // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
-        private void ExecuteScheduledTasks()
-        {
-            if (!_www.isDone)
-            {
-                throw new Exception("Request has not yet completed");
-            }
-
-            foreach (var wwwHandler in _onDoneTasks)
-            {
-                wwwHandler.Invoke(_www);
-            }
-            _onDoneTasks.Clear();
-        }
-        
-        /// <summary>
-        /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
-        /// that are still in the pipeline.
-        /// </summary>
-        public static void UpdateState()
-        {
-            // First put done requests in another collection before removing them from the list in order to avoid
-            // concurrent modification exceptions.
-            var doneRequests = new List<WwwRequestInProgress>();
-            foreach (var requestInProgress in _requestsInProgress)
-            {
-                if (requestInProgress._www.isDone)
-                {
-                    doneRequests.Add(requestInProgress);
-                }
-            }
-
-            foreach (var doneRequest in doneRequests)
-            {
-                doneRequest.ExecuteScheduledTasks();
-                _requestsInProgress.Remove(doneRequest);
-            }
-        }
-
-        /// <summary>
-        /// Display the progress bar for the contained request along with information about this request in progress.
-        /// </summary>
-        public void DisplayProgress()
-        {
-            EditorUtility.DisplayProgressBar(_title, _info, _www.progress);
-        }
-
-        /// <summary>
-        /// Display a progress bar and request information for all class-wide tracked requests in progress.
-        /// </summary>
-        public static void DisplayProgressForTrackedRequests()
-        {
-            foreach (var requestInProgress in _requestsInProgress)
-            {
-                requestInProgress.DisplayProgress();
             }
         }
     }
