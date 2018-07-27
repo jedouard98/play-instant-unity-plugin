@@ -6,6 +6,8 @@ using System.Reflection.Emit;
 using System.Security.Cryptography;
 using System.Threading;
 using GooglePlayInstant.Editor.GooglePlayServices;
+using NUnit.Framework;
+using UnityEditor;
 using UnityEditor.U2D;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -16,10 +18,11 @@ namespace GooglePlayInstant.Editor
     {
         private const string GrantType = "authorization_code";
         private const string Scope = "https://www.googleapis.com/auth/devstorage.read_write";
-
+        private static AccessToken _accessToken;
         public delegate void AuthCodeReceivedCallback(AuthorizationCode authorizationCode);
+
         public delegate void TokenReceivedCallback(AccessToken accessToken);
-        
+
         public static void GetAuthCode(AuthCodeReceivedCallback authCodeReceivedCallback)
         {
             QuickDeployOAuth2Server server = new QuickDeployOAuth2Server();
@@ -36,13 +39,14 @@ namespace GooglePlayInstant.Editor
                 Debug.Log("No response yet");
                 Thread.Sleep(1);
             }
-            
+
             KeyValuePair<string, string> response = server.GetAuthorizationResponse();
             if (!string.Equals("code", response.Key))
             {
                 throw new InvalidStateException("Could not receive needed permissions");
             }
-            AuthorizationCode authCode =  new AuthorizationCode
+
+            AuthorizationCode authCode = new AuthorizationCode
             {
                 code = response.Value,
                 redirect_uri = redirect_uri
@@ -70,32 +74,32 @@ namespace GooglePlayInstant.Editor
             formData.Add("grant_type", GrantType);
 
             WWW www = QuickDeployWwwRequestHandler.SendHttpPostRequest(tokenEndpiont, formData, headers);
-            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token", "Getting access token to use for uploading asset bundle");
+            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token",
+                "Getting access token to use for uploading asset bundle");
             requestInProgress.TrackProgress();
-            requestInProgress.OnDone(HandleWww);
-
-            
-            AccessToken token = null;          
-            if (string.IsNullOrEmpty(token.access_token))
+            requestInProgress.ScheduleTaksOnDone(doneWww =>
             {
-                throw new Exception("Error retrieving the access token");
-            }
+                var token = JsonUtility.FromJson<AccessToken>(doneWww.text);
+                if (string.IsNullOrEmpty(token.access_token))
+                {
+                    throw new Exception(string.Format("Attempted to get access token and got response with code {0} and text {1}", doneWww.text, doneWww.error);
+                }
 
-            if (tokenReceivedCallback != null)
-            {
                 tokenReceivedCallback.Invoke(token);
-            }
-            
+            });
+           
         }
 
-        public static void HandleWww(WWW www)
-        {
-        }
 
         public static Oauth2Credentials ReadOauth2CredentialsFile()
         {
             return JsonUtility.FromJson<Oauth2File>(
                 File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName)).installed;
+        }
+
+        public static void tokenAssigner(AccessToken accessToken)
+        {
+            _accessToken = accessToken;
         }
     }
 
@@ -116,11 +120,26 @@ namespace GooglePlayInstant.Editor
             }
         }
 
+
         private static readonly QuickDeployConfig.Configuration Config = QuickDeployConfig.Config;
 
-        public static void UploadBundle()
+        public static void UploadBundle(WWW tokenHolder)
         {
-            _accessToken = QuickDeployTokenUtility.GetAccessToken();
+            if (tokenHolder != null)
+            {
+                _accessToken = JsonUtility.FromJson<AccessToken>(tokenHolder.text);
+            }
+
+            if (_accessToken == null)
+            {
+                throw new Exception("Attempted to upload without valid token");
+            }
+
+            if (string.IsNullOrEmpty(_accessToken.access_token))
+            {
+                Debug.LogFormat("Attempted to get access token and got error with code {0}", tokenHolder.error);
+            }
+
             if (!BucketExists(Config.cloudStorageBucketName))
             {
                 CreateBucket(Config.cloudStorageBucketName);
@@ -143,14 +162,14 @@ namespace GooglePlayInstant.Editor
             var result = QuickDeployWwwRequestHandler.SendHttpPostRequest(uploadEndpoint, bytes, headers);
             Debug.Log("Our result was: " + result);
         }
-        
-        
+
 
         private static bool AlwaysTrue()
         {
             return true;
         }
 
+        // Expects
         private static void CreateBucket(string bucketName)
         {
             Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
