@@ -128,9 +128,9 @@ namespace GooglePlayInstant.Editor
         public static void UploadBundle()
         {
             // TODO(audace): Split this into two tasks, one to carry out when the bucket exists, and one to carry out when the bucket happens to not exist
-            if (!BucketExists(_config.cloudStorageBucketName))
+            if (!IfBucketExists(_config.cloudStorageBucketName, null, null))
             {
-                CreateBucket(_config.cloudStorageBucketName, result => { UploadBundle();});
+                CreateBucket(_config.cloudStorageBucketName, doneWww => { UploadBundle();});
             }
 
             if (AlwaysTrue())
@@ -156,7 +156,8 @@ namespace GooglePlayInstant.Editor
             return true;
         }
 
-        // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token
+        // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token and that the bucket
+        // currently does not exist
         private static void CreateBucket(string bucketName, WwwHandler resultHandler)
         {
             Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
@@ -169,11 +170,20 @@ namespace GooglePlayInstant.Editor
                 string.Format("Creating bucket with name {0}", bucketName),
                 "You have specified a bucket that does not exist yet. Please wait while it is being created");
             requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaksOnDone(wwwResult => { resultHandler.Invoke(wwwResult); });
+            requestInProgress.ScheduleTaksOnDone(wwwResult =>
+            {
+                if (resultHandler != null)
+                {
+                    resultHandler.Invoke(wwwResult);
+                }
+
+                
+            });
         }
 
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
-        private static bool BucketExists(string bucketName)
+        // TODO(audace): Implement different paths to be executed on true and on false
+        private static bool IfBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
         {
             string bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}?fields=location", bucketName);
