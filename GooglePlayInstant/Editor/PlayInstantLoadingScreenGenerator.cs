@@ -77,7 +77,13 @@ namespace GooglePlayInstant.Editor
 
         private static void AddLoadingBar(GameObject loadingScreenGameObject)
         {
- 
+            var loadingBarOutlineGameObject = new GameObject("Loading Bar Outline");
+            loadingBarOutlineGameObject.AddComponent<Image>();
+            loadingBarOutlineGameObject.transform.SetParent(loadingScreenGameObject.transform);
+            
+            // set background image
+            var backgroundImage = loadingBarOutlineGameObject.GetComponent<Image>();
+            backgroundImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(InputFieldBackground);
         }
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
