@@ -21,13 +21,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class QuickDeployWwwRequestHandlerTest
     {
-        private delegate void ContextHandler(HttpListenerContext context, ref Thread handlingThread);
+        private delegate void ContextHandler(HttpListenerContext context);
 
         [Test]
         public void TestSendGetRequestNoGetParamsOrHeaders()
         {
             const string expectedResponse = "Request Received";
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 var outputStream = context.Response.OutputStream;
                 var responseArray = Encoding.UTF8.GetBytes(expectedResponse);
@@ -35,7 +35,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -50,7 +49,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         public void TestSendGetRequestWithGetParamsNoHeaders()
         {
             var getParams = QuickDeployHttpTestHelper.GetKeyValueDict(10);
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 var outputStream = context.Response.OutputStream;
                 // The response is
@@ -59,7 +58,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -73,7 +71,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         public void TestSendGetRequestWithHeadersNoGetParams()
         {
             var sentHeaders = QuickDeployHttpTestHelper.GetKeyValueDict(10);
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 var outputStream = context.Response.OutputStream;
                 var headersDict = new Dictionary<string, string>();
@@ -88,7 +86,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -103,7 +100,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         public void TestSendPostRequestWithFormAndNoHeaders()
         {
             var formDict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 var formData = new StreamReader(context.Request.InputStream).ReadToEnd();
                 var outputStream = context.Response.OutputStream;
@@ -112,7 +109,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -130,7 +126,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var formDict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
             var sentHeaders = QuickDeployHttpTestHelper.GetKeyValueDict(10);
             var receivedHeaders = new Dictionary<string, string>();
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 // Headers first
                 foreach (var key in context.Request.Headers.AllKeys)
@@ -146,7 +142,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -164,7 +159,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var dict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
             var sentBytes = Encoding.UTF8.GetBytes(QuickDeployHttpTestHelper.GetUriQueryFromDict(dict).Substring(1));
             //byte[] receivedBytes = null;
-            ContextHandler handler = (HttpListenerContext context, ref Thread handlingThread) =>
+            ContextHandler handler = context =>
             {
                 var receivedBytes = Encoding.UTF8.GetBytes(new StreamReader(context.Request.InputStream).ReadToEnd());
                 var outputStream = context.Response.OutputStream;
@@ -172,7 +167,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 outputStream.Flush();
                 outputStream.Close();
                 context.Response.Close();
-                handlingThread.Abort();
             };
 
             var server = new TestServer(handler);
@@ -187,8 +181,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         private class TestServer
         {
             private ContextHandler _contextHandler;
-            private HttpListener _httpListener;
-            private string _endPoint;
+            private readonly HttpListener _httpListener;
+            private readonly string _endPoint;
 
             internal string EndPoint
             {
@@ -221,14 +215,12 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 }
 
                 _httpListener.Start();
-
-                Thread responseHandler = null;
-                responseHandler = new Thread(() =>
+                var responseHandler = new Thread(() =>
                 {
                     while (true)
                     {
                         ThreadPool.QueueUserWorkItem(
-                            o => { _contextHandler.Invoke(o as HttpListenerContext, ref responseHandler); },
+                            o => { _contextHandler.Invoke(o as HttpListenerContext); },
                             _httpListener.GetContext());
                     }
                 });

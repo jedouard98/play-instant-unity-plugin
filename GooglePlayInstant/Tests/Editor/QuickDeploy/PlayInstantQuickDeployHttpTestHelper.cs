@@ -21,7 +21,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var getParams = new Dictionary<string, string>();
             foreach (var s in query.Substring(1).Split('&'))
             {
-                string[] kvp = s.Split('=');
+                var kvp = s.Split('=');
                 getParams.Add(kvp[0], kvp[1]);
             }
 
@@ -33,7 +33,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             return "?" + string.Join("&",
                        parameters.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)).ToArray());
         }
-
+        
         public static bool DictsAreEqual(Dictionary<string, string> dict1, Dictionary<string, string> dict2)
         {
             return dict1.Count == dict2.Count && !dict1.Except(dict2).Any();
