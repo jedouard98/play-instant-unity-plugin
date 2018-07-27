@@ -83,7 +83,13 @@ namespace GooglePlayInstant.Editor
             
             // set background image
             var backgroundImage = loadingBarOutlineGameObject.GetComponent<Image>();
-            backgroundImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(InputFieldBackground);
+            backgroundImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
+            backgroundImage.type = Image.Type.Tiled;
+            backgroundImage.fillCenter = false;
+
+            var rectTransform = (RectTransform) loadingBarOutlineGameObject.transform;
+            rectTransform.sizeDelta = new Vector2(700, 20);
+
         }
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
