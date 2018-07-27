@@ -117,10 +117,14 @@ namespace GooglePlayInstant.Editor
         // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
         // Shouldn't be readonly because it is mutable.
         private static List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
-
+        
         private WWW _www;
         private string _title;
         private string _info;
+
+        // a method to be executed on the _www field when it is done
+        public delegate void DoneWwwHandler(WWW www);
+        private List<DoneWwwHandler> _onDoneTasks = new List<DoneWwwHandler>();
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
@@ -141,15 +145,39 @@ namespace GooglePlayInstant.Editor
         /// Add instance to tracked requests in progress. After this call, a call to DisplayProgressForTrackedRequests
         /// will display information for this request if it's not completed.
         /// </summary>
-        public void Track()
+        public void TrackProgress()
         {
             _requestsInProgress.Add(this);
         }
 
         /// <summary>
-        /// Dispose completed requests and clear them from the class-global collection of requests in progress.
+        /// Schedule a task to invoke on the request when the request is done.
         /// </summary>
-        public static void Update()
+        public void ScheduleTaksOnDone(DoneWwwHandler wwwHandler)
+        {
+            _onDoneTasks.Add(wwwHandler);
+        }
+
+        // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
+        private void ExecuteScheduledTasks()
+        {
+            if (!_www.isDone)
+            {
+                throw new Exception("Request has not yet completed");
+            }
+
+            foreach (var wwwHandler in _onDoneTasks)
+            {
+                wwwHandler.Invoke(_www);
+            }
+            _onDoneTasks.Clear();
+        }
+        
+        /// <summary>
+        /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
+        /// that are still in the pipeline.
+        /// </summary>
+        public static void UpdateState()
         {
             // First put done requests in another collection before removing them from the list in order to avoid
             // concurrent modification exceptions.
@@ -164,7 +192,7 @@ namespace GooglePlayInstant.Editor
 
             foreach (var doneRequest in doneRequests)
             {
-                doneRequest._www.Dispose();
+                doneRequest.ExecuteScheduledTasks();
                 _requestsInProgress.Remove(doneRequest);
             }
         }
