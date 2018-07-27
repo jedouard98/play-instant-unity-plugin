@@ -92,7 +92,7 @@ namespace GooglePlayInstant.Editor
             return  new WWW(uriBuilder.ToString(), null, form.headers);
         }
 
-        private static void AddHeadersToWwwForm(WWWForm form, Dictionary<string, string> headers)
+        internal static void AddHeadersToWwwForm(WWWForm form, Dictionary<string, string> headers)
         {
             if (headers != null)
             {
