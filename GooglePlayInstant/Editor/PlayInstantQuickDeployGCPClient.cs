@@ -14,6 +14,11 @@ using Debug = UnityEngine.Debug;
 
 namespace GooglePlayInstant.Editor
 {
+    /// <summary>
+    /// Represents a handler for an Http Response
+    /// </summary>
+    /// <param name="www"></param>
+    public delegate void HttpResponseCallback(WWW www);
     public static class QuickDeployTokenUtility
     {
         private const string GrantType = "authorization_code";
@@ -96,8 +101,6 @@ namespace GooglePlayInstant.Editor
                 tokenReceivedCallback.Invoke(token);
             });
         }
-
-
         public static Oauth2Credentials ReadOauth2CredentialsFile()
         {
             return JsonUtility.FromJson<Oauth2File>(
@@ -157,7 +160,7 @@ namespace GooglePlayInstant.Editor
 
         // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token and that the bucket
         // currently does not exist
-        private static void CreateBucket(string bucketName, WwwHandler resultHandler)
+        private static void ScheduleCreateBucket(string bucketName, WwwHandler resultHandler)
         {
             Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
@@ -191,6 +194,12 @@ namespace GooglePlayInstant.Editor
             var result = QuickDeployWwwRequestHandler.SendHttpGetRequest(bucketInfoUrl, null, headers);
             Debug.LogFormat("Bucket exists result is {0} ", result);
             return false;
+        }
+        
+        public static void ScheduleUpload(HttpResponseCallback onResponse)
+        {
+            throw new NotImplementedException("Not Implemented");
+            // TODO(audace): Implement
         }
     }
 
