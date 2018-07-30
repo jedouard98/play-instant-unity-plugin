@@ -45,8 +45,7 @@ namespace GooglePlayInstant.Editor
 
         private string _callbackEndpoint;
 
-        // Use Queue to implement a producer-consumer pattern with unlimited buffer for auth_code requests/responses
-        private readonly Queue<KeyValuePair<string, string>> _responseQueue = new Queue<KeyValuePair<string, string>>();
+        private KeyValuePair<string, string>? _response;
 
         public string CallbackEndpoint
         {
@@ -122,18 +121,14 @@ namespace GooglePlayInstant.Editor
             }
 
             _httpListener.Start();
-            var responseThread = new Thread(HandleResponses);
-            responseThread.Start();
-        }
-
-
-        // Handle concurrent requests with a thread pool.
-        private void HandleResponses()
-        {
-            while (true)
+            var responseThread = new Thread(() =>
             {
-                ThreadPool.QueueUserWorkItem(ProcessContext, _httpListener.GetContext());
-            }
+                while (true)
+                {
+                    ThreadPool.QueueUserWorkItem(ProcessContext, _httpListener.GetContext());
+                }
+            });
+            responseThread.Start();
         }
 
         // Process the current HttpListenerContext, retain code or error response and respond to the client.
@@ -154,9 +149,7 @@ namespace GooglePlayInstant.Editor
             {
                 if (string.Equals("code", pair.Key) || string.Equals("error", pair.Key))
                 {
-                    responsePair = pair;
-                    _responseQueue.Enqueue(pair);
-                    break;
+                    _response = pair;
                 }
             }
 
@@ -211,7 +204,6 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public void Stop()
         {
-            _responseQueue.Clear();
             if (!IsListening())
             {
                 return;
@@ -234,32 +226,15 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public bool HasOauth2AuthorizationResponse()
         {
-            lock (_responseQueue)
-            {
-                return _responseQueue.Count > 0;
-            }
+            return _response.HasValue;
         }
 
         /// <summary>
-        /// Returns a KeyValuePair instance corresponding to one of the responses containing authorization code or error
-        /// information that this server has received.
+        /// Returns a KeyValuePair instance corresponding to the response received from authorizing the application.
         /// </summary>
-        /// <exception cref="InvalidStateException">This exception when the server hasn't received any authorization
-        /// response yet.</exception>
         public KeyValuePair<string, string> GetAuthorizationResponse()
         {
-            KeyValuePair<string, string> response;
-            lock (_responseQueue)
-            {
-                if (!HasOauth2AuthorizationResponse())
-                {
-                    throw new InvalidStateException("Server has not yet received any responses.");
-                }
-
-                response = _responseQueue.Dequeue();
-            }
-
-            return response;
+            return _response.Value;
         }
     }
 
