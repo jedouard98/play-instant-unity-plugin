@@ -19,13 +19,20 @@ using Random = System.Random;
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     /// <summary>
-    /// Tests 
+    /// Tests for Http Request Helper methods.
     /// </summary>
     [TestFixture]
     public class QuickDeployHttpRequestHelperTest
     {
+        /// <summary>
+        /// Handler for Http listener contexts.
+        /// </summary>
+        /// <param name="context">A reference to the HttpListenerContext instance to be handled.</param>
         private delegate void HttpListenerContextHandler(HttpListenerContext context);
 
+        /// <summary>
+        /// Tests for SendHttpGetRequest method with no params or headers.
+        /// </summary>
         [Test]
         public void TestSendGetRequestNoGetParamsOrHeaders()
         {
@@ -48,6 +55,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             server.Stop();
         }
 
+        /// <summary>
+        /// Tests for SendHttpGetRequest method with params but no headers.
+        /// </summary>
         [Test]
         public void TestSendGetRequestWithGetParamsNoHeaders()
         {
@@ -70,6 +80,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             server.Stop();
         }
 
+        /// <summary>
+        /// Tests for SendHttpGetRequest with headers but no params.
+        /// </summary>
         [Test]
         public void TestSendGetRequestWithHeadersNoGetParams()
         {
@@ -99,6 +112,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             server.Stop();
         }
 
+        /// <summary>
+        /// Tests for SendHttpPostRequest with form and no headers.
+        /// </summary>
         [Test]
         public void TestSendPostRequestWithFormAndNoHeaders()
         {
@@ -123,6 +139,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             server.Stop();
         }
 
+        /// <summary>
+        /// Tests for SendHttpPostRequest method with form and headers.
+        /// </summary>
         [Test]
         public void TestSendPostRequestWithFormAndHeaders()
         {
@@ -156,6 +175,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             server.Stop();
         }
 
+        /// <summary>
+        /// Tests SendHttpPostRequest method with bytes
+        /// </summary>
         [Test]
         public void TestSendPostRequestWithBytes()
         {
@@ -181,6 +203,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         }
 
 
+        /// <summary>
+        /// A server to be used by test methods for handling and inspecting http requests and responses.
+        /// </summary>
         private class TestServer
         {
             private HttpListenerContextHandler _contextHandler;
@@ -192,9 +217,17 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 get { return _endPoint; }
             }
 
+            /// <summary>
+            /// Constructs and returns an instance of a server that handles all HttpListenerContexts by invoking the
+            /// delegate passed in as a context handler. The server will be listening to an endpoint that can be
+            /// accessed by the EndPoint property after the server has been instantiated.
+            /// </summary>
+            /// <param name="contextHandler">A handler for HttpListenerContexts corresponding to request-response pairs
+            /// that this server is going to process. Must not be null.</param>
             internal TestServer(HttpListenerContextHandler contextHandler)
             {
                 _contextHandler = contextHandler;
+                // Allowed ports range from minimumPort to maximumPort
                 const int minimumPort = 1024;
                 const int maximumPort = 65535;
                 while (true)
@@ -230,6 +263,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 responseHandler.Start();
             }
 
+            /// <summary>
+            /// Stop the server from handling further requests.
+            /// </summary>
             internal void Stop()
             {
                 _httpListener.Stop();
