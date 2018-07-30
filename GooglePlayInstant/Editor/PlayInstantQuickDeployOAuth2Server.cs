@@ -131,7 +131,10 @@ namespace GooglePlayInstant.Editor
             responseThread.Start();
         }
 
-        // Process the current HttpListenerContext, retain code or error response and respond to the client.
+        /// <summary>
+        /// Process the context and retrieve authorization response.
+        /// </summary>
+        /// <param name="o"></param>
         private void ProcessContext(object o)
         {
             var context = o as HttpListenerContext;
@@ -163,6 +166,9 @@ namespace GooglePlayInstant.Editor
             context.Response.Close();
         }
 
+        /// <summary>
+        /// Inspect the uri and determine whether it contains valid params to be considered.
+        /// </summary>
         private bool UriContainsValidQueryParams(Uri uri)
         {
             // Policy 1: URI must contain query params (query starts with "?").
@@ -177,7 +183,9 @@ namespace GooglePlayInstant.Editor
             return uriRespectsPolicies;
         }
 
-        // Extract uri and return query params. Provided Uri instance must contain query params.
+        /// <summary>
+        /// Process uri, extract query params and return them in a dictionary. Provided uri must contain query params.
+        /// </summary>
         private static Dictionary<string, string> GetQueryParamsFromUri(Uri uri, ref Dictionary<string, string> result)
         {
             if (result != null)
