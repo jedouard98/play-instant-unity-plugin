@@ -52,7 +52,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             return "?" + string.Join("&",
                        paramsDict.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)).ToArray());
         }
-        
+
         public static bool DictsAreEqual(Dictionary<string, string> dict1, Dictionary<string, string> dict2)
         {
             return dict1.Count == dict2.Count && !dict1.Except(dict2).Any();

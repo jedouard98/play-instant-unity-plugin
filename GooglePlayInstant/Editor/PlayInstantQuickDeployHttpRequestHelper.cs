@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEditor;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
@@ -89,7 +88,7 @@ namespace GooglePlayInstant.Editor
 
             var form = new WWWForm();
             var newHeaders = GetCombinedHeaders(form, getHeaders);
-            return  new WWW(uriBuilder.ToString(), null, newHeaders);
+            return new WWW(uriBuilder.ToString(), null, newHeaders);
         }
 
         internal static Dictionary<string, string> GetCombinedHeaders(WWWForm form, Dictionary<string, string> headers)
@@ -105,6 +104,5 @@ namespace GooglePlayInstant.Editor
 
             return newHeaders;
         }
-        
     }
 }
