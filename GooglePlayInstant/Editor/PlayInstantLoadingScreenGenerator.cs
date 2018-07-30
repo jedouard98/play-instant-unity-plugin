@@ -88,22 +88,37 @@ namespace GooglePlayInstant.Editor
             backgroundImage.type = Image.Type.Tiled;
             backgroundImage.fillCenter = false;
 
-            var rectTransform = (RectTransform) loadingBarOutlineGameObject.transform;
-
-            //adding border
+            var rectTransformOutline = (RectTransform) loadingBarOutlineGameObject.transform;
+            rectTransformOutline.position = loadingScreenGameObject.transform.position;
             
-            rectTransform.position = loadingScreenGameObject.transform.position;
-            
-            var loadingBarPosition = rectTransform.position;
+            var loadingBarPosition = rectTransformOutline.position;
             loadingBarPosition.y = loadingBarPosition.y - ((RectTransform) loadingScreenGameObject.transform).sizeDelta.y/2 ;
-            rectTransform.position = loadingBarPosition;
-            
-            rectTransform.sizeDelta = new Vector2(((RectTransform) loadingScreenGameObject.transform).sizeDelta.x / 2f, 30);
-            
-            //
+            rectTransformOutline.position = loadingBarPosition;
             
             
+            rectTransformOutline.sizeDelta = new Vector2(((RectTransform) loadingScreenGameObject.transform).sizeDelta.x / 2f, 30);
+            
+            //////////////////////////////////////////////////////////////
+            
+            //adding loading bar
+            var loadingBarProgressGameObject = new GameObject("Loading Bar Progress");
+            loadingBarProgressGameObject.AddComponent<Image>();
+            loadingBarProgressGameObject.transform.SetParent(loadingScreenGameObject.transform);
+            
+            //set the color for testing purposes
 
+            var imageProgress = loadingBarProgressGameObject.GetComponent<Image>();
+            imageProgress.color = Color.red;
+            
+            
+            var rectTransformProgress = (RectTransform) loadingBarProgressGameObject.transform;
+            rectTransformProgress.position = rectTransformOutline.position;
+            
+            var loadingBarProgressSize = rectTransformOutline.sizeDelta;
+            loadingBarProgressSize.x = loadingBarProgressSize.x - 17;
+            loadingBarProgressSize.y = loadingBarProgressSize.y - 17;
+
+            rectTransformProgress.sizeDelta = loadingBarProgressSize;
         }
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
