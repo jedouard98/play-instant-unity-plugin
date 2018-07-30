@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.CodeDom.Compiler;
 using System.IO;
 using GooglePlayInstant.LoadingScreen;
 using UnityEditor;
@@ -88,7 +89,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             backgroundImage.fillCenter = false;
 
             var rectTransform = (RectTransform) loadingBarOutlineGameObject.transform;
-            rectTransform.sizeDelta = new Vector2(700, 20);
+
+            //adding border
+            
+            rectTransform.position = loadingScreenGameObject.transform.position;
+            
+            var loadingBarPosition = rectTransform.position;
+            loadingBarPosition.y = loadingBarPosition.y - ((RectTransform) loadingScreenGameObject.transform).sizeDelta.y/2 ;
+            rectTransform.position = loadingBarPosition;
+            
+            rectTransform.sizeDelta = new Vector2(((RectTransform) loadingScreenGameObject.transform).sizeDelta.x / 2f, 30);
+            
+            //
+            
+            
 
         }
 
