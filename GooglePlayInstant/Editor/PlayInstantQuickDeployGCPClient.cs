@@ -21,7 +21,6 @@ namespace GooglePlayInstant.Editor
         private static AccessToken _accessToken;
 
         public delegate void AuthCodeReceivedCallback(AuthorizationCode authorizationCode);
-
         public delegate void TokenReceivedCallback(AccessToken accessToken);
 
         public static AccessToken AccessToken
@@ -84,7 +83,7 @@ namespace GooglePlayInstant.Editor
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(www, "Downloading access token",
                 "Getting access token to use for uploading asset bundle");
             requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaksOnDone(doneWww =>
+            requestInProgress.ScheduleTaskOnDone(doneWww =>
             {
                 var token = JsonUtility.FromJson<AccessToken>(doneWww.text);
                 if (string.IsNullOrEmpty(token.access_token))

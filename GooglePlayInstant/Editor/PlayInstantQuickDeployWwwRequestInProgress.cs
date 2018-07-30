@@ -26,36 +26,39 @@ namespace GooglePlayInstant.Editor
     /// <summary>
     /// Provides functionality for tracking and visualizing useful information about WWW requests in progress.
     /// </summary>
-    public class WwwRequestHelper
+    public class WwwRequestInProgress
     {
         // Thread Safety Note: Operations on this class are NOT threadsafe because they are are expected to be
         // run on the main thread.
 
         // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
         // Shouldn't be readonly because it is mutable.
-        private static List<WwwRequestHelper> _requestsInProgress = new List<WwwRequestHelper>();
-        
-        private WWW _www;
-        private string _title;
-        private string _info;
+        private static List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
 
-        // a method to be executed on the _www field when it is done
+        private readonly WWW _www;
+        private readonly string _progressBarTitleText;
+        private readonly string _progressBarInfoText;
+
+
+        /// <summary>
+        /// A method to be executed on the _www field when it is done.
+        /// </summary>
         public delegate void DoneWwwHandler(WWW www);
-        private List<DoneWwwHandler> _onDoneTasks = new List<DoneWwwHandler>();
+        private DoneWwwHandler _onDone = www => { };  
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
         /// </summary>
         /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
-        /// <param name="title">The high level action of the request. This is displayed as the title when displaying
+        /// <param name="progressBarTitleText">The high level action of the request. This is displayed as the title when displaying
         ///     the progress bar for this request in progress.</param>
-        /// <param name="info">A description of what this request is doing. This is displayed in the body when
+        /// <param name="progressBarInfoText">A description of what this request is doing. This is displayed in the body when
         /// displaying the progress bar for this request in progress.</param>
-        public WwwRequestHelper(WWW www, string title, string info)
+        public WwwRequestInProgress(WWW www, string progressBarTitleText, string progressBarInfoText)
         {
             _www = www;
-            _title = title;
-            _info = info;
+            _progressBarTitleText = progressBarTitleText;
+            _progressBarInfoText = progressBarInfoText;
         }
 
         /// <summary>
@@ -70,9 +73,9 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Schedule a task to invoke on the request when the request is done.
         /// </summary>
-        public void ScheduleTaksOnDone(DoneWwwHandler wwwHandler)
+        public void ScheduleTaskOnDone(DoneWwwHandler wwwHandler)
         {
-            _onDoneTasks.Add(wwwHandler);
+            _onDone += wwwHandler;
         }
 
         // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
@@ -82,14 +85,9 @@ namespace GooglePlayInstant.Editor
             {
                 throw new Exception("Request has not yet completed");
             }
-
-            foreach (var wwwHandler in _onDoneTasks)
-            {
-                wwwHandler.Invoke(_www);
-            }
-            _onDoneTasks.Clear();
+            _onDone.Invoke(_www);
         }
-        
+
         /// <summary>
         /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
         /// that are still in the pipeline.
@@ -98,7 +96,7 @@ namespace GooglePlayInstant.Editor
         {
             // First put done requests in another collection before removing them from the list in order to avoid
             // concurrent modification exceptions.
-            var doneRequests = new List<WwwRequestHelper>();
+            var doneRequests = new List<WwwRequestInProgress>();
             foreach (var requestInProgress in _requestsInProgress)
             {
                 if (requestInProgress._www.isDone)
@@ -119,7 +117,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public void DisplayProgress()
         {
-            EditorUtility.DisplayProgressBar(_title, _info, _www.progress);
+            EditorUtility.DisplayProgressBar(_progressBarTitleText, _progressBarInfoText, _www.progress);
         }
 
         /// <summary>
