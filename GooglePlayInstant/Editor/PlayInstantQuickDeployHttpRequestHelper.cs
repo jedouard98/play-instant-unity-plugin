@@ -26,7 +26,7 @@ namespace GooglePlayInstant.Editor
     /// <summary>
     /// A class with utility methods for sending GET and POST requests.
     /// </summary>
-    public static class QuickDeployWwwRequestHandler
+    public static class QuickDeployHttpRequestHelper
     {
         /// <summary>
         /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and
