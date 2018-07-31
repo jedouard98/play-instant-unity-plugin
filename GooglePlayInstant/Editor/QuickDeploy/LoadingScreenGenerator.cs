@@ -32,6 +32,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
+        private const int LoadingBarFillPadding = 17;
+
+
         private static readonly string LoadingScreenScenePath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
 
@@ -68,8 +71,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
             AddLoadingScreenScript(loadingScreenGameObject);
-            
-            
+
+
             AddLoadingBar(loadingScreenGameObject);
 
             EditorSceneManager.SaveScene(loadingScreenScene,
@@ -78,47 +81,102 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static void AddLoadingBar(GameObject loadingScreenGameObject)
         {
+            var loadingBarGameObject = new GameObject("Loading Bar");
+            loadingBarGameObject.transform.SetParent(loadingScreenGameObject.transform);
+
+            var loadingBarGameObjectRectTransform = (RectTransform) loadingBarGameObject.transform;
+
+            var loadingScreenGameObjectRectTransform = (RectTransform) loadingScreenGameObject.transform;
+
+            //Set the size of the loading bar
+            loadingBarGameObjectRectTransform.sizeDelta =
+                new Vector2(loadingScreenGameObjectRectTransform.sizeDelta.x / 2f, 30);
+
+            //Set the position of the loading bar
+            loadingBarGameObjectRectTransform.position =
+                new Vector2(loadingScreenGameObjectRectTransform.position.x,
+                    loadingScreenGameObjectRectTransform.position.y);
+
+
+            SetLoadingBarOutline(loadingBarGameObject);
+            SetLoadingBarFill(loadingBarGameObject);
+
+
+//            var rectTransformOutline = (RectTransform) loadingBarOutlineGameObject.transform;
+//            rectTransformOutline.position = loadingScreenGameObject.transform.position;
+//
+//            var loadingBarPosition = rectTransformOutline.position;
+//            loadingBarPosition.y =
+//                loadingBarPosition.y - ((RectTransform) loadingScreenGameObject.transform).sizeDelta.y;
+//            rectTransformOutline.position = loadingBarPosition;
+//
+//
+//            rectTransformOutline.sizeDelta =
+//                new Vector2(((RectTransform) loadingScreenGameObject.transform).sizeDelta.x / 2f, 30);
+//
+//            //////////////////////////////////////////////////////////////
+//
+//            //adding loading bar
+//            var loadingBarProgressGameObject = new GameObject("Loading Bar Progress");
+//            loadingBarProgressGameObject.AddComponent<Image>();
+//            loadingBarProgressGameObject.transform.SetParent(loadingScreenGameObject.transform);
+//
+//            //set the color for testing purposes
+//
+//            var imageProgress = loadingBarProgressGameObject.GetComponent<Image>();
+//            imageProgress.color = Color.red;
+//
+//
+//            var rectTransformProgress = (RectTransform) loadingBarProgressGameObject.transform;
+//            rectTransformProgress.position = rectTransformOutline.position;
+//
+//            var loadingBarProgressSize = rectTransformOutline.sizeDelta;
+//            loadingBarProgressSize.x = loadingBarProgressSize.x - 17;
+//            loadingBarProgressSize.y = loadingBarProgressSize.y - 17;
+//
+//            rectTransformProgress.sizeDelta = loadingBarProgressSize;
+        }
+
+        private static void SetLoadingBarOutline(GameObject loadingBarGameObject)
+        {
+            // create outline component
             var loadingBarOutlineGameObject = new GameObject("Loading Bar Outline");
             loadingBarOutlineGameObject.AddComponent<Image>();
-            loadingBarOutlineGameObject.transform.SetParent(loadingScreenGameObject.transform);
-            
-            // set background image
+            loadingBarOutlineGameObject.transform.SetParent(loadingBarGameObject.transform);
+
             var backgroundImage = loadingBarOutlineGameObject.GetComponent<Image>();
             backgroundImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
             backgroundImage.type = Image.Type.Tiled;
             backgroundImage.fillCenter = false;
 
-            var rectTransformOutline = (RectTransform) loadingBarOutlineGameObject.transform;
-            rectTransformOutline.position = loadingScreenGameObject.transform.position;
-            
-            var loadingBarPosition = rectTransformOutline.position;
-            loadingBarPosition.y = loadingBarPosition.y - ((RectTransform) loadingScreenGameObject.transform).sizeDelta.y/2 ;
-            rectTransformOutline.position = loadingBarPosition;
-            
-            
-            rectTransformOutline.sizeDelta = new Vector2(((RectTransform) loadingScreenGameObject.transform).sizeDelta.x / 2f, 30);
-            
-            //////////////////////////////////////////////////////////////
-            
-            //adding loading bar
-            var loadingBarProgressGameObject = new GameObject("Loading Bar Progress");
-            loadingBarProgressGameObject.AddComponent<Image>();
-            loadingBarProgressGameObject.transform.SetParent(loadingScreenGameObject.transform);
-            
-            //set the color for testing purposes
+            // Set size of component
+            var loadingBarOutlineGameObjectRectTransform = (RectTransform) loadingBarOutlineGameObject.transform;
+            var loadingBarGameObjectRectTransform = (RectTransform) loadingBarGameObject.transform;
+            loadingBarOutlineGameObjectRectTransform.sizeDelta = loadingBarGameObjectRectTransform.sizeDelta;
 
-            var imageProgress = loadingBarProgressGameObject.GetComponent<Image>();
-            imageProgress.color = Color.red;
-            
-            
-            var rectTransformProgress = (RectTransform) loadingBarProgressGameObject.transform;
-            rectTransformProgress.position = rectTransformOutline.position;
-            
-            var loadingBarProgressSize = rectTransformOutline.sizeDelta;
-            loadingBarProgressSize.x = loadingBarProgressSize.x - 17;
-            loadingBarProgressSize.y = loadingBarProgressSize.y - 17;
+            // Position outline component
+            loadingBarOutlineGameObject.transform.position = loadingBarGameObject.transform.position;
+        }
 
-            rectTransformProgress.sizeDelta = loadingBarProgressSize;
+        private static void SetLoadingBarFill(GameObject loadingBarGameObject)
+        {
+            // create fill component
+            var loadingBarFillGameObject = new GameObject("Loading Bar Fill");
+            loadingBarFillGameObject.AddComponent<Image>();
+            loadingBarFillGameObject.transform.SetParent(loadingBarGameObject.transform);
+
+            var loadingBarFillImage = loadingBarFillGameObject.GetComponent<Image>();
+            loadingBarFillImage.color = Color.red;
+
+            // Set size of component
+            var loadingBarFillGameObjectRectTransform = (RectTransform) loadingBarFillGameObject.transform;
+            var loadingBarGameObjectRectTransform = (RectTransform) loadingBarGameObject.transform;
+            loadingBarFillGameObjectRectTransform.sizeDelta = new Vector2(
+                loadingBarGameObjectRectTransform.sizeDelta.x - LoadingBarFillPadding,
+                loadingBarGameObjectRectTransform.sizeDelta.y - LoadingBarFillPadding);
+
+            // position outline component
+            loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
         }
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)

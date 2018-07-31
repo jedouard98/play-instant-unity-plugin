@@ -62,7 +62,8 @@ namespace GooglePlayInstant.LoadingScreen
 #else
             var www = UnityWebRequest.GetAssetBundle(assetBundleUrl);
 #endif
-            yield return www.SendWebRequest();
+            www.SendWebRequest();
+            yield return UpdateLoadingBar(www); 
 
             // TODO: implement retry logic
             if (www.isNetworkError || www.isHttpError)
@@ -72,6 +73,33 @@ namespace GooglePlayInstant.LoadingScreen
             else
             {
                 _bundle = DownloadHandlerAssetBundle.GetContent(www);
+            }
+        }
+
+        private IEnumerator UpdateLoadingBar(UnityWebRequest www)
+        {
+            var loading = GameObject.Find("Loading Bar Progress");
+            var loadingRectTransform = (RectTransform) loading.transform;
+            
+            var newloadingRectTransformSizeDelta = loadingRectTransform.sizeDelta;
+            
+            var newloadingRectTransformPosition = loadingRectTransform.position;
+            
+            var maxWidth = newloadingRectTransformSizeDelta.x;
+            var startingX = newloadingRectTransformPosition.x;
+
+            while (!www.isDone)
+            {
+                Debug.Log(www.downloadProgress);
+                newloadingRectTransformSizeDelta.x = maxWidth * www.downloadProgress;
+
+                newloadingRectTransformPosition.x = startingX - (maxWidth - newloadingRectTransformSizeDelta.x) / 2f;
+                
+                loadingRectTransform.sizeDelta = newloadingRectTransformSizeDelta;
+
+                loadingRectTransform.position = newloadingRectTransformPosition;
+                
+                yield return null;
             }
         }
     }
