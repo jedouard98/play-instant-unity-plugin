@@ -61,7 +61,7 @@ namespace GooglePlayInstant.Editor
 
         public static void ScheduleAuthCode(AuthCodeReceivedCallback authCodeReceivedCallback)
         {
-            QuickDeployOAuth2Server server = new QuickDeployOAuth2Server();
+            QuickDeployOAuth2Server server = new QuickDeployOAuth2Server(response => { AuthResponse = response; });
             server.Start();
             var redirect_uri = server.CallbackEndpoint;
 
