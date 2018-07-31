@@ -130,8 +130,13 @@ namespace GooglePlayInstant.Editor
 
         public static Oauth2Credentials ReadOauth2CredentialsFile()
         {
-            return JsonUtility.FromJson<Oauth2File>(
-                File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName)).installed;
+            string path = QuickDeployConfig.Config.cloudCredentialsFileName;
+            Debug.Log("Path is "+path);
+            string allText = File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName);
+            Debug.Log("All Text: "+allText);
+            var file = JsonUtility.FromJson<Oauth2File>(allText);
+            Oauth2Credentials installed = file.installed;
+            return installed;
         }
     }
 
