@@ -158,7 +158,7 @@ namespace GooglePlayInstant.Editor
         {
             var context = o as HttpListenerContext;
             context.Response.KeepAlive = false;
-            if (UriContainsValidQueryParams(context.Request.Url))
+            if (!UriContainsValidQueryParams(context.Request.Url))
             {
                 context.Response.StatusCode = 404;
                 context.Response.Close();
