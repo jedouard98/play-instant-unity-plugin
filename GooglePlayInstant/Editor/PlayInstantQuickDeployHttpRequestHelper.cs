@@ -63,8 +63,9 @@ namespace GooglePlayInstant.Editor
                     form.AddField(pair.Key, pair.Value);
                 }
             }
-
-            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, postHeaders);
+            
+            AddHeadersToForm(form, postHeaders);
+            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, form.headers);
         }
 
         /// <summary>
