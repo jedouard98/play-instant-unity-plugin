@@ -31,10 +31,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
-        private const int LoadingBarFillPadding = 17;
-        private const int LoadingBarHeight = 30;
-
-
         private static readonly string LoadingScreenScenePath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
 
@@ -73,76 +69,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             AddLoadingScreenScript(loadingScreenGameObject);
 
 
-            AddLoadingBar(loadingScreenGameObject);
+            LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
             EditorSceneManager.SaveScene(loadingScreenScene,
                 Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
-        }
-
-        //TODO: look into screen rotation options
-        private static void AddLoadingBar(GameObject loadingScreenGameObject)
-        {
-            var loadingBarGameObject = new GameObject("Loading Bar");
-            loadingBarGameObject.AddComponent<RectTransform>();
-            loadingBarGameObject.transform.SetParent(loadingScreenGameObject.transform);
-
-            var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-
-            var loadingScreenGameObjectRectTransform = loadingScreenGameObject.GetComponent<RectTransform>();
-
-            //Set the size of the loading bar
-            loadingBarGameObjectRectTransform.sizeDelta =
-                new Vector2(loadingScreenGameObjectRectTransform.sizeDelta.x / 2f, LoadingBarHeight);
-
-            //Set the position of the loading bar
-            loadingBarGameObjectRectTransform.position =
-                new Vector2(loadingScreenGameObjectRectTransform.position.x,
-                    loadingScreenGameObjectRectTransform.position.y - 2f * loadingScreenGameObjectRectTransform.position.y);
-
-            SetLoadingBarOutline(loadingBarGameObject);
-            SetLoadingBarFill(loadingBarGameObject);
-        }
-
-        private static void SetLoadingBarOutline(GameObject loadingBarGameObject)
-        {
-            // create outline component
-            var loadingBarOutlineGameObject = new GameObject("Loading Bar Outline");
-            loadingBarOutlineGameObject.AddComponent<Image>();
-            loadingBarOutlineGameObject.transform.SetParent(loadingBarGameObject.transform);
-
-            var backgroundImage = loadingBarOutlineGameObject.GetComponent<Image>();
-            backgroundImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
-            backgroundImage.type = Image.Type.Tiled;
-            backgroundImage.fillCenter = false;
-
-            // Set size of component
-            var loadingBarOutlineGameObjectRectTransform = loadingBarOutlineGameObject.GetComponent<RectTransform>();
-            var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-            loadingBarOutlineGameObjectRectTransform.sizeDelta = loadingBarGameObjectRectTransform.sizeDelta;
-
-            // Position outline component
-            loadingBarOutlineGameObject.transform.position = loadingBarGameObject.transform.position;
-        }
-
-        private static void SetLoadingBarFill(GameObject loadingBarGameObject)
-        {
-            // create fill component
-            var loadingBarFillGameObject = new GameObject("Loading Bar Fill");
-            loadingBarFillGameObject.AddComponent<Image>();
-            loadingBarFillGameObject.transform.SetParent(loadingBarGameObject.transform);
-
-            var loadingBarFillImage = loadingBarFillGameObject.GetComponent<Image>();
-            loadingBarFillImage.color = Color.red;
-
-            // Set size of component
-            var loadingBarFillGameObjectRectTransform = loadingBarFillGameObject.GetComponent<RectTransform>();
-            var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-            loadingBarFillGameObjectRectTransform.sizeDelta = new Vector2(
-                loadingBarGameObjectRectTransform.sizeDelta.x - LoadingBarFillPadding,
-                loadingBarGameObjectRectTransform.sizeDelta.y - LoadingBarFillPadding);
-
-            // Position outline component
-            loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
         }
 
         private static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
