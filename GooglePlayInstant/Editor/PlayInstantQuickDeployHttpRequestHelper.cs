@@ -40,8 +40,8 @@ namespace GooglePlayInstant.Editor
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
-            var newHeaders = GetCombinedHeaders(form, postHeaders);
-            return new WWW(endpoint, postData, newHeaders);
+            AddHeadersToForm(form, postHeaders);
+            return new WWW(endpoint, postData, form.headers);
         }
 
         /// <summary>
@@ -87,22 +87,18 @@ namespace GooglePlayInstant.Editor
             }
 
             var form = new WWWForm();
-            var newHeaders = GetCombinedHeaders(form, getHeaders);
-            return new WWW(uriBuilder.ToString(), null, newHeaders);
+            AddHeadersToForm(form, getHeaders);
+            return new WWW(uriBuilder.ToString(), null, form.headers);
         }
 
-        internal static Dictionary<string, string> GetCombinedHeaders(WWWForm form, Dictionary<string, string> headers)
+        internal static void AddHeadersToForm(WWWForm form, Dictionary<string, string> headers)
         {
-            var newHeaders = new Dictionary<string, string>(form.headers);
-            if (headers != null)
             {
                 foreach (var pair in headers)
                 {
-                    newHeaders.Add(pair.Key, pair.Value);
+                    form.headers[pair.Key] = pair.Value;
                 }
             }
-
-            return newHeaders;
         }
     }
 }
