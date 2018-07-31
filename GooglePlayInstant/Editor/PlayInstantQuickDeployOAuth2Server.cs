@@ -83,6 +83,7 @@ namespace GooglePlayInstant.Editor
         internal static string GetRandomEndpointString()
         {
             return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
+            return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
         }
 
         internal static string GetRandomPortAsString()
@@ -175,7 +176,11 @@ namespace GooglePlayInstant.Editor
                 }
             }
 
-            _responseHandler.Invoke(_response.Value);
+            if (_responseHandler != null)
+            {
+                _responseHandler.Invoke(_response.Value);
+            }
+            
             var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", _response.Value.Key)
                 ? CallbackEndpointResponseOnSuccess
                 : CallBackEndpointResponseOnError);
