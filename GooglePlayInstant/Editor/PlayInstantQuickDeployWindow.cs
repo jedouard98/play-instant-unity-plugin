@@ -51,9 +51,16 @@ namespace GooglePlayInstant.Editor
             _toolbarSelectedButtonIndex = (int) select;
         }
 
+
+        void OnDestroy()
+        {
+            QuickDeployConfig.SaveConfiguration();
+        }
+
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
+            QuickDeployTokenUtility.OnGUI();
             switch ((ToolBarSelectedButton) _toolbarSelectedButtonIndex)
             {
                 case ToolBarSelectedButton.CreateBundle:
@@ -150,11 +157,10 @@ namespace GooglePlayInstant.Editor
             EditorGUILayout.EndHorizontal();
             if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
             {
-                Thread thread = new Thread(() => { QuickDeployCloudUtility.UploadBundle(); });
+                Thread thread = new Thread(() => { QuickDeployGCPClient.CreateBucketIfNotExistsAndUploadBundle(); });
                 thread.Start();
             }
 
-            ;
             EditorGUILayout.Space();
             GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
         }

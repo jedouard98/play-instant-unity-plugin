@@ -41,6 +41,7 @@ namespace GooglePlayInstant.Editor
         public static AccessToken AccessToken
         {
             get { return _accessToken; }
+            set { _accessToken = value; }
         }
 
 
@@ -134,7 +135,7 @@ namespace GooglePlayInstant.Editor
         }
     }
 
-    public abstract class QuickDeployCloudUtility
+    public abstract class QuickDeployGCPClient
     {
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
@@ -150,6 +151,19 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
+            if (AccessToken == null)
+            {
+                QuickDeployTokenUtility.ScheduleAuthCode((code) =>
+                {
+                    QuickDeployTokenUtility.ScheduleAccessToken(code, token =>
+                        {
+                            QuickDeployTokenUtility.AccessToken = token;
+                            CreateBucketIfNotExistsAndUploadBundle();
+                        });
+                });
+                return;
+            }
+            
             // TODO(audace): Split this into two tasks, one to carry out when the bucket exists, and one to carry out when the bucket happens to not exist
             IfBucketExists(_config.cloudStorageBucketName, doneWWW => { UploadBundle(); },
                 doneWWW =>
