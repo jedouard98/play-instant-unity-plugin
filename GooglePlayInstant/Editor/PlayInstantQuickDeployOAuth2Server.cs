@@ -20,7 +20,6 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using JetBrains.Annotations;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -175,7 +174,11 @@ namespace GooglePlayInstant.Editor
                 }
             }
 
-            _responseHandler.Invoke(_response.Value);
+            if (_responseHandler != null)
+            {
+                _responseHandler.Invoke(_response.Value);
+            }
+
             var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", _response.Value.Key)
                 ? CallbackEndpointResponseOnSuccess
                 : CallBackEndpointResponseOnError);
