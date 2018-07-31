@@ -54,7 +54,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest.SendWebRequest();
         }
 
-        //TODO: Support Unity 5.6.0+
+        //TODO: Support Unity 5.6.0+ and fix random crashing
         private void GetAssetBundleInfoFromDownload()
         {
             var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);

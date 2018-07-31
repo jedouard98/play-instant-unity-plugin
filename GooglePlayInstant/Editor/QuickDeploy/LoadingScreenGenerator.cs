@@ -79,6 +79,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
         }
 
+        //TODO: look into screen rotation options
         private static void AddLoadingBar(GameObject loadingScreenGameObject)
         {
             var loadingBarGameObject = new GameObject("Loading Bar");
@@ -87,7 +88,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
 
-            var loadingScreenGameObjectRectTransform = (RectTransform) loadingScreenGameObject.transform;
+            var loadingScreenGameObjectRectTransform = loadingScreenGameObject.GetComponent<RectTransform>();
 
             //Set the size of the loading bar
             loadingBarGameObjectRectTransform.sizeDelta =
@@ -96,7 +97,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             //Set the position of the loading bar
             loadingBarGameObjectRectTransform.position =
                 new Vector2(loadingScreenGameObjectRectTransform.position.x,
-                    loadingScreenGameObjectRectTransform.position.y);
+                    loadingScreenGameObjectRectTransform.position.y - 2f * loadingScreenGameObjectRectTransform.position.y);
 
             SetLoadingBarOutline(loadingBarGameObject);
             SetLoadingBarFill(loadingBarGameObject);
@@ -115,8 +116,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             backgroundImage.fillCenter = false;
 
             // Set size of component
-            var loadingBarOutlineGameObjectRectTransform = (RectTransform) loadingBarOutlineGameObject.transform;
-            var loadingBarGameObjectRectTransform = (RectTransform) loadingBarGameObject.transform;
+            var loadingBarOutlineGameObjectRectTransform = loadingBarOutlineGameObject.GetComponent<RectTransform>();
+            var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
             loadingBarOutlineGameObjectRectTransform.sizeDelta = loadingBarGameObjectRectTransform.sizeDelta;
 
             // Position outline component
@@ -134,13 +135,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             loadingBarFillImage.color = Color.red;
 
             // Set size of component
-            var loadingBarFillGameObjectRectTransform = (RectTransform) loadingBarFillGameObject.transform;
-            var loadingBarGameObjectRectTransform = (RectTransform) loadingBarGameObject.transform;
+            var loadingBarFillGameObjectRectTransform = loadingBarFillGameObject.GetComponent<RectTransform>();
+            var loadingBarGameObjectRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
             loadingBarFillGameObjectRectTransform.sizeDelta = new Vector2(
                 loadingBarGameObjectRectTransform.sizeDelta.x - LoadingBarFillPadding,
                 loadingBarGameObjectRectTransform.sizeDelta.y - LoadingBarFillPadding);
 
-            // position outline component
+            // Position outline component
             loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
         }
 
