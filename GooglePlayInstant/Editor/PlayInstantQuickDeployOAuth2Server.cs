@@ -20,8 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using UnityEngine;
-using Random = System.Random;
+using JetBrains.Annotations;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -49,6 +48,14 @@ namespace GooglePlayInstant.Editor
 
         private KeyValuePair<string, string>? _response;
 
+        /// <summary>
+        /// A handler for received responses.
+        /// </summary>
+        /// <param name="response">A response received through a GET request that is sent to the server.</param>
+        public delegate void ResponseHandler(KeyValuePair<string, string> response);
+
+        private readonly ResponseHandler _responseHandler;
+
         public string CallbackEndpoint
         {
             get
@@ -60,6 +67,17 @@ namespace GooglePlayInstant.Editor
 
                 return _callbackEndpoint;
             }
+        }
+
+        /// <summary>
+        /// An instance of a server that will run locally to retrieve authorization code. The server will stop running
+        /// once the first response gets received.
+        /// </summary>
+        /// <param name="responseHandler">A method to be invoked on the key-value response that will be
+        /// caught by the server.</param>
+        public QuickDeployOAuth2Server(ResponseHandler responseHandler)
+        {
+            _responseHandler = responseHandler;
         }
 
         internal static string GetRandomEndpointString()
@@ -141,13 +159,13 @@ namespace GooglePlayInstant.Editor
         {
             var context = o as HttpListenerContext;
             context.Response.KeepAlive = false;
-            if (!UriContainsValidQueryParams(context.Request.Url))
+            if (UriContainsValidQueryParams(context.Request.Url))
             {
                 context.Response.StatusCode = 404;
                 context.Response.Close();
                 return;
             }
-            
+
             Dictionary<string, string> queryDictionary = null;
             foreach (var pair in GetQueryParamsFromUri(context.Request.Url, ref queryDictionary))
             {
@@ -157,8 +175,7 @@ namespace GooglePlayInstant.Editor
                 }
             }
 
-            QuickDeployTokenUtility.AuthResponse = _response;
-
+            _responseHandler.Invoke(_response.Value);
             var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", _response.Value.Key)
                 ? CallbackEndpointResponseOnSuccess
                 : CallBackEndpointResponseOnError);
@@ -167,6 +184,7 @@ namespace GooglePlayInstant.Editor
             outputStream.Flush();
             outputStream.Close();
             context.Response.Close();
+            Stop();
         }
 
         /// <summary>
@@ -183,8 +201,7 @@ namespace GooglePlayInstant.Editor
                                       (GetQueryParamsFromUri(uri, ref queryParams).ContainsKey("code") ||
                                        queryParams.ContainsKey("error")) &&
                                       queryParams.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
-            Debug.Log("violation? " + uriRespectsPolicies.ToString());
-            return uriRespectsPolicies || true;
+            return uriRespectsPolicies;
         }
 
         /// <summary>
@@ -231,22 +248,6 @@ namespace GooglePlayInstant.Editor
         internal bool IsListening()
         {
             return _httpListener != null && _httpListener.IsListening;
-        }
-
-        /// <summary>
-        /// Find out whether the server has received any authorization code or error response.
-        /// </summary>
-        public bool HasOauth2AuthorizationResponse()
-        {
-            return _response.HasValue;
-        }
-
-        /// <summary>
-        /// Returns a KeyValuePair instance corresponding to the response received from authorizing the application.
-        /// </summary>
-        public KeyValuePair<string, string> GetAuthorizationResponse()
-        {
-            return _response.Value;
         }
     }
 
