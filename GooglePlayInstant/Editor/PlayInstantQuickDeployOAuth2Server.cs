@@ -35,17 +35,11 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class QuickDeployOAuth2Server
     {
-        internal const string CallbackEndpointResponseOnSuccess =
-            "<h1>Authorization successful. You may close this window</h1>";
+        internal const string CloseTabScript =
+            "<script>setTimeout(function(){window.close();})</script>";
 
-        internal const string CallBackEndpointResponseOnError =
-            "<h1>Authorization Failed. Could not get necessary permissions</h1>";
-
-        private HttpListener _httpListener;
-
+        internal HttpListener _httpListener;
         private string _callbackEndpoint;
-
-        private KeyValuePair<string, string>? _response;
 
         /// <summary>
         /// A handler for received responses.
@@ -57,15 +51,7 @@ namespace GooglePlayInstant.Editor
 
         public string CallbackEndpoint
         {
-            get
-            {
-                if (!IsListening())
-                {
-                    throw new InvalidStateException("Server is not running.");
-                }
-
-                return _callbackEndpoint;
-            }
+            get { return _callbackEndpoint; }
         }
 
         /// <summary>
@@ -166,22 +152,21 @@ namespace GooglePlayInstant.Editor
             }
 
             Dictionary<string, string> queryDictionary = null;
+            KeyValuePair<string, string> responsePair;
             foreach (var pair in GetQueryParamsFromUri(context.Request.Url, ref queryDictionary))
             {
                 if (string.Equals("code", pair.Key) || string.Equals("error", pair.Key))
                 {
-                    _response = pair;
+                    responsePair = pair;
                 }
             }
 
             if (_responseHandler != null)
             {
-                _responseHandler.Invoke(_response.Value);
+                _responseHandler.Invoke(responsePair);
             }
 
-            var responseArray = Encoding.UTF8.GetBytes(string.Equals("code", _response.Value.Key)
-                ? CallbackEndpointResponseOnSuccess
-                : CallBackEndpointResponseOnError);
+            var responseArray = Encoding.UTF8.GetBytes(CloseTabScript);
             var outputStream = context.Response.OutputStream;
             outputStream.Write(responseArray, 0, responseArray.Length);
             outputStream.Flush();
@@ -234,23 +219,9 @@ namespace GooglePlayInstant.Editor
         /// Stops the server. A future call of the Start() method on this instance will restart this server on a
         /// different endpoint.
         /// </summary>
-        public void Stop()
+        private void Stop()
         {
-            if (!IsListening())
-            {
-                return;
-            }
-
-            if (_httpListener != null)
-            {
-                _httpListener.Close();
-                _httpListener = null;
-            }
-        }
-
-        internal bool IsListening()
-        {
-            return _httpListener != null && _httpListener.IsListening;
+            _httpListener.Close();
         }
     }
 
