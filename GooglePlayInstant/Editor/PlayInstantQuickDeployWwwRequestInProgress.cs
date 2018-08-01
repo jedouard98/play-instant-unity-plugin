@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
@@ -35,10 +36,8 @@ namespace GooglePlayInstant.Editor
         // Shouldn't be readonly because it is mutable.
         private static List<WwwRequestInProgress> _trackedRequestsInProgress = new List<WwwRequestInProgress>();
         private static List<WwwRequestInProgress> _scheduledForOnDone = new List<WwwRequestInProgress>();
-
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-        private readonly string _progressBarInfoText;
         private static int _counter = 0;
 
 
@@ -55,13 +54,10 @@ namespace GooglePlayInstant.Editor
         /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
         /// <param name="progressBarTitleText">The high level action of the request. This is displayed as the title when displaying
         ///     the progress bar for this request in progress.</param>
-        /// <param name="progressBarInfoText">A description of what this request is doing. This is displayed in the body when
-        /// displaying the progress bar for this request in progress.</param>
-        public WwwRequestInProgress(WWW www, string progressBarTitleText, string progressBarInfoText)
+        public WwwRequestInProgress(WWW www, string progressBarTitleText)
         {
             _www = www;
             _progressBarTitleText = progressBarTitleText;
-            _progressBarInfoText = progressBarInfoText;
         }
 
         /// <summary>
@@ -79,7 +75,12 @@ namespace GooglePlayInstant.Editor
         public void ScheduleTaskOnDone(DoneWwwHandler wwwHandler)
         {
             _onDone += wwwHandler;
-            _scheduledForOnDone.Add(this);
+
+
+            if (!_scheduledForOnDone.Contains(this))
+            {
+                _scheduledForOnDone.Add(this);
+            }
         }
 
         // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
@@ -89,6 +90,7 @@ namespace GooglePlayInstant.Editor
             {
                 throw new Exception("Request has not yet completed");
             }
+
             _onDone.Invoke(_www);
         }
 
@@ -96,25 +98,23 @@ namespace GooglePlayInstant.Editor
         /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
         /// that are still in the pipeline.
         /// </summary>
-        public static void UpdateState()
+        public static void NextState()
         {
             // First put done requests in another collection before removing them from the list in order to avoid
             // concurrent modification exceptions.
             var doneRequests = new List<WwwRequestInProgress>();
-            foreach (var requestInProgress in _trackedRequestsInProgress)
+            foreach (var requestInProgress in _trackedRequestsInProgress.ToList())
             {
                 if (requestInProgress._www.isDone)
                 {
-                    Debug.LogFormat(
-                        "Complete with text {0},\n title {1}",
-                        requestInProgress._www.text,
-                        requestInProgress._progressBarTitleText);
+                    Debug.LogFormat("\nCOMPLETED: {0}", requestInProgress._progressBarTitleText.ToUpper());
                     doneRequests.Add(requestInProgress);
                 }
                 else
                 {
-                    Debug.LogFormat("title: {0}, Progress{1}", requestInProgress._progressBarTitleText,
-                        requestInProgress._www.uploadProgress);
+                    Debug.LogFormat("\nIN PROGRESS: {0}. Up: {1}%, Down: {2}%",
+                        requestInProgress._progressBarTitleText.ToUpper(),
+                        requestInProgress._www.uploadProgress*100, requestInProgress._www.progress*100);
                 }
             }
 
@@ -124,8 +124,7 @@ namespace GooglePlayInstant.Editor
             }
 
             doneRequests.Clear();
-            Debug.Log("Going to run for scheduled with scheduledtasks" + _scheduledForOnDone.Count);
-            foreach (var request in _scheduledForOnDone)
+            foreach (var request in _scheduledForOnDone.ToList())
             {
                 if (request._www.isDone)
                 {
@@ -137,26 +136,6 @@ namespace GooglePlayInstant.Editor
             foreach (var request in doneRequests)
             {
                 _scheduledForOnDone.Remove(request);
-            }
-        }
-
-        /// <summary>
-        /// Display the progress bar for the contained request along with information about this request in progress.
-        /// </summary>
-        public void DisplayProgress()
-        {
-            EditorUtility.DisplayProgressBar(_progressBarTitleText, _progressBarInfoText, _www.progress);
-        }
-
-        /// <summary>
-        /// Display a progress bar and request information for all class-wide tracked requests in progress.
-        /// </summary>
-        public static void DisplayProgressForTrackedRequests()
-        {
-            File.WriteAllText("progressor/output-progress-" + _counter, "Tracking request");
-            foreach (var requestInProgress in _trackedRequestsInProgress)
-            {
-                requestInProgress.DisplayProgress();
             }
         }
     }

@@ -18,8 +18,6 @@ using Debug = UnityEngine.Debug;
 
 namespace GooglePlayInstant.Editor
 {
-    public delegate void AuthorizationResponseCallback(KeyValuePair<string, string> response);
-
     public abstract class QuickDeployGCPClient
     {
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
@@ -27,7 +25,7 @@ namespace GooglePlayInstant.Editor
         private delegate void WwwHandler(WWW request);
 
         /// <summary>
-        /// Upload bundle to the cloud, assuming TokenUtility has a valid access token.
+        /// Creates bucket if not exists, and uploads asset bundle file to the cloud.
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
@@ -45,22 +43,17 @@ namespace GooglePlayInstant.Editor
                 return;
             }
 
-            Debug.Log("Came back here to do the checking");
-            IfBucketExists(_config.cloudStorageBucketName,
-                doneWWW =>
-                {
-                    UploadBundle(resp => { ScheduleMakeBundlePublic(www => { Debug.Log("Response: " + www.text); }); });
-                },
-                doneWWW =>
+            CheckWhetherBucketExists(_config.cloudStorageBucketName,
+                bucketExistsResponse => { UploadBundle(resp => { ScheduleMakeBundlePublic(www => { }); }); },
+                bucketNotFoundResponse =>
                 {
                     ScheduleCreateBucket(_config.cloudStorageBucketName,
-                        bucketCreationResponse => { UploadBundle(www => { Debug.Log("Response: " + www.text); }); });
+                        bucketCreationResponse => { UploadBundle(resp => { ScheduleMakeBundlePublic(www => { }); }); });
                 });
         }
 
         private static void UploadBundle(WwwHandler responseHandler)
         {
-            Debug.LogWarning("Bundle Upload starting right now");
             var uploadEndpoint =
                 string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
                     _config.cloudStorageBucketName, _config.cloudStorageFileName);
@@ -70,11 +63,9 @@ namespace GooglePlayInstant.Editor
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = QuickDeployHttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
-            var requestInProgress = new WwwRequestInProgress(result, "Uploading bundle to cloud",
-                "Please wait while your bundle is being uploaded to the cloud");
+            var requestInProgress = new WwwRequestInProgress(result, "Uploading bundle to cloud");
             requestInProgress.ScheduleTaskOnDone(www =>
             {
-                Debug.Log("Got response: " + www.text + " After upload");
                 if (responseHandler != null)
                 {
                     responseHandler.Invoke(www);
@@ -101,9 +92,7 @@ namespace GooglePlayInstant.Editor
             WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
-                string.Format("Creating bucket with name {0}", bucketName),
-                "You have specified a bucket that does not exist yet. Please wait while it is being created");
-            Debug.Log("Bucket creation request created.");
+                string.Format("Creating bucket with name {0}", bucketName));
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
@@ -114,22 +103,22 @@ namespace GooglePlayInstant.Editor
             });
         }
 
-
         private static void ScheduleMakeBundlePublic(WwwHandler resultHandler)
         {
             var bucketName = _config.cloudStorageBucketName;
-            var objectName = _config.cloudStorageFileName;
+            var remoteAssetBundleName = _config.cloudStorageFileName;
             string makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
-                bucketName, objectName);
-            string jsonContents = JsonUtility.ToJson(new MakeBucketPublicRequest());
-            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
-            headers.Add("Content-Type", "application/json");
-            WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, jsonBytes, headers);
-            Debug.Log("Request to make bucket public was sent");
-            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request, "Making object public",
-                "Sending request to make object public");
+                bucketName, remoteAssetBundleName);
+            string requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
+            byte[] requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
+            Dictionary<string, string> requestHeaders = new Dictionary<string, string>();
+            requestHeaders.Add("Authorization",
+                string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
+            requestHeaders.Add("Content-Type", "application/json");
+            WWW request =
+                QuickDeployHttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
+            
+            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request, string.Format("MAKING REMOTE ASSET BUNDLE \"{0}\" PUBLIC."));
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
@@ -141,23 +130,19 @@ namespace GooglePlayInstant.Editor
         }
 
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
-        private static void IfBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
+        private static void CheckWhetherBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
         {
-            Debug.Log("CHECKED BUCKET EXISTENCE");
             string bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = QuickDeployHttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
             WwwRequestInProgress requestInProgress =
-                new WwwRequestInProgress(result, "Checking whether bucket exists", "");
+                new WwwRequestInProgress(result, string.Format("CHECKING WHETHER BUCKET \"{0}\" EXISTS.", bucketName));
             requestInProgress.TrackProgress();
-            Debug.Log("Going to schedule the tasks");
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
-                var text = wwwResult.text;
-                Debug.Log("Bucket Exists Error : " + text);
-                if (text.Contains("error"))
+                if (!string.IsNullOrEmpty(wwwResult.error))
                 {
                     onFalse.Invoke(wwwResult);
                 }
@@ -167,7 +152,7 @@ namespace GooglePlayInstant.Editor
                 }
             });
         }
-        
+
         [Serializable]
         public class CreateBucketRequest
         {
@@ -175,13 +160,10 @@ namespace GooglePlayInstant.Editor
         }
 
         [Serializable]
-        public class MakeBucketPublicRequest
+        public class MakeBundlePublicRequest
         {
             public string entity = "allUsers";
             public string role = "READER";
         }
-        
-        
     }
-
 }
