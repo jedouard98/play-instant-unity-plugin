@@ -52,6 +52,8 @@ namespace GooglePlayInstant.LoadingScreen
         private const string LoadingBarOutlineGameObjectName = "Loading Bar Outline";
         private const string LoadingBarFillGameObjectName = "Loading Bar Fill";
 
+#if UNITY_EDITOR
+        // TODO: fix persistance of loading bar
         /// <summary>
         /// Creates a loading bar component on the specified loading screen game object's bottom half. Consists of
         /// a white rounded border, with a colored loading bar fill in the middle.
@@ -90,8 +92,7 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarOutlineGameObject.AddComponent<Image>();
 
             var loadingBarOutlineImage = loadingBarOutlineGameObject.GetComponent<Image>();
-            loadingBarOutlineImage.sprite =
-                AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
+            loadingBarOutlineImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
 
             loadingBarOutlineImage.type = Image.Type.Sliced;
             loadingBarOutlineImage.fillCenter = false;
@@ -124,6 +125,7 @@ namespace GooglePlayInstant.LoadingScreen
             // Position fill component
             loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
         }
+#endif
 
         /// <summary>
         /// Updates a loading bar by the progress made by an asynchronous operation up to a specific percentage of
