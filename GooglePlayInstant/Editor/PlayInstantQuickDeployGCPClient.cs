@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Reflection.Emit;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using Boo.Lang;
 using GooglePlayInstant.Editor.GooglePlayServices;
@@ -12,16 +13,11 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.U2D;
 using UnityEngine;
+using UnityEngine.Networking;
 using Debug = UnityEngine.Debug;
 
 namespace GooglePlayInstant.Editor
 {
-    /// <summary>
-    /// Represents a handler for an Http Response
-    /// </summary>
-    /// <param name="www"></param>
-    public delegate void HttpResponseCallback(WWW www);
-
     public delegate void AuthorizationResponseCallback(KeyValuePair<string, string> response);
 
     public static class QuickDeployTokenUtility
@@ -126,7 +122,6 @@ namespace GooglePlayInstant.Editor
                         doneWww.error));
                 }
 
-
                 tokenReceivedCallback.Invoke(token);
             });
         }
@@ -159,6 +154,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
+            QuickDeployConfig.SaveConfiguration();
             if (AccessToken == null)
             {
                 QuickDeployTokenUtility.ScheduleAuthCode(code =>
@@ -174,16 +170,21 @@ namespace GooglePlayInstant.Editor
             }
 
             // TODO(audace): Split this into two tasks, one to carry out when the bucket exists, and one to carry out when the bucket happens to not exist
-            IfBucketExists(_config.cloudStorageBucketName, doneWWW => { UploadBundle(); },
+            IfBucketExists(_config.cloudStorageBucketName,
+                doneWWW =>
+                {
+                    UploadBundle(resp => { ScheduleMakeBundlePublic(www => { Debug.Log("Response: " + www.text); }); });
+                },
                 doneWWW =>
                 {
                     ScheduleCreateBucket(_config.cloudStorageBucketName,
-                        bucketCreationResponse => { UploadBundle(); });
+                        bucketCreationResponse => { UploadBundle(www => { Debug.Log("Response: " + www.text); }); });
                 });
         }
 
-        private static void UploadBundle()
+        private static void UploadBundle(WwwHandler responseHandler)
         {
+            Debug.LogWarning("Bundle Upload starting right now");
             var uploadEndpoint =
                 string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
                     _config.cloudStorageBucketName, _config.cloudStorageFileName);
@@ -192,13 +193,16 @@ namespace GooglePlayInstant.Editor
             byte[] bytes = File.ReadAllBytes(_config.assetBundleFileName);
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessToken.access_token));
-            headers.Add("Content-Length", bytes.Length.ToString());
             var result = QuickDeployHttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
             var requestInProgress = new WwwRequestInProgress(result, "Uploading bundle to cloud",
                 "Please wait while your bundle is being uploaded to the cloud");
             requestInProgress.ScheduleTaskOnDone((www) =>
             {
                 Debug.Log("Got response: " + www.text + " After upload");
+                if (responseHandler != null)
+                {
+                    responseHandler.Invoke(www);
+                }
             });
         }
 
@@ -209,11 +213,17 @@ namespace GooglePlayInstant.Editor
             Oauth2Credentials credentials = QuickDeployTokenUtility.ReadOauth2CredentialsFile();
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                 credentials.project_id);
-            Dictionary<string, string> form = new Dictionary<string, string>();
-            form.Add("name", bucketName);
+            string jsonContents = JsonUtility.ToJson(new CreateBucketRequest
+            {
+                name = bucketName
+            });
+
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0} ", AccessToken.access_token));
-            WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, form, headers);
+            headers.Add("Content-Type", "application/json");
+            WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
+
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
                 string.Format("Creating bucket with name {0}", bucketName),
                 "You have specified a bucket that does not exist yet. Please wait while it is being created");
@@ -228,33 +238,55 @@ namespace GooglePlayInstant.Editor
             });
         }
 
+
+        private static void ScheduleMakeBundlePublic(WwwHandler resultHandler)
+        {
+            var bucketName = _config.cloudStorageBucketName;
+            var objectName = _config.cloudStorageFileName;
+            string makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
+                bucketName, objectName);
+            string jsonContents = JsonUtility.ToJson(new MakeBucketPublicRequest());
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add("Authorization", string.Format("Bearer {0} ", AccessToken.access_token));
+            headers.Add("Content-Type", "application/json");
+            WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, jsonBytes, headers);
+            Debug.Log("Request to make bucket public was sent");
+            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request, "Making object public",
+                "Sending request to make object public");
+            requestInProgress.TrackProgress();
+            requestInProgress.ScheduleTaskOnDone(wwwResult =>
+            {
+                if (resultHandler != null)
+                {
+                    resultHandler.Invoke(wwwResult);
+                }
+            });
+        }
+
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
-        // TODO(audace): Implement different paths to be executed on true and on false
         private static void IfBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
         {
             string bucketInfoUrl =
-                string.Format("https://www.googleapis.com/storage/v1/b/{0}?fields=location", bucketName);
+                string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessToken.access_token));
             var result = QuickDeployHttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
-            File.WriteAllText("output-bucket-exists.txt", string.Format("Bucket exists result is {0} ", result.error));
-            if (onTrue != null)
+            WwwRequestInProgress requestInProgress =
+                new WwwRequestInProgress(result, "Checking whether bucket exists", "");
+            requestInProgress.TrackProgress();
+            requestInProgress.ScheduleTaskOnDone((wwwResult) =>
             {
-                onTrue.Invoke(result);
-            }
-
-            if (onFalse != null)
-            {
-                onFalse.Invoke(result);
-            }
-
-            File.WriteAllText("output-end.txt", "Reached the end tho");
-        }
-
-        public static void ScheduleUpload(HttpResponseCallback onResponse)
-        {
-            throw new NotImplementedException("Not Implemented");
-            // TODO(audace): Implement
+                var text = wwwResult.text;
+                if (text.Contains("error"))
+                {
+                    onFalse.Invoke(wwwResult);
+                }
+                else
+                {
+                    onTrue.Invoke(wwwResult);
+                }
+            });
         }
     }
 
@@ -288,5 +320,18 @@ namespace GooglePlayInstant.Editor
     public class Oauth2File
     {
         public Oauth2Credentials installed;
+    }
+
+    [Serializable]
+    public class CreateBucketRequest
+    {
+        public string name;
+    }
+
+    [Serializable]
+    public class MakeBucketPublicRequest
+    {
+        public string entity = "allUsers";
+        public string role = "READER";
     }
 }

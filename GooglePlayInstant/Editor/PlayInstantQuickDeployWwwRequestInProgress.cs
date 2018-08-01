@@ -108,17 +108,14 @@ namespace GooglePlayInstant.Editor
                 if (requestInProgress._www.isDone)
                 {
                     Debug.LogFormat(
-                        "Complete with text {0}, or error {1}, title {2}, \n description{3} \n upload progress {4}",
-                        requestInProgress._www.text, requestInProgress._www.error,
-                        requestInProgress._progressBarTitleText, requestInProgress._progressBarInfoText,
-                        requestInProgress._www.uploadProgress);
+                        "Complete with text {0},\n title {1}",
+                        requestInProgress._www.text,
+                        requestInProgress._progressBarTitleText);
                     doneRequests.Add(requestInProgress);
                 }
                 else
                 {
-                    Debug.LogWarningFormat("Not complete with title {0}, \n description{1} \n upload progress {2}",
-                        requestInProgress._progressBarTitleText, requestInProgress._progressBarInfoText,
-                        requestInProgress._www.uploadProgress);
+                    Debug.LogFormat("title: {0}, Progress{1}", requestInProgress._progressBarTitleText, requestInProgress._www.uploadProgress);
                 }
             }
 
