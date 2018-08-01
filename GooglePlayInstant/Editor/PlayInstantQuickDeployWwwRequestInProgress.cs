@@ -107,14 +107,16 @@ namespace GooglePlayInstant.Editor
             {
                 if (requestInProgress._www.isDone)
                 {
-                    Debug.LogFormat("\nCOMPLETED: {0}", requestInProgress._progressBarTitleText.ToUpper());
+                    bool hasError = !string.IsNullOrEmpty(requestInProgress._www.error);
+                    Debug.LogFormat("\nCOMPLETED: {0}. Up: {1}%, Down: {2}%. HasError: {3}{4}", requestInProgress._progressBarTitleText,
+                        requestInProgress._www.uploadProgress*100, requestInProgress._www.progress*100, hasError, hasError?", Error: "+requestInProgress._www.error:"");
                     doneRequests.Add(requestInProgress);
                 }
                 else
                 {
                     Debug.LogFormat("\nIN PROGRESS: {0}. Up: {1}%, Down: {2}%",
-                        requestInProgress._progressBarTitleText.ToUpper(),
-                        requestInProgress._www.uploadProgress*100, requestInProgress._www.progress*100);
+                        requestInProgress._progressBarTitleText,
+                        requestInProgress._www.uploadProgress * 100, requestInProgress._www.progress * 100);
                 }
             }
 

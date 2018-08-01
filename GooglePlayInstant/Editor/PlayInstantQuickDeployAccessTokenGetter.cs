@@ -91,7 +91,7 @@ namespace GooglePlayInstant.Editor
 
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(
                 QuickDeployHttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
-                "Downloading access token");
+                "Requesting access token");
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(doneWww =>
             {

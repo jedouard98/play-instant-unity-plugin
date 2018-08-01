@@ -1,20 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Reflection.Emit;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using Boo.Lang;
-using GooglePlayInstant.Editor.GooglePlayServices;
-using NUnit.Framework;
-using UnityEditor;
-using UnityEditor.U2D;
 using UnityEngine;
-using UnityEngine.Networking;
-using Debug = UnityEngine.Debug;
 
 namespace GooglePlayInstant.Editor
 {
@@ -54,16 +42,21 @@ namespace GooglePlayInstant.Editor
 
         private static void UploadBundle(WwwHandler responseHandler)
         {
+            var assetBundleFileName = _config.assetBundleFileName;
+            var cloudStorageBucketName = _config.cloudStorageBucketName;
+            var cloudStorageFileName = _config.cloudStorageFileName;
             var uploadEndpoint =
                 string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
-                    _config.cloudStorageBucketName, _config.cloudStorageFileName);
+                    cloudStorageBucketName, cloudStorageFileName);
 
 
-            byte[] bytes = File.ReadAllBytes(_config.assetBundleFileName);
+            byte[] bytes = File.ReadAllBytes(assetBundleFileName);
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = QuickDeployHttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
-            var requestInProgress = new WwwRequestInProgress(result, "Uploading bundle to cloud");
+            var requestInProgress = new WwwRequestInProgress(result,
+                "Uploading asset bundle to google cloud storage");
+            requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(www =>
             {
                 if (responseHandler != null)
@@ -92,7 +85,7 @@ namespace GooglePlayInstant.Editor
             WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
-                string.Format("Creating bucket with name {0}", bucketName));
+                string.Format("Creating bucket with name \"{0}\"", bucketName));
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
@@ -117,8 +110,9 @@ namespace GooglePlayInstant.Editor
             requestHeaders.Add("Content-Type", "application/json");
             WWW request =
                 QuickDeployHttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
-            
-            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request, string.Format("MAKING REMOTE ASSET BUNDLE \"{0}\" PUBLIC."));
+
+            WwwRequestInProgress requestInProgress =
+                new WwwRequestInProgress(request,"Making remote asset bundle public");
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
@@ -138,7 +132,7 @@ namespace GooglePlayInstant.Editor
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = QuickDeployHttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
             WwwRequestInProgress requestInProgress =
-                new WwwRequestInProgress(result, string.Format("CHECKING WHETHER BUCKET \"{0}\" EXISTS.", bucketName));
+                new WwwRequestInProgress(result, "Checking whether bucket exists.");
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
