@@ -68,7 +68,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
             AddLoadingScreenScript(loadingScreenGameObject);
 
-
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
             EditorSceneManager.SaveScene(loadingScreenScene,

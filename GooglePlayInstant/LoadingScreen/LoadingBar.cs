@@ -32,7 +32,7 @@ namespace GooglePlayInstant.LoadingScreen
         public const float AssetBundleDownloadMaxWidthPercentage = .8f;
 
         /// <summary>
-        /// Percentage of the loading bar allocated to the the scene loading downloading process.
+        /// Percentage of the loading bar allocated to the the scene loading process.
         /// </summary>
         public const float SceneLoadingMaxWidthPercentage = 1 - AssetBundleDownloadMaxWidthPercentage;
 
@@ -88,9 +88,11 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarOutlineGameObject.transform.SetParent(loadingBarGameObject.transform);
 
             loadingBarOutlineGameObject.AddComponent<Image>();
+
             var loadingBarOutlineImage = loadingBarOutlineGameObject.GetComponent<Image>();
             loadingBarOutlineImage.sprite =
                 AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
+
             loadingBarOutlineImage.type = Image.Type.Sliced;
             loadingBarOutlineImage.fillCenter = false;
 
@@ -114,6 +116,7 @@ namespace GooglePlayInstant.LoadingScreen
 
             // Set size of component
             var loadingBarFillRectTransform = loadingBarFillGameObject.GetComponent<RectTransform>();
+
             var loadingBarRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
             loadingBarFillRectTransform.sizeDelta = new Vector2(0,
                 loadingBarRectTransform.sizeDelta.y - LoadingBarFillPadding);
@@ -135,7 +138,7 @@ namespace GooglePlayInstant.LoadingScreen
 
             // Total amount of space the loading bar can occupy
             var loadingBarFillMaxWidth = loadingBarRectTransform.sizeDelta.x - LoadingBarFillPadding;
-            
+
             // Percentage of space that is allocated for this async operation
             var loadingMaxWidth = loadingBarFillMaxWidth * percentageOfLoadingBar;
 
@@ -146,11 +149,6 @@ namespace GooglePlayInstant.LoadingScreen
 
             while (!operation.isDone || !loadingIsDone)
             {
-                if (operation.isDone)
-                {
-                    loadingIsDone = true;
-                }
-
                 loadingBarFillRectTransform.sizeDelta = new Vector2(
                     currentLoadingBarFill + loadingMaxWidth * operation.progress,
                     loadingBarFillRectTransform.sizeDelta.y);
@@ -161,6 +159,11 @@ namespace GooglePlayInstant.LoadingScreen
                     loadingBarRectTransform.position.x -
                     (loadingBarFillMaxWidth - loadingBarFillRectTransform.sizeDelta.x) / 2f,
                     loadingBarFillRectTransform.position.y);
+
+                if (operation.isDone)
+                {
+                    loadingIsDone = true;
+                }
 
                 yield return null;
             }
