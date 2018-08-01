@@ -40,12 +40,8 @@ namespace GooglePlayInstant.Editor
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
-            if (postHeaders != null)
-            {
-                AddHeadersToForm(form, postHeaders);
-            }
-
-            return new WWW(endpoint, postData, form.headers);
+            var newHeaders = GetCombinedHeaders(form, postHeaders);
+            return new WWW(endpoint, postData, newHeaders);
         }
 
         /// <summary>
@@ -67,13 +63,7 @@ namespace GooglePlayInstant.Editor
                     form.AddField(pair.Key, pair.Value);
                 }
             }
-
-            if (postHeaders != null)
-            {
-                AddHeadersToForm(form, postHeaders);
-            }
-
-            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, form.headers);
+            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, GetCombinedHeaders(form, postHeaders));
         }
 
         /// <summary>
@@ -96,23 +86,22 @@ namespace GooglePlayInstant.Editor
             }
 
             var form = new WWWForm();
-            if (getHeaders != null)
-            {
-                AddHeadersToForm(form, getHeaders);
-            }
-
-            return new WWW(uriBuilder.ToString(), null, form.headers);
+            var newHeaders = GetCombinedHeaders(form, getHeaders);
+            return new WWW(uriBuilder.ToString(), null, newHeaders);
         }
 
-        internal static void AddHeadersToForm(WWWForm form, Dictionary<string, string> headers)
+        internal static Dictionary<string, string> GetCombinedHeaders(WWWForm form, Dictionary<string, string> headers)
         {
-            if (form != null && headers != null)
+            var newHeaders = new Dictionary<string, string>(form.headers);
+            if (headers != null)
             {
                 foreach (var pair in headers)
                 {
-                    form.headers[pair.Key] = pair.Value;
+                    newHeaders[pair.Key] = pair.Value;
                 }
             }
+
+            return newHeaders;
         }
     }
 }
