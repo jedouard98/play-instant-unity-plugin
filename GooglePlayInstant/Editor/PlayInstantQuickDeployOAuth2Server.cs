@@ -156,7 +156,7 @@ namespace GooglePlayInstant.Editor
 
             Dictionary<string, string> queryDictionary = null;
             KeyValuePair<string, string> responsePair;
-            foreach (var pair in GetQueryParamsFromUri(context.Request.Url, ref queryDictionary))
+            foreach (var pair in GetQueryParamsFromUri(context.Request.Url))
             {
                 if (string.Equals("code", pair.Key) || string.Equals("error", pair.Key))
                 {
@@ -180,35 +180,26 @@ namespace GooglePlayInstant.Editor
         }
 
         /// <summary>
-        /// Inspect the uri and determine whether it contains valid params according to the following policies:
-        ///   1. URI query must not be empty.
-        ///   2. URI query must include exactly one of either "code" or "error" as param keys.
-        ///   3. Only other key that is allowed in the param keys is "scope". 
+        /// Inspect the URI and determine whether it contains valid params according to the following policies:
+        ///   1. URI query must include exactly one of either "code" or "error" as param keys.
+        ///   2. The only other key that is allowed in the param keys is "scope". 
         /// </summary>
         private bool UriContainsValidQueryParams(Uri uri)
         {
             var allowedQueries = new[] {"code", "error", "scope"};
-            Dictionary<string, string> queryParams = null;
-            var uriRespectsPolicies = uri.Query.StartsWith("?") &&
-                                      (GetQueryParamsFromUri(uri, ref queryParams).ContainsKey("code") ||
-                                       queryParams.ContainsKey("error")) &&
+            Dictionary<string, string> queryParams = GetQueryParamsFromUri(uri);
+            var uriRespectsPolicies = (queryParams.ContainsKey("code") || queryParams.ContainsKey("error")) &&
                                       !(queryParams.ContainsKey("error") && queryParams.ContainsKey("code")) &&
                                       queryParams.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
             return uriRespectsPolicies;
         }
 
         /// <summary>
-        /// Process uri, extract query params, put them into a dictionary and assign result's reference to the
-        /// dictionary and return result if result's reference is null. Otherwise just return result.
+        /// Processes URI, extracts query params, puts them into a dictionary returns the dictionary.
         /// </summary>
-        private static Dictionary<string, string> GetQueryParamsFromUri(Uri uri, ref Dictionary<string, string> result)
+        private static Dictionary<string, string> GetQueryParamsFromUri(Uri uri)
         {
-            if (result != null)
-            {
-                return result;
-            }
-
-            result = new Dictionary<string, string>();
+            var result = new Dictionary<string, string>();
             foreach (var pair in uri.Query.Substring(1).Split('&'))
             {
                 if (pair.Contains("="))
