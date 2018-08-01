@@ -14,10 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -38,13 +41,15 @@ namespace GooglePlayInstant.Editor
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
         private readonly string _progressBarInfoText;
+        private static int _counter = 0;
 
 
         /// <summary>
         /// A method to be executed on the _www field when it is done.
         /// </summary>
         public delegate void DoneWwwHandler(WWW www);
-        private DoneWwwHandler _onDone = www => { };  
+
+        private DoneWwwHandler _onDone = www => { };
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
@@ -85,6 +90,7 @@ namespace GooglePlayInstant.Editor
             {
                 throw new Exception("Request has not yet completed");
             }
+
             _onDone.Invoke(_www);
         }
 
@@ -101,7 +107,18 @@ namespace GooglePlayInstant.Editor
             {
                 if (requestInProgress._www.isDone)
                 {
+                    Debug.LogFormat(
+                        "Complete with text {0}, or error {1}, title {2}, \n description{3} \n upload progress {4}",
+                        requestInProgress._www.text, requestInProgress._www.error,
+                        requestInProgress._progressBarTitleText, requestInProgress._progressBarInfoText,
+                        requestInProgress._www.uploadProgress);
                     doneRequests.Add(requestInProgress);
+                }
+                else
+                {
+                    Debug.LogWarningFormat("Not complete with title {0}, \n description{1} \n upload progress {2}",
+                        requestInProgress._progressBarTitleText, requestInProgress._progressBarInfoText,
+                        requestInProgress._www.uploadProgress);
                 }
             }
 
@@ -125,6 +142,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void DisplayProgressForTrackedRequests()
         {
+            File.WriteAllText("progressor/output-progress-" + _counter, "Tracking request");
             foreach (var requestInProgress in _requestsInProgress)
             {
                 requestInProgress.DisplayProgress();
