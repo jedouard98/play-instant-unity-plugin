@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections;
 using UnityEditor;
 using UnityEngine;
@@ -34,11 +33,16 @@ namespace GooglePlayInstant.LoadingScreen
         // Loading bar y axis placement as a percentage of canvas object's automatic y value
         private const float LoadingBarYAxisPercentage = 2f;
 
-        public const string LoadingBarGameObjectName = "Loading Bar";
-        public const string LoadingBarOutlineGameObjectName = "Loading Bar Outline";
-        public const string LoadingBarFillGameObjectName = "Loading Bar Fill";
+        // names for the gameobject components
+        private const string LoadingBarGameObjectName = "Loading Bar";
+        private const string LoadingBarOutlineGameObjectName = "Loading Bar Outline";
+        private const string LoadingBarFillGameObjectName = "Loading Bar Fill";
 
-        private static bool loadingIsDone = false;
+        private static bool _assetBundleLoadingIsDone;
+        private static bool _sceneLoadingIsDone;
+
+        private const float AssetBundleDownloadMaxWidthPercentage = .8f;
+
 
         public static void AddLoadingScreenBarComponent(GameObject loadingScreenGameObject)
         {
@@ -106,28 +110,71 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
         }
 
-        public static IEnumerator UpdateLoadingBar(UnityWebRequest www)
+        public static IEnumerator UpdateLoadingBarForAssetBundleDownload(UnityWebRequest www)
         {
-            var loading = GameObject.Find(LoadingBarFillGameObjectName);
-            var loadingBarFillRectTransform = loading.GetComponent<RectTransform>();
+            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
 
-            var newLoadingBarFillRectTransformSizeDelta = loadingBarFillRectTransform.sizeDelta;
+            var loadingBarFillRectTransform =
+                GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
 
-            var newLoadingBarFillRectTransformPosition = loadingBarFillRectTransform.position;
+            var loadingBarFillMaxWidth = loadingBarRectTransform.sizeDelta.x - LoadingBarFillPadding;
+            var assetBundleLoadingMaxWidth = loadingBarFillMaxWidth * AssetBundleDownloadMaxWidthPercentage;
 
-            var maxWidth = newLoadingBarFillRectTransformSizeDelta.x;
-            var startingX = newLoadingBarFillRectTransformPosition.x;
-
-            while (!www.isDone)
+            while (!www.isDone || !_assetBundleLoadingIsDone)
             {
-                newLoadingBarFillRectTransformSizeDelta.x = maxWidth * www.downloadProgress;
-                
-                newLoadingBarFillRectTransformPosition.x =
-                    startingX - (maxWidth - newLoadingBarFillRectTransformSizeDelta.x) / 2f;
+                if (www.isDone)
+                {
+                    _assetBundleLoadingIsDone = true;
+                }
 
-                loadingBarFillRectTransform.sizeDelta = newLoadingBarFillRectTransformSizeDelta;
+                // Change the width of the loading bar fill rectangle appropriately for the amount of download
+                // progress made
+                loadingBarFillRectTransform.sizeDelta = new Vector2(assetBundleLoadingMaxWidth * www.downloadProgress,
+                    loadingBarFillRectTransform.sizeDelta.y);
 
-                loadingBarFillRectTransform.position = newLoadingBarFillRectTransformPosition;
+                // Changing the width of the rectangle makes it shorter (or larger) on both sides--thus requiring the rectangle's
+                // x position to be moved left by half the amount it's been shortened.
+                loadingBarFillRectTransform.position = new Vector2(
+                    loadingBarRectTransform.position.x -
+                    (loadingBarFillMaxWidth - loadingBarFillRectTransform.sizeDelta.x) / 2f,
+                    loadingBarFillRectTransform.position.y);
+
+                yield return null;
+            }
+        }
+
+        public static IEnumerator UpdateLoadingBarForSceneLoading(AsyncOperation sceneLoad)
+        {
+            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
+
+            var loadingBarFillRectTransform =
+                GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
+            
+            var loadingBarFillMaxWidth = loadingBarRectTransform.sizeDelta.x - LoadingBarFillPadding;
+
+//            var sceneLoadingMaxWidth =  loadingBarRectTransform.sizeDelta.x - loadingBarFillMaxWidth;
+            var sceneLoadingMaxWidth =  loadingBarFillMaxWidth - loadingBarFillRectTransform.sizeDelta.x;
+
+            var currentFill = loadingBarFillRectTransform.sizeDelta.x;
+
+            
+            while (!sceneLoad.isDone || !_sceneLoadingIsDone)
+            {
+                if (sceneLoad.isDone)
+                {
+                    _sceneLoadingIsDone = true;
+                }
+
+                loadingBarFillRectTransform.sizeDelta = new Vector2(
+                    currentFill + sceneLoadingMaxWidth * sceneLoad.progress,
+                    loadingBarFillRectTransform.sizeDelta.y);
+
+                // Changing the width of the rectangle makes it shorter (or larger) on both sides--thus requiring the rectangle's
+                // x position to be moved left by half the amount it's been shortened.
+                loadingBarFillRectTransform.position = new Vector2(
+                    loadingBarRectTransform.position.x -
+                    (loadingBarFillMaxWidth - loadingBarFillRectTransform.sizeDelta.x) / 2f,
+                    loadingBarFillRectTransform.position.y);
 
                 yield return null;
             }

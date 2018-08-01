@@ -50,7 +50,8 @@ namespace GooglePlayInstant.LoadingScreen
             }
             else
             {
-                SceneManager.LoadScene(_bundle.GetAllScenePaths()[0]);
+                var sceneLoad = SceneManager.LoadSceneAsync(_bundle.GetAllScenePaths()[0]);
+                yield return StartCoroutine(LoadingBar.UpdateLoadingBarForSceneLoading(sceneLoad));
             }
         }
 
@@ -62,11 +63,9 @@ namespace GooglePlayInstant.LoadingScreen
 #else
             var www = UnityWebRequest.GetAssetBundle(assetBundleUrl);
 #endif
-            StartCoroutine(LoadingBar.UpdateLoadingBar(www));
-            
-            yield return www.SendWebRequest();
-            
-            // loadingIsDone = true
+            www.SendWebRequest();
+
+            yield return StartCoroutine(LoadingBar.UpdateLoadingBarForAssetBundleDownload(www));
 
             // TODO: implement retry logic
             if (www.isNetworkError || www.isHttpError)
@@ -77,6 +76,6 @@ namespace GooglePlayInstant.LoadingScreen
             {
                 _bundle = DownloadHandlerAssetBundle.GetContent(www);
             }
-        } 
+        }
     }
 }
