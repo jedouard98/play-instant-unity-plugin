@@ -97,7 +97,7 @@ namespace GooglePlayInstant.Editor
             {
                 foreach (var pair in headers)
                 {
-                    newHeaders.Add(pair.Key, pair.Value);
+                    newHeaders[pair.Key] = pair.Value;
                 }
             }
 
