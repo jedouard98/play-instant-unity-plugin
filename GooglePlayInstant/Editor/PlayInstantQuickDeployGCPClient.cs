@@ -159,7 +159,6 @@ namespace GooglePlayInstant.Editor
             {
                 QuickDeployTokenUtility.ScheduleAuthCode(code =>
                 {
-                    File.WriteAllText("output-code.txt", "Code is : " + code.code + "Going to get access token");
                     QuickDeployTokenUtility.ScheduleAccessToken(code, token =>
                     {
                         QuickDeployTokenUtility.AccessToken = token;
@@ -170,6 +169,7 @@ namespace GooglePlayInstant.Editor
             }
 
             // TODO(audace): Split this into two tasks, one to carry out when the bucket exists, and one to carry out when the bucket happens to not exist
+            Debug.Log("Came back here to do the checking");
             IfBucketExists(_config.cloudStorageBucketName,
                 doneWWW =>
                 {
@@ -196,7 +196,7 @@ namespace GooglePlayInstant.Editor
             var result = QuickDeployHttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
             var requestInProgress = new WwwRequestInProgress(result, "Uploading bundle to cloud",
                 "Please wait while your bundle is being uploaded to the cloud");
-            requestInProgress.ScheduleTaskOnDone((www) =>
+            requestInProgress.ScheduleTaskOnDone(www =>
             {
                 Debug.Log("Got response: " + www.text + " After upload");
                 if (responseHandler != null)
@@ -267,6 +267,7 @@ namespace GooglePlayInstant.Editor
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
         private static void IfBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
         {
+            Debug.Log("CHECKED BUCKET EXISTENCE");
             string bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
@@ -275,9 +276,11 @@ namespace GooglePlayInstant.Editor
             WwwRequestInProgress requestInProgress =
                 new WwwRequestInProgress(result, "Checking whether bucket exists", "");
             requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone((wwwResult) =>
+            Debug.Log("Going to schedule the tasks");
+            requestInProgress.ScheduleTaskOnDone(wwwResult =>
             {
                 var text = wwwResult.text;
+                Debug.Log("Bucket Exists Error : "+text);
                 if (text.Contains("error"))
                 {
                     onFalse.Invoke(wwwResult);

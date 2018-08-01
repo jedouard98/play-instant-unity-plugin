@@ -36,7 +36,8 @@ namespace GooglePlayInstant.Editor
 
         // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
         // Shouldn't be readonly because it is mutable.
-        private static List<WwwRequestInProgress> _requestsInProgress = new List<WwwRequestInProgress>();
+        private static List<WwwRequestInProgress> _trackedRequestsInProgress = new List<WwwRequestInProgress>();
+        private static HashSet<WwwRequestInProgress> _scheduledForOnDone = new HashSet<WwwRequestInProgress>();
 
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
@@ -49,7 +50,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public delegate void DoneWwwHandler(WWW www);
 
-        private DoneWwwHandler _onDone = www => { };
+        private DoneWwwHandler _onDone = www => { Debug.Log("I did execute"); };
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
@@ -72,7 +73,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public void TrackProgress()
         {
-            _requestsInProgress.Add(this);
+            _trackedRequestsInProgress.Add(this);
         }
 
         /// <summary>
@@ -81,6 +82,10 @@ namespace GooglePlayInstant.Editor
         public void ScheduleTaskOnDone(DoneWwwHandler wwwHandler)
         {
             _onDone += wwwHandler;
+            lock (_scheduledForOnDone)
+            {
+                _scheduledForOnDone.Add(this);
+            }
         }
 
         // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
@@ -103,7 +108,7 @@ namespace GooglePlayInstant.Editor
             // First put done requests in another collection before removing them from the list in order to avoid
             // concurrent modification exceptions.
             var doneRequests = new List<WwwRequestInProgress>();
-            foreach (var requestInProgress in _requestsInProgress)
+            foreach (var requestInProgress in _trackedRequestsInProgress)
             {
                 if (requestInProgress._www.isDone)
                 {
@@ -115,14 +120,39 @@ namespace GooglePlayInstant.Editor
                 }
                 else
                 {
-                    Debug.LogFormat("title: {0}, Progress{1}", requestInProgress._progressBarTitleText, requestInProgress._www.uploadProgress);
+                    Debug.LogFormat("title: {0}, Progress{1}", requestInProgress._progressBarTitleText,
+                        requestInProgress._www.uploadProgress);
                 }
             }
 
             foreach (var doneRequest in doneRequests)
             {
-                doneRequest.ExecuteScheduledTasks();
-                _requestsInProgress.Remove(doneRequest);
+                _trackedRequestsInProgress.Remove(doneRequest);
+            }
+
+            doneRequests.Clear();
+            Debug.Log("Going to run for scheduled with scheduledtasks" + _scheduledForOnDone.Count);
+
+            lock (_scheduledForOnDone)
+            {
+                foreach (var request in _scheduledForOnDone)
+                {
+                    if (request._www.isDone)
+                    {
+                        request.ExecuteScheduledTasks();
+                        doneRequests.Add(request);
+                    }
+                }
+                
+            }
+            
+
+            foreach (var request in doneRequests)
+            {
+                lock (_scheduledForOnDone)
+                {
+                    _scheduledForOnDone.Remove(request);
+                }
             }
         }
 
@@ -140,7 +170,7 @@ namespace GooglePlayInstant.Editor
         public static void DisplayProgressForTrackedRequests()
         {
             File.WriteAllText("progressor/output-progress-" + _counter, "Tracking request");
-            foreach (var requestInProgress in _requestsInProgress)
+            foreach (var requestInProgress in _trackedRequestsInProgress)
             {
                 requestInProgress.DisplayProgress();
             }
