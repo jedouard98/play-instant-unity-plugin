@@ -14,13 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -37,7 +34,7 @@ namespace GooglePlayInstant.Editor
         // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
         // Shouldn't be readonly because it is mutable.
         private static List<WwwRequestInProgress> _trackedRequestsInProgress = new List<WwwRequestInProgress>();
-        private static HashSet<WwwRequestInProgress> _scheduledForOnDone = new HashSet<WwwRequestInProgress>();
+        private static List<WwwRequestInProgress> _scheduledForOnDone = new List<WwwRequestInProgress>();
 
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
@@ -50,7 +47,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public delegate void DoneWwwHandler(WWW www);
 
-        private DoneWwwHandler _onDone = www => { Debug.Log("I did execute"); };
+        private DoneWwwHandler _onDone = www => { };
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
@@ -82,10 +79,7 @@ namespace GooglePlayInstant.Editor
         public void ScheduleTaskOnDone(DoneWwwHandler wwwHandler)
         {
             _onDone += wwwHandler;
-            lock (_scheduledForOnDone)
-            {
-                _scheduledForOnDone.Add(this);
-            }
+            _scheduledForOnDone.Add(this);
         }
 
         // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
@@ -95,7 +89,6 @@ namespace GooglePlayInstant.Editor
             {
                 throw new Exception("Request has not yet completed");
             }
-
             _onDone.Invoke(_www);
         }
 
@@ -132,27 +125,18 @@ namespace GooglePlayInstant.Editor
 
             doneRequests.Clear();
             Debug.Log("Going to run for scheduled with scheduledtasks" + _scheduledForOnDone.Count);
-
-            lock (_scheduledForOnDone)
+            foreach (var request in _scheduledForOnDone)
             {
-                foreach (var request in _scheduledForOnDone)
+                if (request._www.isDone)
                 {
-                    if (request._www.isDone)
-                    {
-                        request.ExecuteScheduledTasks();
-                        doneRequests.Add(request);
-                    }
+                    request.ExecuteScheduledTasks();
+                    doneRequests.Add(request);
                 }
-                
             }
-            
 
             foreach (var request in doneRequests)
             {
-                lock (_scheduledForOnDone)
-                {
-                    _scheduledForOnDone.Remove(request);
-                }
+                _scheduledForOnDone.Remove(request);
             }
         }
 

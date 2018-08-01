@@ -60,7 +60,7 @@ namespace GooglePlayInstant.Editor
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
-            QuickDeployTokenUtility.OnGUI();
+            AccessTokenGetter.OnGUI();
             switch ((ToolBarSelectedButton) _toolbarSelectedButtonIndex)
             {
                 case ToolBarSelectedButton.CreateBundle:
