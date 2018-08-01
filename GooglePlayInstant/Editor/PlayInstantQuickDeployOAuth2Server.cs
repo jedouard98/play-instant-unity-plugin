@@ -121,6 +121,7 @@ namespace GooglePlayInstant.Editor
                     if (_httpListener != null)
                     {
                         _httpListener.Close();
+                        // Set the reference to null for garbage collection.
                         _httpListener = null;
                     }
                 }
