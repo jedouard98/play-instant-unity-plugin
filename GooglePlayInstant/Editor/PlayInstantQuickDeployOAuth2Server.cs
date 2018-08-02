@@ -35,6 +35,7 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class QuickDeployOAuth2Server
     {
+        internal const string CloseTabScript = "<script>window.close();</script>";
         internal HttpListener _httpListener;
         private string _callbackEndpoint;
 
@@ -60,7 +61,9 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         /// <param name="responseHandler">A response handler to be invoked on the key-value pair representing the first
         /// response that will be caught by the server. Note that that the invocation of this handler will not be done
-        /// on the main thread, therefore the handler should only operations that can be run off the main thread.</param>
+        /// on the main thread, therefore the handler should only operations that can be run off the main thread.
+        /// No invocation is done if responseHandler is null.
+        /// </param>
         public QuickDeployOAuth2Server(ResponseHandler responseHandler)
         {
             _responseHandler = responseHandler;
@@ -107,17 +110,18 @@ namespace GooglePlayInstant.Editor
             {
                 try
                 {
-                    // Keep trying different ports until one works
                     var fullEndpoint =
                         string.Format("http://localhost:{0}/{1}/", GetRandomPort(), GetRandomEndpoint());
                     _httpListener = new HttpListener();
                     _httpListener.Prefixes.Add(fullEndpoint);
                     _callbackEndpoint = fullEndpoint;
+                    _httpListener.Start();
                     break;
                 }
                 // thrown when port/endpoint is busy
                 catch (HttpListenerException)
                 {
+                    // Debug.Log("Got this error");
                     if (_httpListener != null)
                     {
                         _httpListener.Close();
@@ -126,8 +130,6 @@ namespace GooglePlayInstant.Editor
                     }
                 }
             }
-
-            _httpListener.Start();
 
             // Handle incoming requests with another thread.
             new Thread(() =>
@@ -141,7 +143,8 @@ namespace GooglePlayInstant.Editor
 
         /// <summary>
         /// Processes the object as an HttpListenerContext instancce and retrieves authorization response. Invokes
-        /// the response handler on the response, and responds to request with a script that will close the browser.
+        /// the response handler on the response if response handler is not null, and responds to request with a
+        /// string corresponding to a script that will close the browser.
         /// </summary>
         /// <param name="o"></param>
         private void ProcessContext(object o)
@@ -152,6 +155,7 @@ namespace GooglePlayInstant.Editor
             {
                 context.Response.StatusCode = 404;
                 context.Response.Close();
+                Stop();
                 return;
             }
 
@@ -171,7 +175,7 @@ namespace GooglePlayInstant.Editor
                 _responseHandler.Invoke(responsePair);
             }
 
-            var responseArray = Encoding.UTF8.GetBytes("<script>window.close();</script>");
+            var responseArray = Encoding.UTF8.GetBytes(CloseTabScript);
             var outputStream = context.Response.OutputStream;
             outputStream.Write(responseArray, 0, responseArray.Length);
             outputStream.Flush();
@@ -183,16 +187,29 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Inspect the URI and determine whether it contains valid params according to the following policies:
         ///   1. URI query must include exactly one of either "code" or "error" as param keys.
-        ///   2. The only other key that is allowed in the param keys is "scope". 
+        ///   2. "code" and "error" can not be present at the same time.
+        ///   3. No other keys apart from "code", "error" and "scope" are allowed.
+        ///   4. "scope" should only be present when there is "code".
         /// </summary>
-        private bool UriContainsValidQueryParams(Uri uri)
+        internal static bool UriContainsValidQueryParams(Uri uri)
         {
             var allowedQueries = new[] {"code", "error", "scope"};
-            Dictionary<string, string> queryParams = GetQueryParamsFromUri(uri);
-            var uriRespectsPolicies = (queryParams.ContainsKey("code") || queryParams.ContainsKey("error")) &&
-                                      !(queryParams.ContainsKey("error") && queryParams.ContainsKey("code")) &&
-                                      queryParams.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
-            return uriRespectsPolicies;
+            var queryParams = GetQueryParamsFromUri(uri);
+
+            Predicate<Dictionary<string, string>> policy1 = queryParamsDict =>
+                queryParamsDict.ContainsKey("code") || queryParamsDict.ContainsKey("error");
+
+            Predicate<Dictionary<string, string>> policy2 = queryParamsDict =>
+                !(queryParamsDict.ContainsKey("error") && queryParamsDict.ContainsKey("code"));
+
+            Predicate<Dictionary<string, string>> policy3 = queryParamsDict =>
+                queryParamsDict.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
+
+            Predicate<Dictionary<string, string>> policy4 = queryParamsDict =>
+                !(queryParams.ContainsKey("scope") && !queryParams.ContainsKey("code"));
+
+            return policy1.Invoke(queryParams) && policy2.Invoke(queryParams) && policy3.Invoke(queryParams) &&
+                   policy4.Invoke(queryParams);
         }
 
         /// <summary>
@@ -217,9 +234,11 @@ namespace GooglePlayInstant.Editor
         /// Stops the server. A future call of the Start() method on this instance will restart this server at a
         /// different endpoint.
         /// </summary>
-        private void Stop()
+        internal void Stop()
         {
             _httpListener.Close();
+            // Assign to null so that it can be garbage collected.
+            _httpListener = null;
         }
     }
 }
