@@ -105,7 +105,7 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public void Start()
         {
-            // Pick an available port and then break.
+            // Pick one available port and listen from there.
             while (true)
             {
                 try
@@ -121,11 +121,10 @@ namespace GooglePlayInstant.Editor
                 // thrown when port/endpoint is busy
                 catch (HttpListenerException)
                 {
-                    // Debug.Log("Got this error");
                     if (_httpListener != null)
                     {
                         _httpListener.Close();
-                        // Set the reference to null for garbage collection.
+                        // Set to null for garbage collection.
                         _httpListener = null;
                     }
                 }
@@ -215,7 +214,7 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Processes URI, extracts query params, puts them into a dictionary returns the dictionary.
         /// </summary>
-        private static Dictionary<string, string> GetQueryParamsFromUri(Uri uri)
+        internal static Dictionary<string, string> GetQueryParamsFromUri(Uri uri)
         {
             var result = new Dictionary<string, string>();
             foreach (var pair in uri.Query.Substring(1).Split('&'))
@@ -237,7 +236,7 @@ namespace GooglePlayInstant.Editor
         internal void Stop()
         {
             _httpListener.Close();
-            // Assign to null so that it can be garbage collected.
+            // Assign to null for garbage collection.
             _httpListener = null;
         }
     }

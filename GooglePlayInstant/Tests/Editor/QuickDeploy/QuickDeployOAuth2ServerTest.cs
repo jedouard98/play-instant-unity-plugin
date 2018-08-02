@@ -1,5 +1,21 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using GooglePlayInstant.Editor;
 using NUnit.Framework;
@@ -11,6 +27,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     public class OAuth2ServerTest
     {
         private const int RequestResponseTimeout = 100;
+        private const string AddressPrefix = "http://localhost:5000/";
 
         [Test]
         public void TestServerIsListeningAfterStart()
@@ -100,23 +117,21 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         }
 
         [Test]
-        public void TestUriContainsValidParamsMethod()
+        public void TestUriContainsValidParams()
         {
-            const string AddressPrefix = "http://localhost:5000/";
-            
             const string Policy1 = "Uri must include exactly one of either \"code\" or \"error\" as keys.";
-           
+
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
             Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(validUriWithCode),
                 Policy1);
             var uriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
             Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(uriWithError),
                 "query with just \"error\" as param key should be valid.");
-             
 
 
             const string Policy2 = "\"code\" and \"error\" cannot be present at the same time.";
-            var invalidUriWithCodeAndError = new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
+            var invalidUriWithCodeAndError =
+                new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
             Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
                 Policy2);
 
@@ -129,6 +144,21 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var invalidUriWithScope = new Uri(string.Format("{0}?scope=someValue", AddressPrefix));
             Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(validUriWithScope), Policy4);
             Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(invalidUriWithScope), Policy4);
+        }
+
+        [Test]
+        public void TestGetQueryParamsFromUri()
+        {
+            var testDict = new Dictionary<string, string>();
+            for (var pairId = 0; pairId < 10; pairId++)
+            {
+                testDict.Add(string.Format("key{0}", pairId), string.Format("value{0}", pairId));
+            }
+
+            var query = "?" + string.Join("&", testDict.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray());
+            var uri = new Uri(AddressPrefix + query);
+            Assert.AreEqual(testDict, QuickDeployOAuth2Server.GetQueryParamsFromUri(uri),
+                "should return expected query params");
         }
     }
 }
