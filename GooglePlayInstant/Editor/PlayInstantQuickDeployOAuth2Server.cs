@@ -18,7 +18,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 
@@ -79,7 +78,7 @@ namespace GooglePlayInstant.Editor
             const int maximumPort = 65535;
             return new Random().Next(minimumPort, maximumPort);
         }
-        
+
         /// <summary>
         /// Starts this server to make it listen for requests containing authorization code or error data that are
         /// forwarded from google's OAuth2 authorization url.
