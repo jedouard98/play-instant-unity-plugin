@@ -103,28 +103,32 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         public void TestUriContainsValidParamsMethod()
         {
             const string AddressPrefix = "http://localhost:5000/";
-            // Policy 1: Uri must include exactly one of either "code" or "error" as keys.
-            var uriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
-            Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(uriWithCode),
-                "query with just \"code\" as param key should be valid.");
-
-            var uriWithError = new Uri(string.Format("{0}?error=someValue"));
+            
+            const string Policy1 = "Uri must include exactly one of either \"code\" or \"error\" as keys.";
+           
+            var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
+            Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(validUriWithCode),
+                Policy1);
+            var uriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
             Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(uriWithError),
                 "query with just \"error\" as param key should be valid.");
+             
 
-            
-            // Policy 2: "code" and "error" cannot be present at the same time.
-            var uriWithCodeAndError = new Uri(string.Format("{0}?code=codeValue&error=errorValue"));
-            Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(uriWithCodeAndError),
-                "query cannot have code and error at the same time");
-            
-            // 3. No other keys apart from "code", "error" and "scope" are allowed.
-            
-            var uriWithOtherKey = new Uri(string.Format("{0}?otherKey=someValue"));
-            Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(uriWithError),
-                "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.");
 
-            // Policy 2: The only other key that is allowed in param keys is "scope".
+            const string Policy2 = "\"code\" and \"error\" cannot be present at the same time.";
+            var invalidUriWithCodeAndError = new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
+            Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
+                Policy2);
+
+            const string Policy3 = "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
+            var invalidUriWithOtherKeys = new Uri(string.Format("{0}?otherKey=someValue", AddressPrefix));
+            Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), Policy3);
+
+            const string Policy4 = "\"scope\" should only be present when there is \"code\"";
+            var validUriWithScope = new Uri(string.Format("{0}?code=someValue&scope=someValue", AddressPrefix));
+            var invalidUriWithScope = new Uri(string.Format("{0}?scope=someValue", AddressPrefix));
+            Assert.IsTrue(QuickDeployOAuth2Server.UriContainsValidQueryParams(validUriWithScope), Policy4);
+            Assert.IsFalse(QuickDeployOAuth2Server.UriContainsValidQueryParams(invalidUriWithScope), Policy4);
         }
     }
 }
