@@ -20,7 +20,7 @@ using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
     /// A class with utility methods for sending GET and POST requests.
