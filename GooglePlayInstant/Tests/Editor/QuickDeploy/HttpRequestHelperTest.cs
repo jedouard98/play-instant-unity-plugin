@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using GooglePlayInstant.Editor;
+using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
+using UnityEngine;
+using Random = System.Random;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -28,15 +29,17 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     /// Tests for Http Request Helper methods.
     /// </summary>
     [TestFixture]
-    public class QuickDeployHttpRequestHelperTest
+    public class HttpRequestHelperTest
     {
         /*
          * Testing strategy:
          *     - Use a local server to inspect contents of the requests sent.
          *     - Partition inputs as follows:
-         *         - Method tested is SendHttpGetRequest, SendHttpPostRequest.
+         *         - Method tested is SendHttpGetRequest, SendHttpPostRequest, other helper methods.
          *         - Contents of requests are query params, form contents, bytes, headers.
          */
+
+        private const int RequestResponseThresholdInMillis = 50;
 
         /// <summary>
         /// Handler for http listener contexts.
@@ -62,9 +65,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpGetRequest(server.EndPoint, null, null);
+            var wwwObject = HttpRequestHelper.SendHttpGetRequest(server.EndPoint, null, null);
             // request shouldn't take long since the server is running on localhost.
-            Thread.Sleep(1000);
+            Thread.Sleep(RequestResponseThresholdInMillis);
             Assert.AreEqual(expectedResponse, wwwObject.text);
             server.Stop();
         }
@@ -75,7 +78,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestSendGetRequestWithGetParamsNoHeaders()
         {
-            var getParams = QuickDeployHttpTestHelper.GetKeyValueDict(10);
+            var getParams = HttpRequestHelperTestHelper.GetKeyValueDict(10);
             HttpListenerContextHandler handler = context =>
             {
                 var outputStream = context.Response.OutputStream;
@@ -88,10 +91,10 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpGetRequest(server.EndPoint, getParams, null);
-            Thread.Sleep(1000);
+            var wwwObject = HttpRequestHelper.SendHttpGetRequest(server.EndPoint, getParams, null);
+            Thread.Sleep(RequestResponseThresholdInMillis);
             // Received params must be equal to sent params.
-            Assert.AreEqual(QuickDeployHttpTestHelper.GetUrlQueryFromDict(getParams), wwwObject.text);
+            Assert.AreEqual(HttpRequestHelperTestHelper.GetUrlQueryFromDict(getParams), wwwObject.text);
             server.Stop();
         }
 
@@ -101,7 +104,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestSendGetRequestWithHeadersNoGetParams()
         {
-            var sentHeaders = QuickDeployHttpTestHelper.GetKeyValueDict(10);
+            var sentHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(10);
             HttpListenerContextHandler handler = context =>
             {
                 var outputStream = context.Response.OutputStream;
@@ -112,7 +115,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 }
 
                 // Respond with url query string corresponding to recieved headers.
-                var responseArray = Encoding.UTF8.GetBytes(QuickDeployHttpTestHelper.GetUrlQueryFromDict(headersDict));
+                var responseArray =
+                    Encoding.UTF8.GetBytes(HttpRequestHelperTestHelper.GetUrlQueryFromDict(headersDict));
                 outputStream.Write(responseArray, 0, responseArray.Length);
                 outputStream.Flush();
                 outputStream.Close();
@@ -120,9 +124,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpGetRequest(server.EndPoint, null, sentHeaders);
-            Thread.Sleep(1000);
-            var receivedHeaders = QuickDeployHttpTestHelper.GetDictFromUrlQuery(wwwObject.text);
+            var wwwObject = HttpRequestHelper.SendHttpGetRequest(server.EndPoint, null, sentHeaders);
+            Thread.Sleep(RequestResponseThresholdInMillis);
+            var receivedHeaders = HttpRequestHelperTestHelper.GetDictFromUrlQuery(wwwObject.text);
             // All sent headers must be contained in a set of received headers.
             Assert.IsTrue(!sentHeaders.Except(receivedHeaders).Any());
             server.Stop();
@@ -134,7 +138,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestSendPostRequestWithFormAndNoHeaders()
         {
-            var formDict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
+            var formDict = HttpRequestHelperTestHelper.GetKeyValueDict(10);
             HttpListenerContextHandler handler = context =>
             {
                 var formData = new StreamReader(context.Request.InputStream).ReadToEnd();
@@ -148,11 +152,11 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpPostRequest(server.EndPoint, formDict, null);
-            Thread.Sleep(1000);
+            var wwwObject = HttpRequestHelper.SendHttpPostRequest(server.EndPoint, formDict, null);
+            Thread.Sleep(RequestResponseThresholdInMillis);
             // The contents received must be same as contents sent.
-            Assert.True(QuickDeployHttpTestHelper.DictsAreEqual(formDict,
-                QuickDeployHttpTestHelper.GetDictFromUrlQuery("?" + wwwObject.text)));
+            Assert.AreEqual(formDict,
+                HttpRequestHelperTestHelper.GetDictFromUrlQuery("?" + wwwObject.text));
             server.Stop();
         }
 
@@ -162,8 +166,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestSendPostRequestWithFormAndHeaders()
         {
-            var formDict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
-            var sentHeaders = QuickDeployHttpTestHelper.GetKeyValueDict(10);
+            var formDict = HttpRequestHelperTestHelper.GetKeyValueDict(10);
+            var sentHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(10);
             var receivedHeaders = new Dictionary<string, string>();
             HttpListenerContextHandler handler = context =>
             {
@@ -184,13 +188,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpPostRequest(server.EndPoint, formDict, sentHeaders);
-            Thread.Sleep(1000);
+            var wwwObject = HttpRequestHelper.SendHttpPostRequest(server.EndPoint, formDict, sentHeaders);
+            Thread.Sleep(RequestResponseThresholdInMillis);
             // Sent headers must be a subset of received headers.
             Assert.IsTrue(!sentHeaders.Except(receivedHeaders).Any());
             // Contents received in the response must be equivalent to contents sent in the form.
-            Assert.IsTrue(QuickDeployHttpTestHelper.DictsAreEqual(formDict,
-                QuickDeployHttpTestHelper.GetDictFromUrlQuery("?" + wwwObject.text)));
+            Assert.AreEqual(formDict,
+                HttpRequestHelperTestHelper.GetDictFromUrlQuery("?" + wwwObject.text));
             server.Stop();
         }
 
@@ -200,8 +204,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestSendPostRequestWithBytes()
         {
-            var dict = QuickDeployHttpTestHelper.GetKeyValueDict(10);
-            var sentBytes = Encoding.UTF8.GetBytes(QuickDeployHttpTestHelper.GetUrlQueryFromDict(dict).Substring(1));
+            var dict = HttpRequestHelperTestHelper.GetKeyValueDict(10);
+            var sentBytes = Encoding.UTF8.GetBytes(HttpRequestHelperTestHelper.GetUrlQueryFromDict(dict).Substring(1));
             HttpListenerContextHandler handler = context =>
             {
                 var receivedBytes = Encoding.UTF8.GetBytes(new StreamReader(context.Request.InputStream).ReadToEnd());
@@ -214,12 +218,21 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var server = new TestServer(handler);
-            var wwwObject = QuickDeployHttpRequestHelper.SendHttpPostRequest(server.EndPoint, sentBytes, null);
+            var wwwObject = HttpRequestHelper.SendHttpPostRequest(server.EndPoint, sentBytes, null);
             // Request shouldn't take long since the server is running on localhost.
-            Thread.Sleep(1000);
+            Thread.Sleep(RequestResponseThresholdInMillis);
             // Bytes sent must be equivalent to bytes received.
             Assert.AreEqual(sentBytes, Encoding.UTF8.GetBytes(wwwObject.text));
             server.Stop();
+        }
+
+        [Test]
+        public void TestGetCombinedDictionary()
+        {
+            var form = new WWWForm();
+            var newHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(10);
+            var combinedDictionary = HttpRequestHelper.GetCombinedDictionary(form.headers, newHeaders);
+            Assert.AreEqual(form.headers.Union(newHeaders).ToDictionary(s => s.Key, s => s.Value), combinedDictionary);
         }
 
 
@@ -258,6 +271,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                     try
                     {
                         _httpListener.Prefixes.Add(endPoint);
+                        _httpListener.Start();
                         _endPoint = endPoint;
                         break;
                     }
@@ -270,7 +284,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                     }
                 }
 
-                _httpListener.Start();
                 var responseHandler = new Thread(() =>
                 {
                     while (true)
