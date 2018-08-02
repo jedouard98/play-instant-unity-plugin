@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -69,33 +70,16 @@ namespace GooglePlayInstant.Editor
             _responseHandler = responseHandler;
         }
 
-        internal static string GetRandomEndpoint()
-        {
-            return GetMD5Hash(new Random().Next(int.MinValue, int.MaxValue).ToString());
-        }
-
+        /// <summary>
+        /// Generates a random port from the range of eligible port numbers starting from 1024 to 65535 inclusive.
+        /// </summary>
         internal static int GetRandomPort()
         {
             const int minimumPort = 1024;
             const int maximumPort = 65535;
             return new Random().Next(minimumPort, maximumPort);
         }
-
-        // Helper method to compute an MD5 digest of a string
-        internal static string GetMD5Hash(string input)
-        {
-            var hashAsBytes = MD5.Create().ComputeHash(Encoding.ASCII.GetBytes(input));
-            // Convert to hex string
-            var sb = new StringBuilder();
-            for (var i = 0; i < hashAsBytes.Length; i++)
-            {
-                sb.Append(hashAsBytes[i].ToString("X2"));
-            }
-
-            return sb.ToString();
-        }
-
-
+        
         /// <summary>
         /// Starts this server to make it listen for requests containing authorization code or error data that are
         /// forwarded from google's OAuth2 authorization url.
@@ -111,7 +95,7 @@ namespace GooglePlayInstant.Editor
                 try
                 {
                     var fullEndpoint =
-                        string.Format("http://localhost:{0}/{1}/", GetRandomPort(), GetRandomEndpoint());
+                        string.Format("http://localhost:{0}/{1}/", GetRandomPort(), Path.GetRandomFileName());
                     _httpListener = new HttpListener();
                     _httpListener.Prefixes.Add(fullEndpoint);
                     _callbackEndpoint = fullEndpoint;
