@@ -68,12 +68,13 @@ namespace GooglePlayInstant.LoadingScreen
 
             var loadingScreenRectTransform = loadingScreenGameObject.GetComponent<RectTransform>();
 
-            //Set the size of the loading bar
+            // Set the size of the loading bar. LoadingBarWidthPercentage gives loading bar padding from the edges
+            // of the viewing device
             loadingBarRectTransform.sizeDelta =
                 new Vector2(loadingScreenRectTransform.sizeDelta.x * LoadingBarWidthPercentage,
                     LoadingBarHeight);
 
-            //Set the position of the loading bar
+            // Set the position of the loading bar
             loadingBarRectTransform.position =
                 new Vector2(loadingScreenRectTransform.position.x,
                     loadingScreenRectTransform.position.y -
@@ -92,7 +93,8 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarOutlineGameObject.AddComponent<Image>();
 
             var loadingBarOutlineImage = loadingBarOutlineGameObject.GetComponent<Image>();
-            loadingBarOutlineImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
+            loadingBarOutlineImage.sprite =
+                AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd");
 
             loadingBarOutlineImage.type = Image.Type.Sliced;
             loadingBarOutlineImage.fillCenter = false;
@@ -149,14 +151,14 @@ namespace GooglePlayInstant.LoadingScreen
 
             var loadingIsDone = false;
 
-            while (!operation.isDone || !loadingIsDone)
+            while (!loadingIsDone)
             {
                 loadingBarFillRectTransform.sizeDelta = new Vector2(
                     currentLoadingBarFill + loadingMaxWidth * operation.progress,
                     loadingBarFillRectTransform.sizeDelta.y);
 
-                // Changing the width of the rectangle makes it shorter (or larger) on both sides--thus requiring the rectangle's
-                // x position to be moved left by half the amount it's been shortened.
+                // Changing the width of the rectangle makes it shorter (or larger) on both sides--thus requiring
+                // the rectangle's x position to be moved left by half the amount it's been shortened.
                 loadingBarFillRectTransform.position = new Vector2(
                     loadingBarRectTransform.position.x -
                     (loadingBarFillMaxWidth - loadingBarFillRectTransform.sizeDelta.x) / 2f,

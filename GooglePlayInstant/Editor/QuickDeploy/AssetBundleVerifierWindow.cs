@@ -54,7 +54,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest.SendWebRequest();
         }
 
-        //TODO: Support Unity 5.6.0+ and fix random crashing
+        //TODO: Support Unity 5.6.0+
         private void GetAssetBundleInfoFromDownload()
         {
             var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
@@ -109,6 +109,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest = null;
         }
 
+        // TODO: fix crashing associated with using DisplayProgressBar()
         private void OnGUI()
         {
             if (_webRequest != null && !_webRequest.isDone)
