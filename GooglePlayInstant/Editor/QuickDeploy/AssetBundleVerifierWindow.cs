@@ -93,6 +93,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             return bytes / 1024f / 1024f;
         }
 
+        // TODO: fix nested if statements
         private void Update()
         {
             if (_webRequest == null || !_webRequest.isDone)
