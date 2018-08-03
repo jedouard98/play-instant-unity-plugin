@@ -25,10 +25,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     CreateBucket(bucketCreationResponse =>
                     {
-                        if (!string.IsNullOrEmpty(bucketCreationResponse.error))
+                        var error = bucketCreationResponse.error;
+                        if (!string.IsNullOrEmpty(error))
                         {
-                            throw new Exception(string.Format("Got error attempting to create bucket {0}",
-                                bucketCreationResponse.error));
+                            throw new Exception(string.Format("Got error attempting to create bucket {0}\n{1}", error,
+                                bucketCreationResponse.text));
                         }
 
                         UploadBundleAndMakeItPublic();
@@ -43,14 +44,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (!string.IsNullOrEmpty(uploadBundleWww.error))
                 {
-                    throw new Exception(string.Format("Got error uploading bundle: {0} ", uploadBundleWww.error));
+                    throw new Exception(string.Format("Got error uploading bundle: {0}\n{1}", uploadBundleWww.error,
+                        uploadBundleWww.text));
                 }
 
                 MakeBundlePublic(makeBundlePublicWww =>
                 {
-                    if (!string.IsNullOrEmpty(makeBundlePublicWww.error))
+                    var error = makeBundlePublicWww.error;
+                    if (!string.IsNullOrEmpty(error))
                     {
-                        Debug.Log(string.Format("Got error making bundle public: {0}", makeBundlePublicWww.error));
+                        Debug.Log(string.Format("Got error making bundle public: {0}\n{1}", error,
+                            makeBundlePublicWww.text));
                     }
                 });
             });
@@ -156,7 +160,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         var error = completeRequest.error;
                         if (!string.IsNullOrEmpty(error))
                         {
-                            if (string.Equals("404 Not Found", error))
+                            if (error.StartsWith("404"))
                             {
                                 onBucketDoesNotExist.Invoke(completeRequest);
                             }
