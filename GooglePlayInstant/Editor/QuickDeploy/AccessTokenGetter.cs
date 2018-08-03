@@ -44,11 +44,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         public static void GetAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
         {
-            OAuth2Server server = new OAuth2Server(authorizationResponse =>
-            {
-                _authorizationResponse = authorizationResponse;
-            });
+            var server = new OAuth2Server(authorizationResponse => { _authorizationResponse = authorizationResponse; });
             server.Start();
+
             var redirect_uri = server.CallbackEndpoint;
 
             AuthorizationResponseHandler onOAuthResponseReceived = responsePair =>
@@ -58,11 +56,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     throw new Exception("Could not receive required permissions");
                 }
 
-                AuthorizationCode authCode = new AuthorizationCode
+                var authCode = new AuthorizationCode
                 {
                     code = responsePair.Value,
                     redirect_uri = redirect_uri
                 };
+
                 if (authorizationCodeHandler != null)
                 {
                     authorizationCodeHandler.Invoke(authCode);
@@ -78,7 +77,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Application.OpenURL(authorizatonUrl);
         }
 
-        public static void GetAccessToken(AuthorizationCode authCode, AccessTokenHandler onAccessTokenReceived)
+        public static void GetAccessToken(AuthorizationCode authCode, AccessTokenHandler accessTokenHandler)
         {
             GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
             string tokenEndpiont = credentials.token_uri;
@@ -104,7 +103,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     }
 
                     AccessToken = token;
-                    onAccessTokenReceived.Invoke(token);
+                    accessTokenHandler.Invoke(token);
                 });
         }
 
