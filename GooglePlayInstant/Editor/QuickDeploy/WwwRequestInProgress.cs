@@ -28,7 +28,8 @@ namespace GooglePlayInstant.Editor
     {
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-
+        
+        
         /// <summary>
         /// A method to be executed on the _www field when it is done.
         /// </summary>

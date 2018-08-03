@@ -13,7 +13,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         public delegate void AuthorizationCodeHandler(AuthorizationCode authorizationCode);
 
-        public delegate void AuthorizationResponseHandler(KeyValuePair<string, string> response);
+        private delegate void AuthorizationResponseHandler(KeyValuePair<string, string> response);
 
         private static AuthorizationResponseHandler _onOAuthResponseReceived;
 
@@ -27,7 +27,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             private set { _accessToken = value; }
         }
 
-        public delegate void AccessTokenHandler(GcpAccessToken accessToken);
+        public delegate void PostTokenAction();
 
         public static void OnGUI()
         {
@@ -69,19 +69,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             };
             _onOAuthResponseReceived = onOAuthResponseReceived;
             // Now ask permissions from the server.
-            GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
-            string queryParams = "?scope=" + Scope + "&access_type=offline&include_granted_scopes=true" +
-                                 "&redirect_uri=" + redirect_uri + "&response_type=code" + "&client_id=" +
-                                 credentials.client_id;
+            var credentials = GCPClientHelper.GetOauth2Credentials();
+            var queryParams = "?scope=" + Scope + "&access_type=offline&include_granted_scopes=true" +
+                              "&redirect_uri=" + redirect_uri + "&response_type=code" + "&client_id=" +
+                              credentials.client_id;
             var authorizatonUrl = credentials.auth_uri + queryParams;
             Application.OpenURL(authorizatonUrl);
         }
 
-        public static void GetAccessToken(AuthorizationCode authCode, AccessTokenHandler accessTokenHandler)
+        public static void UpdateAccessToken(PostTokenAction postTokenAction)
         {
-            GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
-            string tokenEndpiont = credentials.token_uri;
-            Dictionary<string, string> formData = new Dictionary<string, string>();
+            if (AccessToken == null)
+            {
+                GetAuthCode(code => RequestAndStoreAccessToken(code, postTokenAction));
+            }
+            else
+            {
+                postTokenAction.Invoke();
+            }
+        }
+        
+        private static void RequestAndStoreAccessToken(AuthorizationCode authCode, PostTokenAction postTokenAction)
+        {
+            var credentials = GCPClientHelper.GetOauth2Credentials();
+            var tokenEndpiont = credentials.token_uri;
+            var formData = new Dictionary<string, string>();
             formData.Add("code", authCode.code);
             formData.Add("client_id", credentials.client_id);
             formData.Add("client_secret", credentials.client_secret);
@@ -93,9 +105,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 "Requesting access token",
                 doneWww =>
                 {
-                    Debug.Log("Receiving access token");
-                    string text = doneWww.text;
-                    var token = JsonUtility.FromJson<GcpAccessToken>(text);
+                    var token = JsonUtility.FromJson<GcpAccessToken>(doneWww.text);
                     if (string.IsNullOrEmpty(token.access_token))
                     {
                         throw new Exception(string.Format(
@@ -103,10 +113,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                             doneWww.error));
                     }
 
-                    Debug.Log("here");
                     AccessToken = token;
                     Debug.Log(string.Format("Token expires in {0}", token.expires_in));
-                    accessTokenHandler.Invoke(token);
+                    postTokenAction.Invoke();
                 });
         }
 
@@ -123,7 +132,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             public string access_token;
             public string refresh_token;
             public string token_type;
-            public string expires_in;
+            public int expires_in;
         }
     }
 }
