@@ -28,7 +28,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         var error = bucketCreationResponse.error;
                         if (!string.IsNullOrEmpty(error))
                         {
-                            throw new Exception(string.Format("Got error attempting to create bucket {0}\n{1}", error,
+                            throw new Exception(string.Format("Got error attempting to create bucket: {0}\n{1}", error,
                                 bucketCreationResponse.text));
                         }
 
@@ -76,6 +76,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var bytes = File.ReadAllBytes(assetBundleFileName);
                 var headers = new Dictionary<string, string>();
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
+                headers.Add("Content-Type","application/octet-stream");
                 var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
                 WwwRequestInProgress.TrackProgress(request,
                     "Uploading asset bundle to google cloud storage", responseHandler.Invoke);
