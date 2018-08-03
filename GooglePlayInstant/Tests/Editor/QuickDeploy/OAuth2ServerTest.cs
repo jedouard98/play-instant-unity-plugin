@@ -148,32 +148,32 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestUriContainsValidParams()
         {
-            const string Policy1 = "Uri query must include exactly one of either \"code\" or \"error\" as keys.";
+            const string PolicyNumberOneText = "Uri query must include exactly one of either \"code\" or \"error\" as keys.";
 
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithCode),
-                Policy1);
+                PolicyNumberOneText);
             var uriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(uriWithError),
                 "query with just \"error\" as param key should be valid.");
 
 
-            const string Policy2 = "\"code\" and \"error\" cannot be present at the same time.";
+            const string PolicyNumberTwoText = "\"code\" and \"error\" cannot be present at the same time.";
             var invalidUriWithCodeAndError =
                 new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
-                Policy2);
+                PolicyNumberTwoText);
 
-            const string Policy3 = "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
+            const string PolicyNumberThreeText = "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
             var invalidUriWithOtherKeys =
                 new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), Policy3);
+            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), PolicyNumberThreeText);
 
-            const string Policy4 = "\"scope\" should only be present when there is \"code\"";
+            const string PolicyNumberFourText = "\"scope\" should only be present when there is \"code\"";
             var validUriWithScope = new Uri(string.Format("{0}?code=someValue&scope=someValue", AddressPrefix));
             var invalidUriWithScope = new Uri(string.Format("{0}?scope=someValue", AddressPrefix));
-            Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithScope), Policy4);
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithScope), Policy4);
+            Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithScope), PolicyNumberFourText);
+            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithScope), PolicyNumberFourText);
         }
 
         /// <summary>
