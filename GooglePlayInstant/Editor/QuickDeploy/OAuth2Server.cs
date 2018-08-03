@@ -23,17 +23,21 @@ using System.Threading;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
     /// A class representing a server that provides an endpoint to use for getting authorization code from Google's
-    /// OAuth2 API's authorization page, on which the user grants the application to access their data on Google
-    /// Cloud platform.
+    /// OAuth2 API's authorization page. On that page, the user grants the application to access their data on Google
+    /// Cloud platform. The server will start running at a certain endpoint on a call to Start(). The server announces
+    /// its chosen endpoint with the CallbackEndpoint property. This server will run until it receives the first
+    /// request, which it will process to retrieve the authorization response and handle the by invoking on the response
+    /// the handler passed to the server during instatiation. The server will then reply back with a JS script that will
+    /// close the authorization window, and then this server will stop listening for further requests.
     ///
     /// <see cref="https://developers.google.com/identity/protocols/OAuth2#installed"/> for an overview of OAuth2
     /// protocol for installed applications that interact with Google APIs.
     /// </summary>
-    public class QuickDeployOAuth2Server
+    public class OAuth2Server
     {
         internal const string CloseTabScript = "<script>window.close();</script>";
         internal HttpListener _httpListener;
@@ -64,7 +68,7 @@ namespace GooglePlayInstant.Editor
         /// on the main thread, therefore the handler should only operations that can be run off the main thread.
         /// No invocation is done if responseHandler is null.
         /// </param>
-        public QuickDeployOAuth2Server(ResponseHandler responseHandler)
+        public OAuth2Server(ResponseHandler responseHandler)
         {
             _responseHandler = responseHandler;
         }
@@ -178,20 +182,20 @@ namespace GooglePlayInstant.Editor
             var allowedQueries = new[] {"code", "error", "scope"};
             var queryParams = GetQueryParamsFromUri(uri);
 
-            Predicate<Dictionary<string, string>> policy1 = queryParamsDict =>
+            Predicate<Dictionary<string, string>> policyNumberOne = queryParamsDict =>
                 queryParamsDict.ContainsKey("code") || queryParamsDict.ContainsKey("error");
 
-            Predicate<Dictionary<string, string>> policy2 = queryParamsDict =>
+            Predicate<Dictionary<string, string>> policyNumberTwo = queryParamsDict =>
                 !(queryParamsDict.ContainsKey("error") && queryParamsDict.ContainsKey("code"));
 
-            Predicate<Dictionary<string, string>> policy3 = queryParamsDict =>
+            Predicate<Dictionary<string, string>> policyNumberThree = queryParamsDict =>
                 queryParamsDict.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
 
-            Predicate<Dictionary<string, string>> policy4 = queryParamsDict =>
+            Predicate<Dictionary<string, string>> policyNumberFour = queryParamsDict =>
                 !(queryParams.ContainsKey("scope") && !queryParams.ContainsKey("code"));
 
-            return policy1.Invoke(queryParams) && policy2.Invoke(queryParams) && policy3.Invoke(queryParams) &&
-                   policy4.Invoke(queryParams);
+            return policyNumberOne.Invoke(queryParams) && policyNumberTwo.Invoke(queryParams) &&
+                   policyNumberThree.Invoke(queryParams) && policyNumberFour.Invoke(queryParams);
         }
 
         /// <summary>
@@ -219,7 +223,7 @@ namespace GooglePlayInstant.Editor
         internal void Stop()
         {
             _httpListener.Close();
-            // Assign to null for garbage collection.
+            // Set to null for garbage collection.
             _httpListener = null;
         }
     }
