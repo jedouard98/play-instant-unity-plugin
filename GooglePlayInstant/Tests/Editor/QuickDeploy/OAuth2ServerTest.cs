@@ -101,7 +101,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Thread.Sleep(RequestResponseThresholdInMillis);
             Assert.AreEqual(sentCode, receivedCode, "Expected received code to be the same as sent code.");
             Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
-                string.Format("Expected response to be {0}", OAuth2Server.CloseTabText));
+                string.Format("Expected response to be \"{0}\"", OAuth2Server.CloseTabText));
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Thread.Sleep(RequestResponseThresholdInMillis);
             Assert.AreEqual(sentError, receivedError, "Expected received code to be the same as sent code.");
             Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
-                string.Format("Expected response to be {0}", OAuth2Server.CloseTabText));
+                string.Format("Expected response to be \"{0}\"", OAuth2Server.CloseTabText));
         }
 
         /// <summary>

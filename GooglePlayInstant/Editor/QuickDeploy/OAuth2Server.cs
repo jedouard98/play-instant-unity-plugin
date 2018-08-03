@@ -38,7 +38,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public class OAuth2Server
     {
-        internal const string CloseTabText = "<h3>You may close this tab.</h3>";
+        internal const string CloseTabText = "You may close this tab.";
         internal HttpListener _httpListener;
         private string _callbackEndpoint;
 
