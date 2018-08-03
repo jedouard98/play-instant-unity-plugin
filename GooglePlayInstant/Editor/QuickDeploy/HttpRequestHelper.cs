@@ -93,11 +93,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             return new WWW(uriBuilder.ToString(), null, newHeaders);
         }
 
+        /// <summary>
+        /// Combine two dictionaries into a single dictionary. Values in the second argument override values of the
+        /// first argument for every key that is present to both dictionaries.
+        /// </summary>
         internal static Dictionary<string, string> GetCombinedDictionary(Dictionary<string, string> firstDict,
             Dictionary<string, string> secondDict)
         {
-            return (firstDict ?? new Dictionary<string, string>()).Union(secondDict ?? new Dictionary<string, string>())
-                .ToDictionary(s => s.Key, s => s.Value);
+            var combinedDict = new Dictionary<string, string>();
+            if (firstDict != null)
+            {
+                foreach (var pair in firstDict)
+                {
+                    combinedDict[pair.Key] = pair.Value;
+                }
+            }
+
+            if (secondDict != null)
+            {
+                foreach (var pair in secondDict)
+                {
+                    combinedDict[pair.Key] = pair.Value;
+                }
+            }
+
+            return combinedDict;
         }
     }
 }
