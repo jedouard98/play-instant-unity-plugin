@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using UnityEditor;
 using UnityEngine;
-using GooglePlayInstant.Editor.QuickDeploy;
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public class QuickDeployWindow : EditorWindow
     {
