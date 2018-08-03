@@ -161,6 +161,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
             {
+                QuickDeployConfig.SaveConfiguration();
                 GCPClient.CreateBucketIfNotExistsAndUploadBundle();
             }
 

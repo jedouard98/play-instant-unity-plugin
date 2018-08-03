@@ -24,7 +24,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public static GcpAccessToken AccessToken
         {
             get { return _accessToken; }
-            set { _accessToken = value; }
+            private set { _accessToken = value; }
         }
 
         public delegate void AccessTokenHandler(GcpAccessToken accessToken);
@@ -42,7 +42,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             WwwRequestInProgress.NextState();
         }
 
-        public static void ScheduleAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
+        public static void GetAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
         {
             OAuth2Server server = new OAuth2Server(authorizationResponse =>
             {
@@ -78,7 +78,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Application.OpenURL(authorizatonUrl);
         }
 
-        public static void ScheduleAccessToken(AuthorizationCode authCode, AccessTokenHandler onAccessTokenReceived)
+        public static void GetAccessToken(AuthorizationCode authCode, AccessTokenHandler onAccessTokenReceived)
         {
             GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
             string tokenEndpiont = credentials.token_uri;
@@ -89,24 +89,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             formData.Add("redirect_uri", authCode.redirect_uri);
             formData.Add("grant_type", GrantType);
 
-            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(
+            WwwRequestInProgress.TrackProgress(
                 HttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
-                "Requesting access token");
-            requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone(doneWww =>
-            {
-                string text = doneWww.text;
-                var token = JsonUtility.FromJson<GcpAccessToken>(text);
-                if (string.IsNullOrEmpty(token.access_token))
+                "Requesting access token",
+                doneWww =>
                 {
-                    throw new Exception(string.Format(
-                        "Attempted to get access token and got response with code {0} and text {1}", doneWww.text,
-                        doneWww.error));
-                }
-                onAccessTokenReceived.Invoke(token);
-            });
+                    string text = doneWww.text;
+                    var token = JsonUtility.FromJson<GcpAccessToken>(text);
+                    if (string.IsNullOrEmpty(token.access_token))
+                    {
+                        throw new Exception(string.Format(
+                            "Attempted to get access token and got response with code {0} and text {1}", doneWww.text,
+                            doneWww.error));
+                    }
+
+                    AccessToken = token;
+                    onAccessTokenReceived.Invoke(token);
+                });
         }
-        
+
         [Serializable]
         public class AuthorizationCode
         {

@@ -29,24 +29,28 @@ namespace GooglePlayInstant.Editor
     /// </summary>
     public class WwwRequestInProgress
     {
-        // Thread Safety Note: Operations on this class are NOT threadsafe because they are are expected to be
-        // run on the main thread.
-
-        // Use an ordered collection for requests in progress so you can display progress bars in a consinstent order.
-        // Shouldn't be readonly because it is mutable.
-        private static List<WwwRequestInProgress> _trackedRequestsInProgress = new List<WwwRequestInProgress>();
-        private static List<WwwRequestInProgress> _scheduledForOnDone = new List<WwwRequestInProgress>();
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-        private static int _counter = 0;
-
 
         /// <summary>
         /// A method to be executed on the _www field when it is done.
         /// </summary>
         public delegate void DoneWwwHandler(WWW www);
 
-        private DoneWwwHandler _onDone = www => { };
+        private DoneWwwHandler _onDone;
+
+        // Only one request can be performed at a time
+        private static WwwRequestInProgress _requestInProgress;
+
+
+        public static void TrackProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
+        {
+            if (_requestInProgress != null)
+            {
+                throw new Exception("Cannot start a request in progress while another one is not complete");
+            }
+            _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onDone);
+        }
 
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
@@ -54,45 +58,14 @@ namespace GooglePlayInstant.Editor
         /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
         /// <param name="progressBarTitleText">The high level action of the request. This is displayed as the title when displaying
         ///     the progress bar for this request in progress.</param>
-        public WwwRequestInProgress(WWW www, string progressBarTitleText)
+        /// <param name="onDone">A handler for the www instance when the result is available.</param>
+        private WwwRequestInProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
         {
             _www = www;
             _progressBarTitleText = progressBarTitleText;
+            _onDone = onDone;
         }
-
-        /// <summary>
-        /// Add instance to tracked requests in progress. After this call, a call to DisplayProgressForTrackedRequests
-        /// will display information for this request if it's not completed.
-        /// </summary>
-        public void TrackProgress()
-        {
-            _trackedRequestsInProgress.Add(this);
-        }
-
-        /// <summary>
-        /// Schedule a task to invoke on the request when the request is done.
-        /// </summary>
-        public void ScheduleTaskOnDone(DoneWwwHandler wwwHandler)
-        {
-            _onDone += wwwHandler;
-
-
-            if (!_scheduledForOnDone.Contains(this))
-            {
-                _scheduledForOnDone.Add(this);
-            }
-        }
-
-        // Execute all the scheduled tasks for this instance. Clears all the tasks after executing them
-        private void ExecuteScheduledTasks()
-        {
-            if (!_www.isDone)
-            {
-                throw new Exception("Request has not yet completed");
-            }
-
-            _onDone.Invoke(_www);
-        }
+        
 
         /// <summary>
         /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
@@ -100,44 +73,28 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void NextState()
         {
-            // First put done requests in another collection before removing them from the list in order to avoid
-            // concurrent modification exceptions.
-            var doneRequests = new List<WwwRequestInProgress>();
-            foreach (var requestInProgress in _trackedRequestsInProgress.ToList())
+            if (_requestInProgress == null)
             {
-                if (requestInProgress._www.isDone)
-                {
-                    bool hasError = !string.IsNullOrEmpty(requestInProgress._www.error);
-                    Debug.LogFormat("\nCOMPLETED: {0}. Up: {1}%, Down: {2}%. HasError: {3}{4}", requestInProgress._progressBarTitleText,
-                        requestInProgress._www.uploadProgress*100, requestInProgress._www.progress*100, hasError, hasError?", Error: "+requestInProgress._www.error:"");
-                    doneRequests.Add(requestInProgress);
-                }
-                else
-                {
-                    Debug.LogFormat("\nIN PROGRESS: {0}. Up: {1}%, Down: {2}%",
-                        requestInProgress._progressBarTitleText,
-                        requestInProgress._www.uploadProgress * 100, requestInProgress._www.progress * 100);
-                }
+                return;
             }
 
-            foreach (var doneRequest in doneRequests)
+            if (_requestInProgress._www.isDone)
             {
-                _trackedRequestsInProgress.Remove(doneRequest);
+                EditorUtility.ClearProgressBar();
+                var requestInProgress = _requestInProgress;
+                _requestInProgress = null;
+                requestInProgress._onDone.Invoke(requestInProgress._www);
             }
-
-            doneRequests.Clear();
-            foreach (var request in _scheduledForOnDone.ToList())
+            else
             {
-                if (request._www.isDone)
+                if (EditorUtility.DisplayCancelableProgressBar(_requestInProgress._progressBarTitleText,
+                    "Progress: " + Math.Floor(_requestInProgress._www.uploadProgress * 100) + "%",
+                    _requestInProgress._www.uploadProgress))
                 {
-                    request.ExecuteScheduledTasks();
-                    doneRequests.Add(request);
+                    EditorUtility.ClearProgressBar();
+                    _requestInProgress._www.Dispose();
+                    _requestInProgress = null;
                 }
-            }
-
-            foreach (var request in doneRequests)
-            {
-                _scheduledForOnDone.Remove(request);
             }
         }
     }

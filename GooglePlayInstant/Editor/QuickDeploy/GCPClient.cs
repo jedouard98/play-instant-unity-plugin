@@ -17,14 +17,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
-            QuickDeployConfig.SaveConfiguration();
             if (AccessTokenGetter.AccessToken == null)
             {
-                AccessTokenGetter.ScheduleAuthCode(code =>
+                AccessTokenGetter.GetAuthCode(code =>
                 {
-                    AccessTokenGetter.ScheduleAccessToken(code, token =>
+                    AccessTokenGetter.GetAccessToken(code, token =>
                     {
-                        AccessTokenGetter.AccessToken = token;
                         CreateBucketIfNotExistsAndUploadBundle();
                     });
                 });
@@ -32,11 +30,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             CheckWhetherBucketExists(_config.cloudStorageBucketName,
-                bucketExistsResponse => { UploadBundle(resp => { ScheduleMakeBundlePublic(www => { }); }); },
+                bucketExistsResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); },
                 bucketNotFoundResponse =>
                 {
-                    ScheduleCreateBucket(_config.cloudStorageBucketName,
-                        bucketCreationResponse => { UploadBundle(resp => { ScheduleMakeBundlePublic(www => { }); }); });
+                    CreateBucket(_config.cloudStorageBucketName,
+                        bucketCreationResponse => { UploadBundle(resp => {MakeBundlePublic(www => { }); }); });
                 });
         }
 
@@ -54,21 +52,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
-            var requestInProgress = new WwwRequestInProgress(result,
-                "Uploading asset bundle to google cloud storage");
-            requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone(www =>
-            {
-                if (responseHandler != null)
+            WwwRequestInProgress.TrackProgress(result,
+                "Uploading asset bundle to google cloud storage",
+                www =>
                 {
-                    responseHandler.Invoke(www);
-                }
-            });
+                    if (responseHandler != null)
+                    {
+                        responseHandler.Invoke(www);
+                    }
+                });
         }
 
         // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token and that the bucket
         // currently does not exist
-        private static void ScheduleCreateBucket(string bucketName, WwwHandler resultHandler)
+        private static void CreateBucket(string bucketName, WwwHandler resultHandler)
         {
             GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
             string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
@@ -84,19 +81,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             headers.Add("Content-Type", "application/json");
             WWW request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
-            WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
-                string.Format("Creating bucket with name \"{0}\"", bucketName));
-            requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone(wwwResult =>
-            {
-                if (resultHandler != null)
+            WwwRequestInProgress.TrackProgress(request,
+                string.Format("Creating bucket with name \"{0}\"", bucketName),
+                wwwResult =>
                 {
-                    resultHandler.Invoke(wwwResult);
-                }
-            });
+                    if (resultHandler != null)
+                    {
+                        resultHandler.Invoke(wwwResult);
+                    }
+                });
         }
 
-        private static void ScheduleMakeBundlePublic(WwwHandler resultHandler)
+        private static void MakeBundlePublic(WwwHandler resultHandler)
         {
             var bucketName = _config.cloudStorageBucketName;
             var remoteAssetBundleName = _config.cloudStorageFileName;
@@ -111,16 +107,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             WWW request =
                 HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
 
-            WwwRequestInProgress requestInProgress =
-                new WwwRequestInProgress(request,"Making remote asset bundle public");
-            requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone(wwwResult =>
-            {
-                if (resultHandler != null)
+            WwwRequestInProgress.TrackProgress(request, "Making remote asset bundle public",
+                wwwResult =>
                 {
-                    resultHandler.Invoke(wwwResult);
-                }
-            });
+                    if (resultHandler != null)
+                    {
+                        resultHandler.Invoke(wwwResult);
+                    }
+                });
         }
 
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
@@ -131,20 +125,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
-            WwwRequestInProgress requestInProgress =
-                new WwwRequestInProgress(result, "Checking whether bucket exists.");
-            requestInProgress.TrackProgress();
-            requestInProgress.ScheduleTaskOnDone(wwwResult =>
-            {
-                if (!string.IsNullOrEmpty(wwwResult.error))
+            WwwRequestInProgress.TrackProgress(result, "Checking whether bucket exists.",
+                wwwResult =>
                 {
-                    onFalse.Invoke(wwwResult);
-                }
-                else
-                {
-                    onTrue.Invoke(wwwResult);
-                }
-            });
+                    if (!string.IsNullOrEmpty(wwwResult.error))
+                    {
+                        onFalse.Invoke(wwwResult);
+                    }
+                    else
+                    {
+                        onTrue.Invoke(wwwResult);
+                    }
+                });
         }
 
         [Serializable]
