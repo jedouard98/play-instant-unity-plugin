@@ -93,6 +93,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 "Requesting access token",
                 doneWww =>
                 {
+                    Debug.Log("Receiving access token");
                     string text = doneWww.text;
                     var token = JsonUtility.FromJson<GcpAccessToken>(text);
                     if (string.IsNullOrEmpty(token.access_token))
@@ -102,7 +103,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                             doneWww.error));
                     }
 
+                    Debug.Log("here");
                     AccessToken = token;
+                    Debug.Log(string.Format("Token expires in {0}", token.expires_in));
                     accessTokenHandler.Invoke(token);
                 });
         }

@@ -13,9 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
@@ -47,7 +44,7 @@ namespace GooglePlayInstant.Editor
         {
             if (_requestInProgress != null)
             {
-                throw new Exception("Cannot start a request in progress while another one is not complete");
+                Debug.LogWarning("Started another request while the previous one was not complete.");
             }
             _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onDone);
         }

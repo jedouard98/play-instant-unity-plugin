@@ -17,6 +17,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
+            
             if (AccessTokenGetter.AccessToken == null)
             {
                 AccessTokenGetter.GetAuthCode(code =>
@@ -28,7 +29,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 });
                 return;
             }
+            
+            Debug.Log("Starting now");
 
+            Debug.Log("Access token expires in "+AccessTokenGetter.AccessToken.expires_in);
             CheckWhetherBucketExists(_config.cloudStorageBucketName,
                 bucketExistsResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); },
                 bucketNotFoundResponse =>
@@ -40,6 +44,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static void UploadBundle(WwwHandler responseHandler)
         {
+            Debug.Log("going to upload bundle");
             var assetBundleFileName = _config.assetBundleFileName;
             var cloudStorageBucketName = _config.cloudStorageBucketName;
             var cloudStorageFileName = _config.cloudStorageFileName;
@@ -48,11 +53,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     cloudStorageBucketName, cloudStorageFileName);
 
 
-            byte[] bytes = File.ReadAllBytes(assetBundleFileName);
+            var bytes = File.ReadAllBytes(assetBundleFileName);
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
-            var result = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
-            WwwRequestInProgress.TrackProgress(result,
+            var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
+            WwwRequestInProgress.TrackProgress(request,
                 "Uploading asset bundle to google cloud storage",
                 www =>
                 {
@@ -67,19 +72,19 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         // currently does not exist
         private static void CreateBucket(string bucketName, WwwHandler resultHandler)
         {
-            GCPClientHelper.Oauth2Credentials credentials = GCPClientHelper.GetOauth2Credentials();
-            string createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
+            var credentials = GCPClientHelper.GetOauth2Credentials();
+            var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                 credentials.project_id);
-            string jsonContents = JsonUtility.ToJson(new CreateBucketRequest
+            var jsonContents = JsonUtility.ToJson(new CreateBucketRequest
             {
                 name = bucketName
             });
 
-            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add("Authorization", string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
+            var jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
+            var headers = new Dictionary<string, string>();
+            headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             headers.Add("Content-Type", "application/json");
-            WWW request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
+            var request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
             WwwRequestInProgress.TrackProgress(request,
                 string.Format("Creating bucket with name \"{0}\"", bucketName),
@@ -96,15 +101,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             var bucketName = _config.cloudStorageBucketName;
             var remoteAssetBundleName = _config.cloudStorageFileName;
-            string makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
+            var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
                 bucketName, remoteAssetBundleName);
-            string requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
-            byte[] requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
-            Dictionary<string, string> requestHeaders = new Dictionary<string, string>();
+            var requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
+            var requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
+            var requestHeaders = new Dictionary<string, string>();
             requestHeaders.Add("Authorization",
                 string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
             requestHeaders.Add("Content-Type", "application/json");
-            WWW request =
+            var request =
                 HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
 
             WwwRequestInProgress.TrackProgress(request, "Making remote asset bundle public",
@@ -120,9 +125,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
         private static void CheckWhetherBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
         {
-            string bucketInfoUrl =
+            var bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
-            Dictionary<string, string> headers = new Dictionary<string, string>();
+            var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
             var result = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
             WwwRequestInProgress.TrackProgress(result, "Checking whether bucket exists.",
