@@ -20,12 +20,13 @@ using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
-    /// A class with utility methods for sending GET and POST requests.
+    /// A class with utility methods for sending GET and POST requests. Uses WWW and WWWForm instances to send HTTP
+    /// requests for backward compatibility with older versions of Unity.
     /// </summary>
-    public static class QuickDeployHttpRequestHelper
+    public static class HttpRequestHelper
     {
         /// <summary>
         /// Sends a general POST request to the provided endpoint, along with the data provided in the byte-array and
@@ -40,7 +41,7 @@ namespace GooglePlayInstant.Editor
             Dictionary<string, string> postHeaders)
         {
             var form = new WWWForm();
-            var newHeaders = GetCombinedHeaders(form, postHeaders);
+            var newHeaders = GetCombinedDictionary(form.headers, postHeaders);
             return new WWW(endpoint, postData, newHeaders);
         }
 
@@ -63,7 +64,9 @@ namespace GooglePlayInstant.Editor
                     form.AddField(pair.Key, pair.Value);
                 }
             }
-            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null, GetCombinedHeaders(form, postHeaders));
+
+            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null,
+                GetCombinedDictionary(form.headers, postHeaders));
         }
 
         /// <summary>
@@ -86,22 +89,15 @@ namespace GooglePlayInstant.Editor
             }
 
             var form = new WWWForm();
-            var newHeaders = GetCombinedHeaders(form, getHeaders);
+            var newHeaders = GetCombinedDictionary(form.headers, getHeaders);
             return new WWW(uriBuilder.ToString(), null, newHeaders);
         }
 
-        internal static Dictionary<string, string> GetCombinedHeaders(WWWForm form, Dictionary<string, string> headers)
+        internal static Dictionary<string, string> GetCombinedDictionary(Dictionary<string, string> firstDict,
+            Dictionary<string, string> secondDict)
         {
-            var newHeaders = new Dictionary<string, string>(form.headers);
-            if (headers != null)
-            {
-                foreach (var pair in headers)
-                {
-                    newHeaders[pair.Key] = pair.Value;
-                }
-            }
-
-            return newHeaders;
+            return (firstDict ?? new Dictionary<string, string>()).Union(secondDict ?? new Dictionary<string, string>())
+                .ToDictionary(s => s.Key, s => s.Value);
         }
     }
 }

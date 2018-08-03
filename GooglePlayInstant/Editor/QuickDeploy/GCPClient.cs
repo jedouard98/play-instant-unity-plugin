@@ -4,9 +4,9 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
-    public abstract class QuickDeployGCPClient
+    abstract class QuickDeployGCPClient
     {
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
@@ -53,7 +53,7 @@ namespace GooglePlayInstant.Editor
             byte[] bytes = File.ReadAllBytes(assetBundleFileName);
             var headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
-            var result = QuickDeployHttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
+            var result = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
             var requestInProgress = new WwwRequestInProgress(result,
                 "Uploading asset bundle to google cloud storage");
             requestInProgress.TrackProgress();
@@ -82,7 +82,7 @@ namespace GooglePlayInstant.Editor
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
             headers.Add("Content-Type", "application/json");
-            WWW request = QuickDeployHttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
+            WWW request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(request,
                 string.Format("Creating bucket with name \"{0}\"", bucketName));
@@ -109,7 +109,7 @@ namespace GooglePlayInstant.Editor
                 string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
             requestHeaders.Add("Content-Type", "application/json");
             WWW request =
-                QuickDeployHttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
+                HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
 
             WwwRequestInProgress requestInProgress =
                 new WwwRequestInProgress(request,"Making remote asset bundle public");
@@ -130,7 +130,7 @@ namespace GooglePlayInstant.Editor
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
-            var result = QuickDeployHttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
+            var result = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
             WwwRequestInProgress requestInProgress =
                 new WwwRequestInProgress(result, "Checking whether bucket exists.");
             requestInProgress.TrackProgress();

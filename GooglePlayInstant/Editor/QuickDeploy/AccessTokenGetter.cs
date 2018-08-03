@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GooglePlayInstant.Editor
+namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class AccessTokenGetter
     {
@@ -44,7 +44,7 @@ namespace GooglePlayInstant.Editor
 
         public static void ScheduleAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
         {
-            QuickDeployOAuth2Server server = new QuickDeployOAuth2Server(authorizationResponse =>
+            OAuth2Server server = new OAuth2Server(authorizationResponse =>
             {
                 _authorizationResponse = authorizationResponse;
             });
@@ -55,7 +55,7 @@ namespace GooglePlayInstant.Editor
             {
                 if (!string.Equals("code", responsePair.Key))
                 {
-                    throw new InvalidStateException("Could not receive required permissions");
+                    throw new Exception("Could not receive required permissions");
                 }
 
                 AuthorizationCode authCode = new AuthorizationCode
@@ -90,7 +90,7 @@ namespace GooglePlayInstant.Editor
             formData.Add("grant_type", GrantType);
 
             WwwRequestInProgress requestInProgress = new WwwRequestInProgress(
-                QuickDeployHttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
+                HttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
                 "Requesting access token");
             requestInProgress.TrackProgress();
             requestInProgress.ScheduleTaskOnDone(doneWww =>
