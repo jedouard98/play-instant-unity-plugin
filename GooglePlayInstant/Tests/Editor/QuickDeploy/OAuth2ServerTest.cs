@@ -100,8 +100,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, sentCode.Key, sentCode.Value));
             Thread.Sleep(RequestResponseThresholdInMillis);
             Assert.AreEqual(sentCode, receivedCode, "Expected received code to be the same as sent code.");
-            Assert.AreEqual(OAuth2Server.CloseTabScript, request.text,
-                "Expected script to close the tab of the browser window.");
+            Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
+                string.Format("Expected response to be {0}", OAuth2Server.CloseTabText));
         }
 
         /// <summary>
@@ -119,7 +119,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, sentError.Key, sentError.Value));
             Thread.Sleep(RequestResponseThresholdInMillis);
             Assert.AreEqual(sentError, receivedError, "Expected received code to be the same as sent code.");
-            Assert.AreEqual(OAuth2Server.CloseTabScript, request.text, "Expected script to close the tab.");
+            Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
+                string.Format("Expected response to be {0}", OAuth2Server.CloseTabText));
         }
 
         /// <summary>
@@ -148,7 +149,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestUriContainsValidParams()
         {
-            const string PolicyNumberOneText = "Uri query must include exactly one of either \"code\" or \"error\" as keys.";
+            const string PolicyNumberOneText =
+                "Uri query must include exactly one of either \"code\" or \"error\" as keys.";
 
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithCode),
@@ -164,7 +166,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
                 PolicyNumberTwoText);
 
-            const string PolicyNumberThreeText = "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
+            const string PolicyNumberThreeText =
+                "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
             var invalidUriWithOtherKeys =
                 new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), PolicyNumberThreeText);

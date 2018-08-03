@@ -31,15 +31,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// Cloud platform. The server will start running at a certain endpoint on a call to Start(). The server announces
     /// its chosen endpoint with the CallbackEndpoint property. This server will run until it receives the first
     /// request, which it will process to retrieve the authorization response and handle the by invoking on the response
-    /// the handler passed to the server during instatiation. The server will then reply back with a JS script that will
-    /// close the authorization window, and then this server will stop listening for further requests.
+    /// the handler passed to the server during instatiation. The server will then stop listening for further requests.
     ///
     /// <see cref="https://developers.google.com/identity/protocols/OAuth2#installed"/> for an overview of OAuth2
     /// protocol for installed applications that interact with Google APIs.
     /// </summary>
     public class OAuth2Server
     {
-        internal const string CloseTabScript = "<script>window.close();</script>";
+        internal const string CloseTabText = "<h3>You may close this tab.</h3>";
         internal HttpListener _httpListener;
         private string _callbackEndpoint;
 
@@ -161,7 +160,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 _responseHandler.Invoke(responsePair);
             }
 
-            var responseArray = Encoding.UTF8.GetBytes(CloseTabScript);
+            var responseArray = Encoding.UTF8.GetBytes(CloseTabText);
             var outputStream = context.Response.OutputStream;
             outputStream.Write(responseArray, 0, responseArray.Length);
             outputStream.Flush();
