@@ -15,8 +15,9 @@
 using System.Threading;
 using UnityEditor;
 using UnityEngine;
+using GooglePlayInstant.Editor.QuickDeploy;
 
-namespace GooglePlayInstant.Editor.QuickDeploy
+namespace GooglePlayInstant.Editor
 {
     public class QuickDeployWindow : EditorWindow
     {
@@ -162,7 +163,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
             {
-                QuickDeployGCPClient.CreateBucketIfNotExistsAndUploadBundle();
+                GCPClient.CreateBucketIfNotExistsAndUploadBundle();
             }
 
             EditorGUILayout.Space();

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
-    abstract class QuickDeployGCPClient
+    abstract class GCPClient
     {
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
