@@ -8,7 +8,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         // Members used for getting, retrieving and storing authorization code
         private const string GrantType = "authorization_code";
-        private const string Scope = "https://www.googleapis.com/auth/devstorage.full_control";
+        private const string Scope = "https://www.googleapis.com/auth/devstorage.read_write";
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         public delegate void AuthorizationCodeHandler(AuthorizationCode authorizationCode);
@@ -41,6 +41,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             WwwRequestInProgress.NextState();
         }
+
+
+        public static void UpdateAccessToken(PostTokenAction postTokenAction)
+        {
+            if (AccessToken == null)
+            {
+                GetAuthCode(code => RequestAndStoreAccessToken(code, postTokenAction));
+            }
+            else
+            {
+                postTokenAction.Invoke();
+            }
+        }
+
 
         public static void GetAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
         {
@@ -77,18 +91,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Application.OpenURL(authorizatonUrl);
         }
 
-        public static void UpdateAccessToken(PostTokenAction postTokenAction)
-        {
-            if (AccessToken == null)
-            {
-                GetAuthCode(code => RequestAndStoreAccessToken(code, postTokenAction));
-            }
-            else
-            {
-                postTokenAction.Invoke();
-            }
-        }
-        
         private static void RequestAndStoreAccessToken(AuthorizationCode authCode, PostTokenAction postTokenAction)
         {
             var credentials = GCPClientHelper.GetOauth2Credentials();
@@ -114,7 +116,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     }
 
                     AccessToken = token;
-                    Debug.Log(string.Format("Token expires in {0}", token.expires_in));
                     postTokenAction.Invoke();
                 });
         }

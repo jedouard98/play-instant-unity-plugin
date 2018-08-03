@@ -17,27 +17,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static void CreateBucketIfNotExistsAndUploadBundle()
         {
-            if (AccessTokenGetter.AccessToken != null)
-            {
-                CheckWhetherBucketExists(_config.cloudStorageBucketName,
-                    bucketExistsResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); },
-                    bucketNotFoundResponse =>
+            CheckWhetherBucketExists(
+                bucketExistsResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); },
+                bucketNotFoundResponse =>
+                {
+                    CreateBucket(bucketCreationResponse =>
                     {
-                        CreateBucket(_config.cloudStorageBucketName,
-                            bucketCreationResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); });
+                        UploadBundle(resp => { MakeBundlePublic(www => { }); });
                     });
-            }
-            else
-            {
-                AccessTokenGetter.UpdateAccessToken(CreateBucketIfNotExistsAndUploadBundle);
-            }
+                });
         }
 
         private static void UploadBundle(WwwHandler responseHandler)
         {
-            if (AccessTokenGetter.AccessToken != null)
+            var token = AccessTokenGetter.AccessToken;
+            if (token != null)
             {
-                Debug.Log("going to upload bundle");
                 var assetBundleFileName = _config.assetBundleFileName;
                 var cloudStorageBucketName = _config.cloudStorageBucketName;
                 var cloudStorageFileName = _config.cloudStorageFileName;
@@ -48,7 +43,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 var bytes = File.ReadAllBytes(assetBundleFileName);
                 var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
+                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
                 var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
                 WwwRequestInProgress.TrackProgress(request,
                     "Uploading asset bundle to google cloud storage",
@@ -68,26 +63,27 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token and that the bucket
         // currently does not exist
-        private static void CreateBucket(string bucketName, WwwHandler resultHandler)
+        private static void CreateBucket(WwwHandler resultHandler)
         {
-            if (AccessTokenGetter.AccessToken != null)
+            var token = AccessTokenGetter.AccessToken;
+            if (token != null)
             {
                 var credentials = GCPClientHelper.GetOauth2Credentials();
                 var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                     credentials.project_id);
-                var jsonContents = JsonUtility.ToJson(new CreateBucketRequest
+                var createBucketRequest = new CreateBucketRequest
                 {
-                    name = bucketName
-                });
+                    name = _config.cloudStorageBucketName
+                };
 
-                var jsonBytes = Encoding.UTF8.GetBytes(jsonContents);
+                var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
                 var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
+                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
                 headers.Add("Content-Type", "application/json");
                 var request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
                 WwwRequestInProgress.TrackProgress(request,
-                    string.Format("Creating bucket with name \"{0}\"", bucketName),
+                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
                     wwwResult =>
                     {
                         if (resultHandler != null)
@@ -98,13 +94,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => CreateBucket(bucketName, resultHandler));
+                AccessTokenGetter.UpdateAccessToken(() => CreateBucket(resultHandler));
             }
         }
 
         private static void MakeBundlePublic(WwwHandler resultHandler)
         {
-            if (AccessTokenGetter.AccessToken != null)
+            var token = AccessTokenGetter.AccessToken;
+            if (token != null)
             {
                 var bucketName = _config.cloudStorageBucketName;
                 var remoteAssetBundleName = _config.cloudStorageFileName;
@@ -114,7 +111,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
                 var requestHeaders = new Dictionary<string, string>();
                 requestHeaders.Add("Authorization",
-                    string.Format("Bearer {0} ", AccessTokenGetter.AccessToken.access_token));
+                    string.Format("Bearer {0} ", token.access_token));
                 requestHeaders.Add("Content-Type", "application/json");
                 var request =
                     HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
@@ -135,42 +132,45 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
-        private static void CheckWhetherBucketExists(string bucketName, WwwHandler onTrue, WwwHandler onFalse)
+        private static void CheckWhetherBucketExists(WwwHandler onBucketExists,
+            WwwHandler onBucketDoesNotExist)
         {
-            if (AccessTokenGetter.AccessToken != null)
+            var token = AccessTokenGetter.AccessToken;
+            if (token != null)
             {
                 var bucketInfoUrl =
-                    string.Format("https://www.googleapis.com/storage/v1/b/{0}", bucketName);
+                    string.Format("https://www.googleapis.com/storage/v1/b/{0}", _config.cloudStorageBucketName);
                 var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
+                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
                 var result = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
                 WwwRequestInProgress.TrackProgress(result, "Checking whether bucket exists.",
                     wwwResult =>
                     {
-                        if (!string.IsNullOrEmpty(wwwResult.error) && onFalse != null)
+                        if (!string.IsNullOrEmpty(wwwResult.error) && onBucketDoesNotExist != null)
                         {
-                            onFalse.Invoke(wwwResult);
+                            onBucketDoesNotExist.Invoke(wwwResult);
                         }
-                        else if (onTrue != null)
+                        else if (onBucketExists != null)
                         {
-                            onTrue.Invoke(wwwResult);
+                            onBucketExists.Invoke(wwwResult);
                         }
                     });
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => CheckWhetherBucketExists(bucketName, onTrue, onFalse));
+                AccessTokenGetter.UpdateAccessToken(() =>
+                    CheckWhetherBucketExists(onBucketExists, onBucketDoesNotExist));
             }
         }
 
         [Serializable]
-        public class CreateBucketRequest
+        private class CreateBucketRequest
         {
             public string name;
         }
 
         [Serializable]
-        public class MakeBundlePublicRequest
+        private class MakeBundlePublicRequest
         {
             public string entity = "allUsers";
             public string role = "READER";
