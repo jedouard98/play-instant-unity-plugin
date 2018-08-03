@@ -8,7 +8,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         // Members used for getting, retrieving and storing authorization code
         private const string GrantType = "authorization_code";
-        private const string Scope = "https://www.googleapis.com/auth/devstorage.read_write";
+        private const string Scope = "https://www.googleapis.com/auth/devstorage.full_control";
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         public delegate void AuthorizationCodeHandler(AuthorizationCode authorizationCode);

@@ -15,17 +15,45 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Creates bucket if not exists, and uploads asset bundle file to the cloud.
         /// </summary>
-        public static void CreateBucketIfNotExistsAndUploadBundle()
+        public static void DeployAssetBundle()
         {
-            CheckWhetherBucketExists(
-                bucketExistsResponse => { UploadBundle(resp => { MakeBundlePublic(www => { }); }); },
+            VerifyBucketExistence(
+                // To be executed if bucket exists.
+                bucketExistsResponse => { UploadBundleAndMakeItPublic(); },
+                // To be executed if bucket does not exist.
                 bucketNotFoundResponse =>
                 {
                     CreateBucket(bucketCreationResponse =>
                     {
-                        UploadBundle(resp => { MakeBundlePublic(www => { }); });
+                        if (!string.IsNullOrEmpty(bucketCreationResponse.error))
+                        {
+                            throw new Exception(string.Format("Got error attempting to create bucket {0}",
+                                bucketCreationResponse.error));
+                        }
+
+                        UploadBundleAndMakeItPublic();
                     });
                 });
+        }
+
+
+        private static void UploadBundleAndMakeItPublic()
+        {
+            UploadBundle(uploadBundleWww =>
+            {
+                if (!string.IsNullOrEmpty(uploadBundleWww.error))
+                {
+                    throw new Exception(string.Format("Got error uploading bundle: {0} ", uploadBundleWww.error));
+                }
+
+                MakeBundlePublic(makeBundlePublicWww =>
+                {
+                    if (!string.IsNullOrEmpty(makeBundlePublicWww.error))
+                    {
+                        Debug.Log(string.Format("Got error making bundle public: {0}", makeBundlePublicWww.error));
+                    }
+                });
+            });
         }
 
         private static void UploadBundle(WwwHandler responseHandler)
@@ -46,14 +74,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
                 var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
                 WwwRequestInProgress.TrackProgress(request,
-                    "Uploading asset bundle to google cloud storage",
-                    www =>
-                    {
-                        if (responseHandler != null)
-                        {
-                            responseHandler.Invoke(www);
-                        }
-                    });
+                    "Uploading asset bundle to google cloud storage", responseHandler.Invoke);
             }
             else
             {
@@ -83,14 +104,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
                 WwwRequestInProgress.TrackProgress(request,
-                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
-                    wwwResult =>
-                    {
-                        if (resultHandler != null)
-                        {
-                            resultHandler.Invoke(wwwResult);
-                        }
-                    });
+                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name), resultHandler.Invoke);
             }
             else
             {
@@ -113,17 +127,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 requestHeaders.Add("Authorization",
                     string.Format("Bearer {0} ", token.access_token));
                 requestHeaders.Add("Content-Type", "application/json");
-                var request =
+                var makeBundlePublicWww =
                     HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
-
-                WwwRequestInProgress.TrackProgress(request, "Making remote asset bundle public",
-                    wwwResult =>
-                    {
-                        if (resultHandler != null)
-                        {
-                            resultHandler.Invoke(wwwResult);
-                        }
-                    });
+                WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote asset bundle public",
+                    resultHandler.Invoke);
             }
             else
             {
@@ -131,9 +138,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
+
         // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
-        private static void CheckWhetherBucketExists(WwwHandler onBucketExists,
-            WwwHandler onBucketDoesNotExist)
+        private static void VerifyBucketExistence(WwwHandler onBucketExists, WwwHandler onBucketDoesNotExist)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
@@ -142,24 +149,34 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     string.Format("https://www.googleapis.com/storage/v1/b/{0}", _config.cloudStorageBucketName);
                 var headers = new Dictionary<string, string>();
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
-                var result = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
-                WwwRequestInProgress.TrackProgress(result, "Checking whether bucket exists.",
-                    wwwResult =>
+                var request = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
+                WwwRequestInProgress.TrackProgress(request, "Checking whether bucket exists.",
+                    completeRequest =>
                     {
-                        if (!string.IsNullOrEmpty(wwwResult.error) && onBucketDoesNotExist != null)
+                        var error = completeRequest.error;
+                        if (!string.IsNullOrEmpty(error))
                         {
-                            onBucketDoesNotExist.Invoke(wwwResult);
+                            if (string.Equals("404 Not Found", error))
+                            {
+                                onBucketDoesNotExist.Invoke(completeRequest);
+                            }
+                            else
+                            {
+                                throw new Exception(string.Format(
+                                    "Got error when verifying bucket existence: {0} \n {1}", error,
+                                    completeRequest.text));
+                            }
                         }
-                        else if (onBucketExists != null)
+                        else
                         {
-                            onBucketExists.Invoke(wwwResult);
+                            onBucketExists.Invoke(completeRequest);
                         }
                     });
             }
             else
             {
                 AccessTokenGetter.UpdateAccessToken(() =>
-                    CheckWhetherBucketExists(onBucketExists, onBucketDoesNotExist));
+                    VerifyBucketExistence(onBucketExists, onBucketDoesNotExist));
             }
         }
 
