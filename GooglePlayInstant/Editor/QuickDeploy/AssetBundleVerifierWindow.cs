@@ -126,7 +126,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest = null;
         }
 
-        // TODO: fix crashing associated with using DisplayProgressBar()
         private void OnGUI()
         {
             AddVerifyComponentInfo("AssetBundle Download Status:",
