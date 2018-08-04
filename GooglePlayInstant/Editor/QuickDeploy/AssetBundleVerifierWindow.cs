@@ -93,30 +93,29 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             return bytes / 1024f / 1024f;
         }
 
-        // TODO: fix nested if statements
         private void Update()
         {
-            if (_webRequest == null || !_webRequest.isDone)
+            if (_webRequest == null)
             {
-                if (_webRequest != null && !_webRequest.isDone)
-                {
-                    if (EditorUtility.DisplayCancelableProgressBar("AssetBundle Download", "",
-                        _webRequest.downloadProgress))
-                    {
-                        _webRequest.Abort();
-                        _webRequest.Dispose();
-                        _webRequest = null;
+                return;
+            }
 
-                        Debug.Log("Download process was cancelled.");
-                    }
-                }
-                else
+            if (!_webRequest.isDone)
+            {
+                if (EditorUtility.DisplayCancelableProgressBar("AssetBundle Download", "",
+                    _webRequest.downloadProgress))
                 {
-                    EditorUtility.ClearProgressBar();
+                    _webRequest.Abort();
+                    _webRequest.Dispose();
+                    _webRequest = null;
+
+                    Debug.Log("Download process was cancelled.");
                 }
 
                 return;
             }
+
+            EditorUtility.ClearProgressBar();
 
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
