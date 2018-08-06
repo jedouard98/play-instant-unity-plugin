@@ -7,15 +7,25 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
-    abstract class GCPClient
+    /// <summary>
+    /// A class that implements the functionality for interacting with Google Cloud Storage API to deploying asset
+    /// bundles.
+    /// </summary>
+    public static class GCPClient
     {
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
+        /// <summary>
+        /// Method signature for methods to be invoked on an WWW object representing a request that was made.
+        /// </summary>
         private delegate void WwwHandler(WWW request);
 
         /// <summary>
-        /// Creates bucket if not exists, and uploads asset bundle file to the cloud.
+        /// Executes all the steps required for deploying an Asset Bundle to Google Cloud Storage.
+        /// First verifies if configured bucket exists, and creates the bucket if it does not exist. It then uploads
+        /// asset bundle to Google Cloud Storage and sets the visibility of the asset bundle to public.
         /// </summary>
+        /// <exception cref="Exception"></exception>
         public static void DeployAssetBundle()
         {
             VerifyBucketExistence(
@@ -40,6 +50,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
 
+        /// <summary>
+        /// Uploads asset bundle to Google Cloud storage and makes the bundle public.
+        /// </summary>
+        /// <exception cref="Exception">Exception thrown if there was an error uploading the bundle or setting the
+        /// visibility of asset bundle to public.</exception>
         private static void UploadBundleAndMakeItPublic()
         {
             UploadBundle(uploadBundleWww =>
@@ -65,11 +80,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                                 makeBundlePublicWww.text));
                         }
 
-                        Debug.Log("Visility of asset bundle was stored to public.");
+                        Debug.Log("Visility of asset bundle was set to public.");
                     });
             });
         }
 
+        /// <summary>
+        /// Sends an HTTP request to Google Cloud Storage to upload the asset bundle according to configurations, and
+        /// invokes the result handler on the response.
+        /// Will first update access token before making this function call if valid acess token is not present.
+        /// </summary>
+        /// <param name="responseHandler"></param>
         private static void UploadBundle(WwwHandler responseHandler)
         {
             var token = AccessTokenGetter.AccessToken;
@@ -97,8 +118,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-        // Creates a bucket with the given bucket name. Assumed TokenUtility has a valid access token and that the bucket
-        // currently does not exist
+        /// <summary>
+        /// Sends an HTTP to Google Cloud storage to create a bucket with the configured name, and invokes the result
+        /// handler on the HTTP response.
+        /// Will first update access token before making this function call if valid access token is not present.
+        /// </summary>
+        /// <param name="resultHandler"></param>
         private static void CreateBucket(WwwHandler resultHandler)
         {
             var token = AccessTokenGetter.AccessToken;
@@ -126,12 +151,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 AccessTokenGetter.UpdateAccessToken(() => CreateBucket(resultHandler));
             }
         }
-        
+
         /// <summary>
-        /// Changes visibility of uploaded asset bundle to public, and invokes the result handler on the http response
+        /// Uses present access token to send HTTP request to Google cloud storage to change visibility of uploaded
+        /// file to public, and invokes the result handler on the HTTP response.
+        /// Will first update access token before making this function call if valid access token is not
+        /// present.
         /// </summary>
-        /// <param name="response"></param>
-        /// <param name="resultHandler"></param>
+        /// <param name="response">UploadBundleJsonResponse instance containing remote file and bucket name.</param>
+        /// <param name="resultHandler">A delegate to handle the response that will be received from the server.</param>
         private static void MakeBundlePublic(UploadBundleJsonResponse response, WwwHandler resultHandler)
         {
             var token = AccessTokenGetter.AccessToken;
