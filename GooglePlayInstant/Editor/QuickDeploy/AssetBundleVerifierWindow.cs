@@ -47,14 +47,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             window.StartAssetBundleVerificationDownload();
         }
 
-        //TODO: Support Unity 5.6.0+
         private void StartAssetBundleVerificationDownload()
         {
+#if UNITY_2018_1_OR_NEWER
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
+#else
+            _webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
+            _webRequest.Send();
+#endif
         }
 
-        //TODO: Support Unity 5.6.0+
         private void GetAssetBundleInfoFromDownload()
         {
             var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);

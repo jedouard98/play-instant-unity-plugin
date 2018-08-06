@@ -56,27 +56,27 @@ namespace GooglePlayInstant.LoadingScreen
             }
         }
 
-        //TODO: Update function for unity 5.6 functionality
         private IEnumerator GetAssetBundle(string assetBundleUrl)
         {
-#if UNITY_2018_2_OR_NEWER
-            var www = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
+#if UNITY_2018_1_OR_NEWER
+            var webRequest = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
+            var assetbundleDownloadOperation = webRequest.SendWebRequest();
 #else
-            var www = UnityWebRequest.GetAssetBundle(assetBundleUrl);
+            var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
+            var assetbundleDownloadOperation = webRequest.Send();
 #endif
-            var assetbundleDownloadOperation = www.SendWebRequest();
 
             yield return StartCoroutine(LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage));
 
             // TODO: implement retry logic
-            if (www.isNetworkError || www.isHttpError)
+            if (webRequest.isNetworkError || webRequest.isHttpError)
             {
-                Debug.LogErrorFormat("Error downloading asset bundle: {0}", www.error);
+                Debug.LogErrorFormat("Error downloading asset bundle: {0}", webRequest.error);
             }
             else
             {
-                _bundle = DownloadHandlerAssetBundle.GetContent(www);
+                _bundle = DownloadHandlerAssetBundle.GetContent(webRequest);
             }
         }
     }
