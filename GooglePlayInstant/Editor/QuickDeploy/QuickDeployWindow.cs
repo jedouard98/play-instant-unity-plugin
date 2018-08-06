@@ -64,7 +64,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
-            
+
             switch ((ToolBarSelectedButton) _toolbarSelectedButtonIndex)
             {
                 case ToolBarSelectedButton.CreateBundle:
@@ -166,7 +166,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.Space();
-            GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth));
+            if (GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth)))
+            {
+                Application.OpenURL("https://console.cloud.google.com/storage/browser");
+            }
         }
 
         private void OnGuiVerifyBundleSelect()
