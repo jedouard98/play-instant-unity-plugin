@@ -59,6 +59,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static GCPAccessToken AccessToken
         {
+            //TODO(audace): Implement functionality for tokens to be reused in future unity sessions without re-doing the OAuth2 Flow.
             get { return _accessToken; }
             private set { _accessToken = value; }
         }
@@ -130,9 +131,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             // Take the user to the authorization page to authorize the application.
             var credentials = OAuth2Credentials.GetCredentials();
-            var queryParams = string.Format("?scope={0}&access_type=offline&include_granted_scopes=true" +
-                                            "&redirect_uri={1}&response_type=code" + "&client_id=" +
-                                            credentials.client_id, OAuth2Scope, redirectUri);
+            var queryParams =
+                string.Format("?scope={0}&access_type=offline&redirect_uri={1}&response_type=code&client_id={2}",
+                    OAuth2Scope, redirectUri, credentials.client_id);
             var authorizatonUrl = credentials.auth_uri + queryParams;
             Application.OpenURL(authorizatonUrl);
         }
