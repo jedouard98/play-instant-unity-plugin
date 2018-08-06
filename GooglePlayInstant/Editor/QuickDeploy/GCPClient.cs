@@ -48,12 +48,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         uploadBundleWww.text));
                 }
 
+                var response = JsonUtility.FromJson<UploadBundleResponse>(uploadBundleWww.text);
+                _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket, response.name);
+
                 MakeBundlePublic(makeBundlePublicWww =>
                 {
                     var error = makeBundlePublicWww.error;
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Debug.Log(string.Format("Got error making bundle public: {0}\n{1}", error,
+                        throw new Exception(string.Format("Got error making bundle public: {0}\n{1}", error,
                             makeBundlePublicWww.text));
                     }
                 });
@@ -76,7 +79,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var bytes = File.ReadAllBytes(assetBundleFileName);
                 var headers = new Dictionary<string, string>();
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
-                headers.Add("Content-Type","application/octet-stream");
+                headers.Add("Content-Type", "application/octet-stream");
                 var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
                 WwwRequestInProgress.TrackProgress(request,
                     "Uploading asset bundle to google cloud storage", responseHandler.Invoke);
@@ -196,6 +199,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             public string entity = "allUsers";
             public string role = "READER";
+        }
+
+        [Serializable]
+        private class UploadBundleResponse
+        {
+            public string name;
+            public string bucket;
         }
     }
 }
