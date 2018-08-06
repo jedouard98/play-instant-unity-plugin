@@ -52,6 +52,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 #if UNITY_2018_1_OR_NEWER
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
+#elif UNITY_2017_1_OR_NEWER
+            _webRequest = UnityWebRequest.GetAssetBundle(_assetBundleUrl);
+            _webRequest.SendWebRequest();
 #else
             _webRequest = UnityWebRequest.GetAssetBundle(_assetBundleUrl);
             _webRequest.Send();
@@ -95,7 +98,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-        private double ConvertBytesToMegabytes(ulong bytes)
+        private static double ConvertBytesToMegabytes(ulong bytes)
         {
             return bytes / 1024f / 1024f;
         }
@@ -151,7 +154,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-        private void AddVerifyComponentInfo(string title, string response)
+        private static void AddVerifyComponentInfo(string title, string response)
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(title, GUILayout.MinWidth(FieldMinWidth));

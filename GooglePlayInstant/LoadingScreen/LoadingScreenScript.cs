@@ -54,8 +54,8 @@ namespace GooglePlayInstant.LoadingScreen
             else
             {
                 var sceneLoadOperation = SceneManager.LoadSceneAsync(_bundle.GetAllScenePaths()[0]);
-                yield return StartCoroutine(LoadingBar.UpdateLoadingBar(sceneLoadOperation,
-                    LoadingBar.SceneLoadingMaxWidthPercentage));
+                yield return LoadingBar.UpdateLoadingBar(sceneLoadOperation,
+                    LoadingBar.SceneLoadingMaxWidthPercentage);
             }
         }
 
@@ -64,12 +64,15 @@ namespace GooglePlayInstant.LoadingScreen
 #if UNITY_2018_1_OR_NEWER
             var webRequest = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.SendWebRequest();
+#elif UNITY_2017_1_OR_NEWER
+            var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
+            var assetbundleDownloadOperation = webRequest.SendWebRequest();
 #else
             var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.Send();
 #endif
-            yield return StartCoroutine(LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
-                LoadingBar.AssetBundleDownloadMaxWidthPercentage));
+            yield return LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
+                LoadingBar.AssetBundleDownloadMaxWidthPercentage);
 
 #if UNITY_2017_1_OR_NEWER
             if (webRequest.isHttpError || webRequest.isNetworkError)
