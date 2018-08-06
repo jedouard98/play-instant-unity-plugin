@@ -22,7 +22,8 @@ using UnityEngine;
 namespace GooglePlayInstant.Editor
 {
     /// <summary>
-    /// Provides functionality for tracking and visualizing useful information about WWW requests in progress.
+    /// Provides functionality for tracking HTTP requests represented by corresponding WWW instances, as well as
+    /// executing scheduled delegages on the responses when the requests are complete.
     /// </summary>
     public class WwwRequestInProgress
     {
@@ -41,6 +42,13 @@ namespace GooglePlayInstant.Editor
         private static WwwRequestInProgress _requestInProgress;
 
 
+        /// <summary>
+        /// Monitor an HTTP request is being made. Assumed one request will be made at a time, therefore will provide
+        /// a warning message and stop monitoring a previous request if one was still being monitored.
+        /// </summary>
+        /// <param name="www">A www instance holding a request that was made</param>
+        /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
+        /// <param name="onDone">A delegate to be invoked on the result once it is available.</param>
         public static void TrackProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
         {
             if (_requestInProgress != null)
@@ -54,10 +62,9 @@ namespace GooglePlayInstant.Editor
         /// <summary>
         /// Instantiate an instance of a RequestInProgress class.
         /// </summary>
-        /// <param name="www">An instance of the WWW object representing the HTTP request being made.</param>
-        /// <param name="progressBarTitleText">The high level action of the request. This is displayed as the title when displaying
-        ///     the progress bar for this request in progress.</param>
-        /// <param name="onDone">A handler for the www instance when the result is available.</param>
+        /// <param name="www">A www instance holding a request that was made</param>
+        /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
+        /// <param name="onDone">A delegate to be invoked on the result once it is available.</param>
         private WwwRequestInProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
         {
             _www = www;
@@ -67,8 +74,9 @@ namespace GooglePlayInstant.Editor
 
 
         /// <summary>
-        /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
-        /// that are still in the pipeline.
+        /// Verifies the state of the currently monitored request in progress. Displays progress bar for the request if
+        /// it is still going on. If the request is done, this will invoke post completion delegate on the result and
+        /// will stop monitoring the request.
         /// </summary>
         public static void Update()
         {
@@ -81,6 +89,8 @@ namespace GooglePlayInstant.Editor
             {
                 EditorUtility.ClearProgressBar();
                 var requestInProgress = _requestInProgress;
+                // set the static field to null before invoking the  post completion delegate because the delegate could
+                // be executing an action that will read or overwrie the static field.
                 _requestInProgress = null;
                 requestInProgress._onDone.Invoke(requestInProgress._www);
             }
