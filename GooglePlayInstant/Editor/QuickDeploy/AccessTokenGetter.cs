@@ -20,9 +20,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class AccessTokenGetter
     {
-        // Members used for getting, retrieving and storing authorization code
-        private const string GrantType = "authorization_code";
-        private const string Scope = "https://www.googleapis.com/auth/devstorage.full_control";
+        private const string OAuth2GrantType = "authorization_code";
+
+        /// <summary>
+        /// Full control scope is required, since the application needs to read, write as well as change access
+        /// permissions of buckets and asset bundles.
+        /// </summary>
+        private const string OAuth2Scope = "https://www.googleapis.com/auth/devstorage.full_control";
+
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         /// <summary>
@@ -46,7 +51,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static AuthorizationResponseHandler _onOAuthResponseReceived;
 
-        // Access token storage
+        // Use to store access token.
         private static GCPAccessToken _accessToken;
 
         /// <summary>
@@ -102,7 +107,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var server = new OAuth2Server(authorizationResponse => { _authorizationResponse = authorizationResponse; });
             server.Start();
 
-            var redirect_uri = server.CallbackEndpoint;
+            var redirectUri = server.CallbackEndpoint;
 
             _onOAuthResponseReceived = authorizationResponse =>
             {
@@ -114,7 +119,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var authCode = new AuthorizationCode
                 {
                     code = authorizationResponse.Value,
-                    redirect_uri = redirect_uri
+                    redirect_uri = redirectUri
                 };
 
                 if (authorizationCodeHandler != null)
@@ -123,11 +128,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
             };
 
-            // Now ask permissions from the server.
+            // Take the user to the authorization page to authorize the application.
             var credentials = OAuth2Credentials.GetCredentials();
-            var queryParams = "?scope=" + Scope + "&access_type=offline&include_granted_scopes=true" +
-                              "&redirect_uri=" + redirect_uri + "&response_type=code" + "&client_id=" +
-                              credentials.client_id;
+            var queryParams = string.Format("?scope={0}&access_type=offline&include_granted_scopes=true" +
+                                            "&redirect_uri={1}&response_type=code" + "&client_id=" +
+                                            credentials.client_id, OAuth2Scope, redirectUri);
             var authorizatonUrl = credentials.auth_uri + queryParams;
             Application.OpenURL(authorizatonUrl);
         }
@@ -149,7 +154,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             formData.Add("client_id", credentials.client_id);
             formData.Add("client_secret", credentials.client_secret);
             formData.Add("redirect_uri", authCode.redirect_uri);
-            formData.Add("grant_type", GrantType);
+            formData.Add("grant_type", OAuth2GrantType);
 
             WwwRequestInProgress.TrackProgress(
                 HttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
@@ -188,7 +193,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             public string access_token;
             public string refresh_token;
-            public string token_type;
             public int expires_in;
         }
     }
