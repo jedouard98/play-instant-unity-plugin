@@ -26,7 +26,10 @@ namespace GooglePlayInstant.LoadingScreen
     /// </summary>
     public class LoadingScreenScript : MonoBehaviour
     {
+        private const int MaxAttemptCount = 3;
         private AssetBundle _bundle;
+        private int _assetBundleRetrievalAttemptCount;
+
 
         private IEnumerator Start()
         {
@@ -68,14 +71,23 @@ namespace GooglePlayInstant.LoadingScreen
             yield return StartCoroutine(LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage));
 
-            // TODO: implement retry logic
 #if UNITY_2017_1_OR_NEWER
             if (webRequest.isHttpError || webRequest.isNetworkError)
 #else
             if (webRequest.isError)
 #endif
             {
-                Debug.LogErrorFormat("Error downloading asset bundle: {0}", webRequest.error);
+                if (_assetBundleRetrievalAttemptCount < MaxAttemptCount)
+                {
+                    _assetBundleRetrievalAttemptCount++;
+                    Debug.LogFormat("Attempt #{0} at downloading AssetBundle...", _assetBundleRetrievalAttemptCount);
+                    yield return new WaitForSeconds(2);
+                    yield return GetAssetBundle(assetBundleUrl);
+                }
+                else
+                {
+                    Debug.LogErrorFormat("Error downloading asset bundle: {0}", webRequest.error);
+                }
             }
             else
             {
