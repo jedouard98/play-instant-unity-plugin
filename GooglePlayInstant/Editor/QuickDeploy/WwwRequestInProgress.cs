@@ -90,7 +90,7 @@ namespace GooglePlayInstant.Editor
                 EditorUtility.ClearProgressBar();
                 var requestInProgress = _requestInProgress;
                 // set the static field to null before invoking the  post completion delegate because the delegate could
-                // be executing an action that will read or overwrie the static field.
+                // be executing an action that will read or overwrite the static field.
                 _requestInProgress = null;
                 requestInProgress._onDone.Invoke(requestInProgress._www);
             }
