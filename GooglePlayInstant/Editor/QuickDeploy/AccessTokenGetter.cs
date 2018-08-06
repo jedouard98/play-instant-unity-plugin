@@ -72,7 +72,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-
         /// <summary>
         /// Get new access token if access token is expired or is not available, and execute the action when the access
         /// token is available.
@@ -89,7 +88,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 postTokenAction();
             }
         }
-
 
         /// <summary>
         /// Instantiate the OAuth2 flow to retrieve authorization code for google cloud storage, and schedule invocation of
@@ -135,7 +133,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Sends an HTTP request to retrieve an access token from the token uri from user's OAuth2 credentials file.
+        /// Sends an HTTP request to retrieve an access token from the token uri in developer's OAuth2 credentials file.
         /// Schedules a delegate to store the access token once the token is received from the server or to throw an exception once there is a failure to retrieve
         /// the token, and to invoke the post token action passed as an argument to this function once the token has been received and stored.
         /// </summary>
@@ -172,8 +170,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Represents authorization code received from OAuth2 Protocol when the user authorizes the application, and
-        /// is used to get an access token used for making API requests.
+        /// Represents authorization code received from OAuth2 Protocol when the user authorizes the application to
+        /// access the cloud, and is used to get an access token used for making API requests.
         /// </summary>
         [Serializable]
         public class AuthorizationCode
