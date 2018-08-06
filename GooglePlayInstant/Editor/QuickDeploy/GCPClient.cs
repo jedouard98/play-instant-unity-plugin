@@ -33,7 +33,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                                 bucketCreationResponse.text));
                         }
 
-                        Debug.Log("Created Google Cloud Storage bucket.");
+                        Debug.Log("Google Cloud Storage bucket was successfully created.");
                         UploadBundleAndMakeItPublic();
                     });
                 });
@@ -50,22 +50,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         uploadBundleWww.text));
                 }
 
-                Debug.Log("Uploaded asset bundle to Google Cloud Storage.");
-                var response = JsonUtility.FromJson<UploadBundleResponse>(uploadBundleWww.text);
+                Debug.Log("Asset bundle was uploaded to Google Cloud Storage.");
+                var response = JsonUtility.FromJson<UploadBundleJsonResponse>(uploadBundleWww.text);
                 _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket,
                     response.name);
 
-                MakeBundlePublic(makeBundlePublicWww =>
-                {
-                    var error = makeBundlePublicWww.error;
-                    if (!string.IsNullOrEmpty(error))
+                MakeBundlePublic(JsonUtility.FromJson<UploadBundleJsonResponse>(uploadBundleWww.text),
+                    makeBundlePublicWww =>
                     {
-                        throw new Exception(string.Format("Got error making bundle public: {0}\n{1}", error,
-                            makeBundlePublicWww.text));
-                    }
+                        var error = makeBundlePublicWww.error;
+                        if (!string.IsNullOrEmpty(error))
+                        {
+                            throw new Exception(string.Format("Got error making bundle public: {0}\n{1}", error,
+                                makeBundlePublicWww.text));
+                        }
 
-                    Debug.Log("Set visility of stored asset bundle to public.");
-                });
+                        Debug.Log("Visility of asset bundle was stored to public.");
+                    });
             });
         }
 
@@ -125,16 +126,19 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 AccessTokenGetter.UpdateAccessToken(() => CreateBucket(resultHandler));
             }
         }
-
-        private static void MakeBundlePublic(WwwHandler resultHandler)
+        
+        /// <summary>
+        /// Changes visibility of uploaded asset bundle to public, and invokes the result handler on the http response
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="resultHandler"></param>
+        private static void MakeBundlePublic(UploadBundleJsonResponse response, WwwHandler resultHandler)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
             {
-                var bucketName = _config.cloudStorageBucketName;
-                var remoteAssetBundleName = _config.cloudStorageFileName;
                 var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
-                    bucketName, remoteAssetBundleName);
+                    response.bucket, response.name);
                 var requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
                 var requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
                 var requestHeaders = new Dictionary<string, string>();
@@ -148,12 +152,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(resultHandler));
+                AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(response, resultHandler));
             }
         }
 
 
-        // Checks whether the bucket with the name bucketName exists. Assumes access token valid.
+        /// <summary>
+        /// If access token is present, sends an HTTP request to GCP to verify whether the configured bucket name exists or
+        /// not. Invokes delegates onBucketExists if bucket exists, or onBucketDoesNotExists if bucket does
+        /// not exist.
+        /// If access token is not present, uses access token getter to get a new acess token and invoke this method
+        /// again.
+        /// Throws an exception if the server responds with error when verifying bucket existence.
+        /// </summary>
+        /// <param name="onBucketExists">Delegate to be invoked on the received result when bucket exists.</param>
+        /// <param name="onBucketDoesNotExist">Delegate to be invoked on the received result when bucket does not
+        /// exist.</param>
         private static void VerifyBucketExistence(WwwHandler onBucketExists, WwwHandler onBucketDoesNotExist)
         {
             var token = AccessTokenGetter.AccessToken;
@@ -194,12 +208,19 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
+        /// <summary>
+        /// A representation of the body of the JSON request sent to Google Cloud Storage to create a bucket.
+        /// </summary>
         [Serializable]
         private class CreateBucketRequest
         {
             public string name;
         }
 
+        /// <summary>
+        /// A representation of the body of the JSON request sent to Google Cloud Storage to set asset bundle
+        /// visibility to public. 
+        /// </summary>
         [Serializable]
         private class MakeBundlePublicRequest
         {
@@ -207,8 +228,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             public string role = "READER";
         }
 
+        /// <summary>
+        /// A representation of a JSON response received once the asset bundle has been successfully uploaded to
+        /// Google cloud storage.
+        /// </summary>
         [Serializable]
-        private class UploadBundleResponse
+        private class UploadBundleJsonResponse
         {
             public string name;
             public string bucket;
