@@ -92,7 +92,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                                 makeBundlePublicWww.text));
                         }
 
-                        Debug.Log("Visility of asset bundle was set to public.");
+                        Debug.Log("Visibility of asset bundle was set to public.");
                     });
             });
         }
