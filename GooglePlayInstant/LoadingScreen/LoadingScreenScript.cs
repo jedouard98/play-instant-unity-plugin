@@ -65,14 +65,12 @@ namespace GooglePlayInstant.LoadingScreen
             var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.Send();
 #endif
-            
-            
             yield return StartCoroutine(LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage));
 
             // TODO: implement retry logic
 #if UNITY_2017_1_OR_NEWER
-            if (webRequest.isHttpError || webRequest.isNetworkError )
+            if (webRequest.isHttpError || webRequest.isNetworkError)
 #else
             if (webRequest.isError)
 #endif

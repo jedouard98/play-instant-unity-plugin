@@ -65,7 +65,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _responseCode = _webRequest.responseCode;
 
 #if UNITY_2017_1_OR_NEWER
-            if (_webRequest.isHttpError || _webRequest.isNetworkError )
+            if (_webRequest.isHttpError || _webRequest.isNetworkError)
 #else
             if (_webRequest.isError)
 #endif
@@ -116,7 +116,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest = null;
         }
 
-        // TODO: fix crashing associated with using DisplayProgressBar() and revist after merging with fix branch
+        // TODO: fix crashing associated with using DisplayProgressBar() and revist after merging with fix branchø
         private void OnGUI()
         {
             if (_webRequest != null && !_webRequest.isDone)
