@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.AccessControl;
 using System.Text;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                                 bucketCreationResponse.text));
                         }
 
+                        Debug.Log("Created Google Cloud Storage bucket.");
                         UploadBundleAndMakeItPublic();
                     });
                 });
@@ -48,8 +50,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         uploadBundleWww.text));
                 }
 
+                Debug.Log("Uploaded asset bundle to Google Cloud Storage.");
                 var response = JsonUtility.FromJson<UploadBundleResponse>(uploadBundleWww.text);
-                _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket, response.name);
+                _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket,
+                    response.name);
 
                 MakeBundlePublic(makeBundlePublicWww =>
                 {
@@ -59,6 +63,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         throw new Exception(string.Format("Got error making bundle public: {0}\n{1}", error,
                             makeBundlePublicWww.text));
                     }
+
+                    Debug.Log("Set visility of stored asset bundle to public.");
                 });
             });
         }
@@ -97,7 +103,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
             {
-                var credentials = GCPClientHelper.GetOauth2Credentials();
+                var credentials = OAuth2Credentials.GetCredentials();
                 var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                     credentials.project_id);
                 var createBucketRequest = new CreateBucketRequest
@@ -166,7 +172,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         {
                             if (error.StartsWith("404"))
                             {
-                                onBucketDoesNotExist.Invoke(completeRequest);
+                                onBucketDoesNotExist(completeRequest);
                             }
                             else
                             {
@@ -177,7 +183,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         }
                         else
                         {
-                            onBucketExists.Invoke(completeRequest);
+                            onBucketExists(completeRequest);
                         }
                     });
             }

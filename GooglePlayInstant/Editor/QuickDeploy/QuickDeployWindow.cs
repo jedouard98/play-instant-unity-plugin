@@ -58,7 +58,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void Update()
         {
-            AccessTokenGetter.OnGUI();
+            AccessTokenGetter.Update();
+            WwwRequestInProgress.Update();
         }
 
         void OnGUI()

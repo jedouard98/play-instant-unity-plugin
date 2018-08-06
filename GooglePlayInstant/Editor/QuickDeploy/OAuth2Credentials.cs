@@ -4,16 +4,16 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
-    public static class GCPClientHelper
+    public static class OAuth2Credentials
     {
-        public static Oauth2Credentials GetOauth2Credentials()
+        public static Credentials GetCredentials()
         {
             var allText = File.ReadAllText(QuickDeployConfig.Config.cloudCredentialsFileName);
-            return JsonUtility.FromJson<Oauth2File>(allText).installed;
+            return JsonUtility.FromJson<CredentialsFile>(allText).installed;
         }
         
         [Serializable]
-        public class Oauth2Credentials
+        public class Credentials
         {
             public string client_id;
             public string client_secret;
@@ -23,9 +23,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         [Serializable]
-        public class Oauth2File
+        public class CredentialsFile
         {
-            public Oauth2Credentials installed;
+            public Credentials installed;
         }
         
     }

@@ -69,7 +69,7 @@ namespace GooglePlayInstant.Editor
         /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests
         /// that are still in the pipeline.
         /// </summary>
-        public static void NextState()
+        public static void Update()
         {
             if (_requestInProgress == null)
             {
