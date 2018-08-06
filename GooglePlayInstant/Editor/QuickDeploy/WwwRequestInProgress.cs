@@ -28,8 +28,8 @@ namespace GooglePlayInstant.Editor
     {
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-        
-        
+
+
         /// <summary>
         /// A method to be executed on the _www field when it is done.
         /// </summary>
@@ -47,6 +47,7 @@ namespace GooglePlayInstant.Editor
             {
                 Debug.LogWarning("Started another request while the previous one was not complete.");
             }
+
             _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onDone);
         }
 
@@ -63,7 +64,7 @@ namespace GooglePlayInstant.Editor
             _progressBarTitleText = progressBarTitleText;
             _onDone = onDone;
         }
-        
+
 
         /// <summary>
         /// Clear done requests from the pipeline of requests in progress, and execute scheduled tasks for done requests

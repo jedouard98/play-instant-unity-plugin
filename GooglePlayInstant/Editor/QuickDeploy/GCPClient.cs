@@ -1,14 +1,27 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.AccessControl;
 using System.Text;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
-    /// A class that implements the functionality for interacting with Google Cloud Storage API to deploying asset
+    /// A class that implements the functionality for interacting with Google Cloud Storage API to deploy asset
     /// bundles.
     /// </summary>
     public static class GCPClient
@@ -48,7 +61,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     });
                 });
         }
-
 
         /// <summary>
         /// Uploads asset bundle to Google Cloud storage and makes the bundle public.
@@ -102,8 +114,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var uploadEndpoint =
                     string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
                         cloudStorageBucketName, cloudStorageFileName);
-
-
                 var bytes = File.ReadAllBytes(assetBundleFileName);
                 var headers = new Dictionary<string, string>();
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
@@ -183,7 +193,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(response, resultHandler));
             }
         }
-
 
         /// <summary>
         /// If access token is present, sends an HTTP request to GCP to verify whether the configured bucket name exists or
