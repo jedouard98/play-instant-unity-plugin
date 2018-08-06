@@ -64,7 +64,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             _responseCode = _webRequest.responseCode;
 
-            if (_webRequest.isNetworkError || _webRequest.isHttpError)
+#if UNITY_2017_1_OR_NEWER
+            if (_webRequest.isHttpError || _webRequest.isNetworkError )
+#else
+            if (_webRequest.isError)
+#endif
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = _webRequest.error;
