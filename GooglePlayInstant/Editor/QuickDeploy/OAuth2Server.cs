@@ -144,7 +144,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 return;
             }
 
-            Dictionary<string, string> queryDictionary = null;
             KeyValuePair<string, string> responsePair;
             foreach (var pair in GetQueryParamsFromUri(context.Request.Url))
             {
@@ -157,7 +156,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (_responseHandler != null)
             {
-                _responseHandler.Invoke(responsePair);
+                _responseHandler(responsePair);
             }
 
             var responseArray = Encoding.UTF8.GetBytes(CloseTabText);
@@ -173,12 +172,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Inspect the URI and determine whether it contains valid params according to the following policies:
         ///   1. URI query must include exactly one of either "code" or "error" as param keys.
         ///   2. "code" and "error" can not be present at the same time.
-        ///   3. No other keys apart from "code", "error" and "scope" are allowed.
-        ///   4. "scope" should only be present when there is "code".
+        ///   3. No other keys apart from "code", "error"are allowed.
         /// </summary>
         internal static bool UriContainsValidQueryParams(Uri uri)
         {
-            var allowedQueries = new[] {"code", "error", "scope"};
+            var allowedQueries = new[] {"code", "error"};
             var queryParams = GetQueryParamsFromUri(uri);
 
             Predicate<Dictionary<string, string>> policyNumberOne = queryParamsDict =>
@@ -189,12 +187,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             Predicate<Dictionary<string, string>> policyNumberThree = queryParamsDict =>
                 queryParamsDict.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
-
-            Predicate<Dictionary<string, string>> policyNumberFour = queryParamsDict =>
-                !(queryParams.ContainsKey("scope") && !queryParams.ContainsKey("code"));
-
-            return policyNumberOne.Invoke(queryParams) && policyNumberTwo.Invoke(queryParams) &&
-                   policyNumberThree.Invoke(queryParams) && policyNumberFour.Invoke(queryParams);
+            return policyNumberOne(queryParams) && policyNumberTwo(queryParams) &&
+                   policyNumberThree(queryParams);
         }
 
         /// <summary>

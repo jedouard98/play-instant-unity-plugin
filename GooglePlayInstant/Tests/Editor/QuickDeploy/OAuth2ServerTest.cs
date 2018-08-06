@@ -167,16 +167,10 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 PolicyNumberTwoText);
 
             const string PolicyNumberThreeText =
-                "No other keys apart from \"code\", \"error\" and \"scope\" are allowed.";
+                "No other keys apart from \"code\" and \"error\" are allowed.";
             var invalidUriWithOtherKeys =
                 new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), PolicyNumberThreeText);
-
-            const string PolicyNumberFourText = "\"scope\" should only be present when there is \"code\"";
-            var validUriWithScope = new Uri(string.Format("{0}?code=someValue&scope=someValue", AddressPrefix));
-            var invalidUriWithScope = new Uri(string.Format("{0}?scope=someValue", AddressPrefix));
-            Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithScope), PolicyNumberFourText);
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithScope), PolicyNumberFourText);
         }
 
         /// <summary>
