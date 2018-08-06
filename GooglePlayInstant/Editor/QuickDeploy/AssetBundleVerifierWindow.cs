@@ -112,7 +112,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest = null;
         }
 
-        // TODO: fix crashing associated with using DisplayProgressBar()
+        // TODO: fix crashing associated with using DisplayProgressBar() and revist after merging with fix branch
         private void OnGUI()
         {
             if (_webRequest != null && !_webRequest.isDone)
