@@ -29,7 +29,7 @@ namespace GooglePlayInstant.Editor
     {
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-        private readonly Action<WWW> _onDone;
+        private readonly Action<WWW> _onResponseAvailableAction;
 
         // Only one request can be performed at a time
         private static WwwRequestInProgress _requestInProgress;
@@ -41,15 +41,16 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         /// <param name="www">A www instance holding a request that was made</param>
         /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
-        /// <param name="onDone">An action to be invoked on the result once it is available.</param>
-        public static void TrackProgress(WWW www, string progressBarTitleText, Action<WWW> onDone)
+        /// <param name="onResponseAvailableAction">An action to be invoked on www once the response to the request
+        /// is available.</param>
+        public static void TrackProgress(WWW www, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
         {
             if (_requestInProgress != null)
             {
                 throw new Exception("Cannot start a another request while the previous one is not complete.");
             }
 
-            _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onDone);
+            _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onResponseAvailableAction);
         }
 
         /// <summary>
@@ -57,20 +58,21 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         /// <param name="www">A www instance holding a request that was made</param>
         /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
-        /// <param name="onDone">An action to be invoked on the result once it is available.</param>
-        private WwwRequestInProgress(WWW www, string progressBarTitleText, Action<WWW> onDone)
+        /// <param name="onResponseAvailableAction">An action to be invoked on the WWW instance holding the request when the result
+        /// is available.</param>
+        private WwwRequestInProgress(WWW www, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
         {
             _www = www;
             _progressBarTitleText = progressBarTitleText;
-            _onDone = onDone;
+            _onResponseAvailableAction = onResponseAvailableAction;
         }
 
 
         //TODO(audace): Include canceling the request when the user clicks the cancel button in the documentation.
         /// <summary>
         /// Verifies the state of the currently monitored request in progress. Displays progress bar for the request if
-        /// it is still going on. If the request is done, this will invoke post completion action on the result and
-        /// will stop monitoring the request.
+        /// it is still going on. If the response is available, the scheduled post-completion action will be invoked on
+        /// the www instance, the request will stop being monitored.
         /// </summary>
         public static void Update()
         {
@@ -86,7 +88,7 @@ namespace GooglePlayInstant.Editor
                 // Set the static field _requestInProgress to null before invoking the  post-completion action
                 // because the action could be executing an action that will read or overwrite the static field.
                 _requestInProgress = null;
-                requestInProgress._onDone(requestInProgress._www);
+                requestInProgress._onResponseAvailableAction(requestInProgress._www);
             }
             else
             {
