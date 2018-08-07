@@ -23,49 +23,42 @@ namespace GooglePlayInstant.Editor
 {
     /// <summary>
     /// Provides functionality for tracking HTTP requests represented by corresponding WWW instances, as well as
-    /// executing scheduled delegages on the responses when the requests are complete.
+    /// executing scheduled actions on the responses when the requests are complete.
     /// </summary>
     public class WwwRequestInProgress
     {
         private readonly WWW _www;
         private readonly string _progressBarTitleText;
-
-
-        /// <summary>
-        /// A method to be executed on the _www field when it is done.
-        /// </summary>
-        public delegate void DoneWwwHandler(WWW www);
-
-        private DoneWwwHandler _onDone;
+        private readonly Action<WWW> _onDone;
 
         // Only one request can be performed at a time
         private static WwwRequestInProgress _requestInProgress;
 
 
         /// <summary>
-        /// Monitor an HTTP request is being made. Assumed one request will be made at a time, therefore will provide
+        /// Monitor an HTTP request being made. Assumes one request will be made at a time, therefore will provide
         /// a warning message and stop monitoring a previous request if one was still being monitored.
         /// </summary>
         /// <param name="www">A www instance holding a request that was made</param>
         /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
-        /// <param name="onDone">A delegate to be invoked on the result once it is available.</param>
-        public static void TrackProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
+        /// <param name="onDone">An action to be invoked on the result once it is available.</param>
+        public static void TrackProgress(WWW www, string progressBarTitleText, Action<WWW> onDone)
         {
             if (_requestInProgress != null)
             {
-                Debug.LogWarning("Started another request while the previous one was not complete.");
+                throw new Exception("Cannot start a another request while the previous one is not complete.");
             }
 
             _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onDone);
         }
 
         /// <summary>
-        /// Instantiate an instance of a RequestInProgress class.
+        /// Create an instance of the RequestInProgress class.
         /// </summary>
         /// <param name="www">A www instance holding a request that was made</param>
         /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
-        /// <param name="onDone">A delegate to be invoked on the result once it is available.</param>
-        private WwwRequestInProgress(WWW www, string progressBarTitleText, DoneWwwHandler onDone)
+        /// <param name="onDone">An action to be invoked on the result once it is available.</param>
+        private WwwRequestInProgress(WWW www, string progressBarTitleText, Action<WWW> onDone)
         {
             _www = www;
             _progressBarTitleText = progressBarTitleText;
@@ -73,9 +66,10 @@ namespace GooglePlayInstant.Editor
         }
 
 
+        //TODO(audace): Include canceling the request when the user clicks the cancel button in the documentation.
         /// <summary>
         /// Verifies the state of the currently monitored request in progress. Displays progress bar for the request if
-        /// it is still going on. If the request is done, this will invoke post completion delegate on the result and
+        /// it is still going on. If the request is done, this will invoke post completion action on the result and
         /// will stop monitoring the request.
         /// </summary>
         public static void Update()
@@ -89,15 +83,15 @@ namespace GooglePlayInstant.Editor
             {
                 EditorUtility.ClearProgressBar();
                 var requestInProgress = _requestInProgress;
-                // set the static field to null before invoking the  post completion delegate because the delegate could
-                // be executing an action that will read or overwrite the static field.
+                // Set the static field _requestInProgress to null before invoking the  post-completion action
+                // because the action could be executing an action that will read or overwrite the static field.
                 _requestInProgress = null;
-                requestInProgress._onDone.Invoke(requestInProgress._www);
+                requestInProgress._onDone(requestInProgress._www);
             }
             else
             {
                 if (EditorUtility.DisplayCancelableProgressBar(_requestInProgress._progressBarTitleText,
-                    "Progress: " + Math.Floor(_requestInProgress._www.uploadProgress * 100) + "%",
+                    string.Format("Progress: {0}%", Math.Floor(_requestInProgress._www.uploadProgress * 100)),
                     _requestInProgress._www.uploadProgress))
                 {
                     EditorUtility.ClearProgressBar();

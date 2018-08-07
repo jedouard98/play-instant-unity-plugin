@@ -29,11 +29,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
 
         /// <summary>
-        /// Method signature for methods to be invoked on an WWW object representing a request that was made.
-        /// </summary>
-        private delegate void WwwHandler(WWW request);
-
-        /// <summary>
         /// Executes all the steps required for deploying an Asset Bundle to Google Cloud Storage.
         /// First verifies if configured bucket exists, and creates the bucket if it does not exist. It then uploads
         /// asset bundle to Google Cloud Storage and sets the visibility of the asset bundle to public.
@@ -82,7 +77,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket,
                     response.name);
 
-                MakeBundlePublic(JsonUtility.FromJson<UploadBundleJsonResponse>(uploadBundleWww.text),
+                MakeBundlePublic(response,
                     makeBundlePublicWww =>
                     {
                         var error = makeBundlePublicWww.error;
@@ -102,8 +97,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// invokes the result handler on the response.
         /// Will first update access token before making this function call if valid acess token is not present.
         /// </summary>
-        /// <param name="responseHandler"></param>
-        private static void UploadBundle(WwwHandler responseHandler)
+        /// <param name="onUploadBundleHandler"></param>
+        private static void UploadBundle(Action<WWW> onUploadBundleHandler)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
@@ -120,11 +115,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 headers.Add("Content-Type", "application/octet-stream");
                 var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
                 WwwRequestInProgress.TrackProgress(request,
-                    "Uploading asset bundle to google cloud storage", responseHandler.Invoke);
+                    "Uploading asset bundle to google cloud storage", onUploadBundleHandler);
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => UploadBundle(responseHandler));
+                AccessTokenGetter.UpdateAccessToken(() => UploadBundle(onUploadBundleHandler));
             }
         }
 
@@ -133,8 +128,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// handler on the HTTP response.
         /// Will first update access token before making this function call if valid access token is not present.
         /// </summary>
-        /// <param name="resultHandler"></param>
-        private static void CreateBucket(WwwHandler resultHandler)
+        /// <param name="onCreateBucketHandler"></param>
+        private static void CreateBucket(Action<WWW> onCreateBucketHandler)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
@@ -154,23 +149,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
 
                 WwwRequestInProgress.TrackProgress(request,
-                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name), resultHandler.Invoke);
+                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
+                    onCreateBucketHandler);
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => CreateBucket(resultHandler));
+                AccessTokenGetter.UpdateAccessToken(() => CreateBucket(onCreateBucketHandler));
             }
         }
 
         /// <summary>
         /// Uses present access token to send HTTP request to Google cloud storage to change visibility of uploaded
-        /// file to public, and invokes the result handler on the HTTP response.
+        /// file to public, and invokes the result handler action on the HTTP response.
         /// Will first update access token before making this function call if valid access token is not
         /// present.
         /// </summary>
         /// <param name="response">UploadBundleJsonResponse instance containing remote file and bucket name.</param>
-        /// <param name="resultHandler">A delegate to handle the response that will be received from the server.</param>
-        private static void MakeBundlePublic(UploadBundleJsonResponse response, WwwHandler resultHandler)
+        /// <param name="onMakeBundlePublicHandler">An action to handle the response that will be received from the server.</param>
+        private static void MakeBundlePublic(UploadBundleJsonResponse response, Action<WWW> onMakeBundlePublicHandler)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
@@ -186,26 +182,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var makeBundlePublicWww =
                     HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
                 WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote asset bundle public",
-                    resultHandler.Invoke);
+                    onMakeBundlePublicHandler);
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(response, resultHandler));
+                AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(response, onMakeBundlePublicHandler));
             }
         }
 
         /// <summary>
         /// If access token is present, sends an HTTP request to GCP to verify whether the configured bucket name exists or
-        /// not. Invokes delegates onBucketExists if bucket exists, or onBucketDoesNotExists if bucket does
+        /// not. Invokes action onBucketExists if bucket exists, or action onBucketDoesNotExists if bucket does
         /// not exist.
         /// If access token is not present, uses access token getter to get a new acess token and invoke this method
         /// again.
         /// Throws an exception if the server responds with error when verifying bucket existence.
         /// </summary>
-        /// <param name="onBucketExists">Delegate to be invoked on the received result when bucket exists.</param>
-        /// <param name="onBucketDoesNotExist">Delegate to be invoked on the received result when bucket does not
+        /// <param name="onBucketExists">An action to be invoked on the received result when bucket exists.</param>
+        /// <param name="onBucketDoesNotExist">An action to be invoked on the received result when bucket does not
         /// exist.</param>
-        private static void VerifyBucketExistence(WwwHandler onBucketExists, WwwHandler onBucketDoesNotExist)
+        private static void VerifyBucketExistence(Action<WWW> onBucketExists, Action<WWW> onBucketDoesNotExist)
         {
             var token = AccessTokenGetter.AccessToken;
             if (token != null)

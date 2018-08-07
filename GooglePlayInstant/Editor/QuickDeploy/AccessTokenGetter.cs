@@ -29,27 +29,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string OAuth2Scope = "https://www.googleapis.com/auth/devstorage.full_control";
 
         private static KeyValuePair<string, string>? _authorizationResponse;
-
-        /// <summary>
-        /// Signature for methods to handle authorization response from the server. An authorization response could be
-        /// either "code" or "error" response.
-        /// </summary>
-        /// <param name="response">A KeyValuePair instance corresponding to the authorization response received.</param>
-        private delegate void AuthorizationResponseHandler(KeyValuePair<string, string> response);
-
-        /// <summary>
-        /// Signature for methods that handle the authorization code.
-        /// </summary>
-        /// <param name="authorizationCode">An Authorizationcode instance corresponding to the authorization code
-        /// received from OAuth2.</param>
-        public delegate void AuthorizationCodeHandler(AuthorizationCode authorizationCode);
-
-        /// <summary>
-        /// Signature for methods to be called after access token has been received.
-        /// </summary>
-        public delegate void PostTokenAction();
-
-        private static AuthorizationResponseHandler _onOAuthResponseReceived;
+        
+        private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
         // Use to store access token.
         private static GCPAccessToken _accessToken;
@@ -83,7 +64,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// token is available.
         /// </summary>
         /// <param name="postTokenAction">Action to be executed when valid access token is avalable.</param>
-        public static void UpdateAccessToken(PostTokenAction postTokenAction)
+        public static void UpdateAccessToken(Action postTokenAction)
         {
             if (AccessToken == null)
             {
@@ -96,14 +77,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Instantiate the OAuth2 flow to retrieve authorization code for google cloud storage, and schedule invocation of
-        /// the code handler on the received authorization code once it is available or throw an exception once there is
-        /// a failure to get the authorization code.
+        /// Instantiate the OAuth2 flow to retrieve authorization code for google cloud storage, and schedule
+        /// invocation of the code handler on the received authorization code once it is available or throw an exception
+        /// once there is a failure to get the authorization code.
         /// </summary>
-        /// <param name="authorizationCodeHandler"></param>
+        /// <param name="authorizationCodeHandler"An action to invoke on the authorization code instance when it is
+        /// available.></param>
         /// <exception cref="Exception">Exception thrown when required authorization code cannot be received
         /// from OAuth2 flow.</exception>
-        public static void GetAuthCode(AuthorizationCodeHandler authorizationCodeHandler)
+        public static void GetAuthCode(Action<AuthorizationCode> onAuthorizationCodeAction)
         {
             var server = new OAuth2Server(authorizationResponse => { _authorizationResponse = authorizationResponse; });
             server.Start();
@@ -123,30 +105,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     redirect_uri = redirectUri
                 };
 
-                if (authorizationCodeHandler != null)
+                if (onAuthorizationCodeAction != null)
                 {
-                    authorizationCodeHandler(authCode);
+                    onAuthorizationCodeAction(authCode);
                 }
             };
 
             // Take the user to the authorization page to authorize the application.
             var credentials = OAuth2Credentials.GetCredentials();
-            var queryParams =
-                string.Format("?scope={0}&access_type=offline&redirect_uri={1}&response_type=code&client_id={2}",
-                    OAuth2Scope, redirectUri, credentials.client_id);
-            var authorizatonUrl = credentials.auth_uri + queryParams;
-            Application.OpenURL(authorizatonUrl);
+            var authorizationUrl =
+                string.Format("{0}?scope={1}&access_type=offline&redirect_uri={2}&response_type=code&client_id={3}",
+                    credentials.auth_uri, OAuth2Scope, redirectUri, credentials.client_id);
+
+            Application.OpenURL(authorizationUrl);
         }
 
         /// <summary>
         /// Sends an HTTP request to retrieve an access token from the token uri in developer's OAuth2 credentials file.
-        /// Schedules a delegate to store the access token once the token is received from the server or to throw an exception once there is a failure to retrieve
-        /// the token, and to invoke the post token action passed as an argument to this function once the token has been received and stored.
+        /// Schedules an action to store the access token once the token is received from the server or to throw an
+        /// exception once there is a failure to retrieve the token, and to invoke the post token action passed as an
+        /// argument to this function once the token has been received and stored.
         /// </summary>
-        /// <param name="authCode"></param>
-        /// <param name="postTokenAction"></param>
-        /// <exception cref="Exception"></exception>
-        private static void RequestAndStoreAccessToken(AuthorizationCode authCode, PostTokenAction postTokenAction)
+        /// <param name="authCode">Authorization code received from OAuth2 to be used to fetch access token.</param>
+        /// <param name="postTokenAction">An action to invoke once the token has been received and stored.</param>
+        /// <exception cref="Exception">Exception thrown when there is a failure to retrieve access token.</exception>
+        private static void RequestAndStoreAccessToken(AuthorizationCode authCode, Action postTokenAction)
         {
             var credentials = OAuth2Credentials.GetCredentials();
             var tokenEndpiont = credentials.token_uri;
