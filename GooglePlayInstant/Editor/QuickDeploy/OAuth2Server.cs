@@ -42,13 +42,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         internal HttpListener _httpListener;
         private string _callbackEndpoint;
 
-        /// <summary>
-        /// A delegate that will handle the KeyValuePair that represents the authorization response.
-        /// </summary>
-        /// <param name="response">A response received through a GET request that is sent to the server.</param>
-        public delegate void ResponseHandler(KeyValuePair<string, string> response);
-
-        private readonly ResponseHandler _responseHandler;
+        private readonly Action<KeyValuePair<string, string>> _responseHandler;
 
         /// <summary>
         /// An endpoint that on which the server is listening.
@@ -62,12 +56,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// An instance of a server that will run locally to retrieve authorization code. The server will stop running
         /// once the first response gets received.
         /// </summary>
-        /// <param name="responseHandler">A response handler to be invoked on the key-value pair representing the first
+        /// <param name="responseHandler">An action to be invoked on the key-value pair representing the first
         /// response that will be caught by the server. Note that that the invocation of this handler will not be done
-        /// on the main thread, therefore the handler should only operations that can be run off the main thread.
-        /// No invocation is done if responseHandler is null.
+        /// on the main thread, therefore the handler should only run operations that can be run on the main thread.
         /// </param>
-        public OAuth2Server(ResponseHandler responseHandler)
+        public OAuth2Server(Action<KeyValuePair<string, string>> responseHandler)
         {
             _responseHandler = responseHandler;
         }
