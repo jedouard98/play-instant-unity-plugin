@@ -97,7 +97,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// invokes the result handler on the response.
         /// Will first update access token before making this function call if valid acess token is not present.
         /// </summary>
-        /// <param name="onUploadBundleHandler">An action to be invoked on the www instance holding the http request
+        /// <param name="onUploadBundleResponseAction">An action to be invoked on the www instance holding the http request
         /// once the response to the request to upload the bundle is available</param>
         private static void UploadBundle(Action<WWW> onUploadBundleResponseAction)
         {
@@ -110,11 +110,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var uploadEndpoint =
                     string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
                         cloudStorageBucketName, cloudStorageFileName);
-                var bytes = File.ReadAllBytes(assetBundleFileName);
-                var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
-                headers.Add("Content-Type", "application/octet-stream");
-                var request = HttpRequestHelper.SendHttpPostRequest(uploadEndpoint, bytes, headers);
+                var request = SendAuthenticatedPostRequest(uploadEndpoint, File.ReadAllBytes(assetBundleFileName),
+                    "application/octet-stream", token.access_token);
                 WwwRequestInProgress.TrackProgress(request,
                     "Uploading asset bundle to google cloud storage", onUploadBundleResponseAction);
             }
@@ -129,7 +126,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// handler on the HTTP response.
         /// Will first update access token before making this function call if valid access token is not present.
         /// </summary>
-        /// <param name="onCreateBucketHandler">An action to be invoked on the www instance holding the HTTP request
+        /// <param name="onCreateBucketResponseAction">An action to be invoked on the www instance holding the HTTP request
         /// once the response to the request to create bucket is available</param>
         private static void CreateBucket(Action<WWW> onCreateBucketResponseAction)
         {
@@ -145,12 +142,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 };
 
                 var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
-                var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
-                headers.Add("Content-Type", "application/json");
-                var request = HttpRequestHelper.SendHttpPostRequest(createBucketEndPoint, jsonBytes, headers);
-
-                WwwRequestInProgress.TrackProgress(request,
+                var createBucketWww = SendAuthenticatedPostRequest(createBucketEndPoint, jsonBytes, "application/json",
+                    token.access_token);
+                WwwRequestInProgress.TrackProgress(createBucketWww,
                     string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
                     onCreateBucketResponseAction);
             }
@@ -177,13 +171,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
                     response.bucket, response.name);
                 var requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
-                var requestBytes = Encoding.UTF8.GetBytes(requestJsonContents);
-                var requestHeaders = new Dictionary<string, string>();
-                requestHeaders.Add("Authorization",
-                    string.Format("Bearer {0}", token.access_token));
-                requestHeaders.Add("Content-Type", "application/json");
-                var makeBundlePublicWww =
-                    HttpRequestHelper.SendHttpPostRequest(makePublicEndpoint, requestBytes, requestHeaders);
+                var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
+                    Encoding.UTF8.GetBytes(requestJsonContents), "application/json", token.access_token);
                 WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote asset bundle public",
                     onMakeBundlePublicResponseAction);
             }
@@ -243,6 +232,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 AccessTokenGetter.UpdateAccessToken(() =>
                     VerifyBucketExistence(onBucketExistsResponseAction, onBucketDoesNotExistResponseAction));
             }
+        }
+
+        /// <summary>
+        /// Helps send an authenticated HTTP post request to Google Cloud Storage.
+        /// </summary>
+        /// <param name="endpoint">endpoint to which the request is going.</param>
+        /// <param name="content">Content bytes to be put in the body of the request.</param>
+        /// <param name="contentType">Type of content to be used in headers.</param>
+        /// <param name="accessToken">OAuth2 Access token to be used in the headers.</param>
+        /// <returns></returns>
+        private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType,
+            string accessToken)
+        {
+            var requestHeaders = new Dictionary<string, string>();
+            requestHeaders.Add("Authorization",
+                string.Format("Bearer {0}", accessToken));
+            requestHeaders.Add("Content-Type", contentType);
+            return HttpRequestHelper.SendHttpPostRequest(endpoint, content, requestHeaders);
         }
 
         /// <summary>
