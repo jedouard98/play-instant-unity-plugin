@@ -74,6 +74,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 Debug.Log("Asset bundle was uploaded to Google Cloud Storage.");
                 var response = JsonUtility.FromJson<UploadBundleJsonResponse>(uploadBundleWww.text);
+                // see https://cloud.google.com/storage/docs/access-public-data on accessing public cloud objects.
                 _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket,
                     response.name);
 
@@ -107,6 +108,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var assetBundleFileName = _config.assetBundleFileName;
                 var cloudStorageBucketName = _config.cloudStorageBucketName;
                 var cloudStorageFileName = _config.cloudStorageFileName;
+                // see https://cloud.google.com/storage/docs/uploading-objects on uploading objects.
                 var uploadEndpoint =
                     string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
                         cloudStorageBucketName, cloudStorageFileName);
@@ -134,6 +136,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (token != null)
             {
                 var credentials = OAuth2Credentials.GetCredentials();
+                // see https://cloud.google.com/storage/docs/creating-buckets on creating buckets.
                 var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
                     credentials.project_id);
                 var createBucketRequest = new CreateBucketRequest
@@ -168,6 +171,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
             {
+                // see https://cloud.google.com/storage/docs/access-control/making-data-public on making data public.
                 var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
                     response.bucket, response.name);
                 var requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
@@ -199,6 +203,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
             {
+                // see https://cloud.google.com/storage/docs/getting-bucket-information on getting bucket information.
                 var bucketInfoUrl =
                     string.Format("https://www.googleapis.com/storage/v1/b/{0}", _config.cloudStorageBucketName);
                 var headers = new Dictionary<string, string>();
