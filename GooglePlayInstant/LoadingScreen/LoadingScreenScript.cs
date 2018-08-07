@@ -54,8 +54,7 @@ namespace GooglePlayInstant.LoadingScreen
             else
             {
                 var sceneLoadOperation = SceneManager.LoadSceneAsync(_bundle.GetAllScenePaths()[0]);
-                yield return LoadingBar.UpdateLoadingBar(sceneLoadOperation,
-                    LoadingBar.SceneLoadingMaxWidthPercentage);
+                yield return LoadingBar.UpdateLoadingBar(sceneLoadOperation, LoadingBar.SceneLoadingMaxWidthPercentage);
             }
         }
 
