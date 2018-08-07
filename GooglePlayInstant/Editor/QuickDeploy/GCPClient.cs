@@ -281,6 +281,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// A representation of a JSON response received once the asset bundle has been successfully uploaded to
         /// Google cloud storage.
         /// </summary>
+#pragma warning disable CS0649
         [Serializable]
         private class UploadBundleJsonResponse
         {
