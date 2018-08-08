@@ -74,7 +74,6 @@ namespace GooglePlayInstant.LoadingScreen
             LoadingBar.SetPosition();
             LoadingBar.SetWidth();
             
-
             yield return LoadingBar.Update(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage);
 

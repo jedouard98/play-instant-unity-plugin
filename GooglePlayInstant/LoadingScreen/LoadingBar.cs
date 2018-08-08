@@ -119,7 +119,8 @@ namespace GooglePlayInstant.LoadingScreen
         {
             var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
 
-            loadingBarRectTransform.position = new Vector2(Screen.width / 2f, Screen.height * LoadingBarYAxisPercentage);
+            loadingBarRectTransform.position =
+                new Vector2(Screen.width / 2f, Screen.height * LoadingBarYAxisPercentage);
         }
 
         /// <summary>
@@ -132,7 +133,6 @@ namespace GooglePlayInstant.LoadingScreen
                 GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
             var loadingBarOutlineRectTransform =
                 GameObject.Find(LoadingBarOutlineGameObjectName).GetComponent<RectTransform>();
-
 
             loadingBarRectTransform.sizeDelta =
                 new Vector2(Screen.width * LoadingBarWidthPercentage,
