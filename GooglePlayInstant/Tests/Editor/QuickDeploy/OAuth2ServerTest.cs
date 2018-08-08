@@ -28,117 +28,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class OAuth2ServerTest
     {
-        private const int RequestResponseThresholdInMillis = 50;
         private const string AddressPrefix = "http://localhost:5000/";
 
-        /// <summary>
-        /// Tests that the server starts listening for requests right after it is started.
-        /// </summary>
+
         [Test]
-        public void TestServerIsListeningAfterStart()
+        public void TestGetAuthorizationResponse()
         {
-            var server = new OAuth2Server(null);
-            server.Start();
-            Assert.IsTrue(server._httpListener.IsListening, "Server must be listening after a call to server.Start().");
-            server.Stop();
-        }
-
-        /// <summary>
-        /// Tests that the server stops running and disposes its listener after responding to the first request.
-        /// </summary>
-        [Test]
-        public void TestServerStopsAndListenerIsDisposedAfterFirstRequest()
-        {
-            var server = new OAuth2Server(null);
-
-            // Test with valid request
-            server.Start();
-            new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, "code", "codeValue"));
-            Thread.Sleep(RequestResponseThresholdInMillis);
-            Assert.IsNull(server._httpListener);
-
-            // Test invalid request
-            server.Start();
-            new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, "notCode", "someValue"));
-            Thread.Sleep(RequestResponseThresholdInMillis);
-            Assert.IsNull(server._httpListener);
-        }
-
-        /// <summary>
-        /// Tests that the server provides an non-empty and consistent endpoint after being started.
-        /// </summary>
-        [Test]
-        public void TestServerProvidesCorrectAndConsistentEndpointAfterStart()
-        {
-            var server = new OAuth2Server(null);
-            server.Start();
-
-            var endPointResponses = new List<string>();
-            for (var tries = 0; tries < 10; tries++)
-            {
-                endPointResponses.Add(server.CallbackEndpoint);
-            }
-
-            Assert.IsTrue(endPointResponses.TrueForAll(endpoint => !string.IsNullOrEmpty(endpoint)),
-                "Server should not have empty endpoint after being started.");
-            Assert.IsTrue(endPointResponses.TrueForAll(endpoint => endPointResponses.TrueForAll(endpoint.Equals)),
-                "Server should have consistent endpoint after being started.");
-        }
-
-        /// <summary>
-        /// Tests that the server behaves correctly on valid requests containing code responses. Check
-        /// OAuth2Server.UriContainsValidQueryParams(Uri) for policies that define a valid request.
-        /// </summary>
-        [Test]
-        public void TestServerBehavesCorrectlyForValidCodeRequests()
-        {
-            KeyValuePair<string, string> receivedCode;
-            var server = new OAuth2Server(response => { receivedCode = response; });
-            server.Start();
-            KeyValuePair<string, string> sentCode = new KeyValuePair<string, string>("code", "codeValue");
-            var request =
-                new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, sentCode.Key, sentCode.Value));
-            Thread.Sleep(RequestResponseThresholdInMillis);
-            Assert.AreEqual(sentCode, receivedCode, "Expected received code to be the same as sent code.");
-            Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
-                string.Format("Expected response to be \"{0}\"", OAuth2Server.CloseTabText));
-        }
-
-        /// <summary>
-        /// Tests that the server behaves correctly as well for valid requests that contain error responses. Check
-        /// OAuth2Server.UriContainsValidQueryParams(Uri) for policies that define a valid request.
-        /// </summary>
-        [Test]
-        public void TestServerBehavesCorrectlyForValidErrorRequests()
-        {
-            KeyValuePair<string, string> receivedError;
-            var server = new OAuth2Server(response => { receivedError = response; });
-            server.Start();
-            KeyValuePair<string, string> sentError = new KeyValuePair<string, string>("error", "errorValue");
-            var request =
-                new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, sentError.Key, sentError.Value));
-            Thread.Sleep(RequestResponseThresholdInMillis);
-            Assert.AreEqual(sentError, receivedError, "Expected received code to be the same as sent code.");
-            Assert.AreEqual(OAuth2Server.CloseTabText, request.text,
-                string.Format("Expected response to be \"{0}\"", OAuth2Server.CloseTabText));
-        }
-
-        /// <summary>
-        /// Tests that the server behaves as expected by returning a "404 Not Found" error for requests that are
-        /// invalid.
-        /// </summary>
-        [Test]
-        public void TestServerBehavesCorrenctlyForInvalidRequests()
-        {
-            KeyValuePair<string, string> receivedCode = new KeyValuePair<string, string>("key", "value");
-            var server = new OAuth2Server(code => { receivedCode = code; });
-            server.Start();
-            var request = new WWW(string.Format("{0}?{1}={2}", server.CallbackEndpoint, "notCode", "someValue"));
-            Thread.Sleep(RequestResponseThresholdInMillis);
-            Assert.True(!string.IsNullOrEmpty(request.error) && request.error.StartsWith("404"),
-                "Result should come with error 404 error");
-            Assert.AreEqual(receivedCode, new KeyValuePair<string, string>("key", "value"),
-                "Response handler should not be invoked on invalid requests");
+            // TODO(audace): Write tests for Getting Authorization Response;
         }
 
         /// <summary>

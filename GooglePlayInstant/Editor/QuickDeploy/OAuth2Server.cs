@@ -39,6 +39,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     public class OAuth2Server
     {
         internal const string CloseTabText = "You may close this tab.";
+        internal const int ServerPort = 50000;
         internal HttpListener _httpListener;
         private string _callbackEndpoint;
 
@@ -66,16 +67,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Generates a random port from the range of eligible port numbers starting from 1024 to 65535 inclusive.
-        /// </summary>
-        internal static int GetRandomPort()
-        {
-            const int minimumPort = 1024;
-            const int maximumPort = 65535;
-            return new Random().Next(minimumPort, maximumPort);
-        }
-
-        /// <summary>
         /// Starts this server to make it listen for requests containing authorization code or error data that are
         /// forwarded from google's OAuth2 authorization url.
         ///
@@ -84,32 +75,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public void Start()
         {
-            // Pick one available port and listen from there.
-            while (true)
-            {
-                try
-                {
-                    var fullEndpoint =
-                        string.Format("http://localhost:{0}/{1}/", GetRandomPort(), Path.GetRandomFileName());
-                    _httpListener = new HttpListener();
-                    _httpListener.Prefixes.Add(fullEndpoint);
-                    _callbackEndpoint = fullEndpoint;
-                    _httpListener.Start();
-                    break;
-                }
-                // thrown when port/endpoint is busy
-                catch (HttpListenerException)
-                {
-                    if (_httpListener != null)
-                    {
-                        _httpListener.Close();
-                        // Set to null for garbage collection.
-                        _httpListener = null;
-                    }
-                }
-            }
+            _callbackEndpoint = string.Format("http://localhost:{0}/{1}/", ServerPort, Path.GetRandomFileName());
+            _httpListener = new HttpListener();
+            _httpListener.Prefixes.Add(_callbackEndpoint);
+            _httpListener.Start();
 
-            // Handle incoming requests with another thread.
             new Thread(() =>
             {
                 while (true)
@@ -120,7 +90,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Processes the object as an HttpListenerContext instancce and retrieves authorization response. Invokes
+        /// Processes the object as an HttpListenerContext instance and retrieves authorization response. Invokes
         /// the response handler on the response if response handler is not null, and responds to request with a
         /// string corresponding to a script that will close the browser.
         /// </summary>
@@ -128,37 +98,36 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private void ProcessContext(object o)
         {
             var context = o as HttpListenerContext;
-            context.Response.KeepAlive = false;
-            if (!UriContainsValidQueryParams(context.Request.Url))
-            {
-                context.Response.StatusCode = 404;
-                context.Response.Close();
-                Stop();
-                return;
-            }
-
-            KeyValuePair<string, string> responsePair;
-            foreach (var pair in GetQueryParamsFromUri(context.Request.Url))
-            {
-                if (string.Equals("code", pair.Key) || string.Equals("error", pair.Key))
-                {
-                    responsePair = pair;
-                    break;
-                }
-            }
+            var authorizationResponse = GetAuthorizationResponse(context.Request.Url);
 
             if (_responseHandler != null)
             {
-                _responseHandler(responsePair);
+                _responseHandler(authorizationResponse);
             }
 
-            var responseArray = Encoding.UTF8.GetBytes(CloseTabText);
+            context.Response.KeepAlive = false;
+            var responsebBytes = Encoding.UTF8.GetBytes(CloseTabText);
             var outputStream = context.Response.OutputStream;
-            outputStream.Write(responseArray, 0, responseArray.Length);
+            outputStream.Write(responsebBytes, 0, responsebBytes.Length);
             outputStream.Flush();
             outputStream.Close();
             context.Response.Close();
             Stop();
+        }
+
+        /// <summary>
+        /// Returns a key value pair corresponding to the authorization response sent from OAuth2 authorization page.
+        /// </summary>
+        /// <param name="uri">The uri of the incoming request</param>
+        /// <exception cref="ArgumentException">Exception thrown if the uri contains invalid params.</exception>
+        private static KeyValuePair<string, string> GetAuthorizationResponse(Uri uri)
+        {
+            if (!UriContainsValidQueryParams(uri))
+            {
+                throw new ArgumentException("Url query contains invalid parameters");
+            }
+
+            return GetQueryParamsFromUri(uri).ToArray()[0];
         }
 
         /// <summary>
