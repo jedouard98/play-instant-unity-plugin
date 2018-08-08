@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,6 +22,7 @@ using System.Threading;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 using Random = System.Random;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
@@ -39,23 +41,34 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
          *         - Contents of requests are query params, form contents, bytes, headers.
          */
 
+
+        [Test]
+        public void TestGetWwwForm()
+        {
+            var postParams = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
+            var form = HttpRequestHelper.GetWwwForm(postParams);
+            var formString = Encoding.UTF8.GetString(form.data);
+            Assert.AreEqual(postParams,
+                HttpRequestHelperTestHelper.GetDictFromUrlQuery(string.Format("?{0}", formString)));
+        }
+
         [Test]
         public void TestGetEndpointWithGetParams()
-        { 
-            //TODO(audace): Implement the test.
-            
-            HttpRequestHelper.GetEndpointWithGetParams(null, null);
+        {
+            var getParams = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
+            var endPointWithQuery = HttpRequestHelper.GetEndpointWithGetParams("http://localhost:5000", getParams);
+            Assert.AreEqual(getParams,
+                HttpRequestHelperTestHelper.GetDictFromUrlQuery(new Uri(endPointWithQuery).Query));
         }
+
 
         [Test]
         public void TestGetCombinedDictionary()
         {
             var form = new WWWForm();
-            var newHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(10);
+            var newHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
             var combinedDictionary = HttpRequestHelper.GetCombinedDictionary(form.headers, newHeaders);
             Assert.AreEqual(form.headers.Union(newHeaders).ToDictionary(s => s.Key, s => s.Value), combinedDictionary);
         }
-
-
     }
 }

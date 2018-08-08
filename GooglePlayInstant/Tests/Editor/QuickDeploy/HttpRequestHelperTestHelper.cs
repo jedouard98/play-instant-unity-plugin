@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.SocialPlatforms;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -26,12 +27,12 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         /// Get a dictionary with a given number of key-value pairs.
         /// </summary>
         /// <param name="pairsNumber">The number of key-value pairs that the returned dictionary should contain.</param>
-        internal static Dictionary<string, string> GetKeyValueDict(int pairsNumber)
+        internal static Dictionary<string, string> GetKeyValueDict(int keyStart, int valueStart, int count)
         {
             var getParams = new Dictionary<string, string>();
-            for (var x = 0; x < pairsNumber; x++)
+            for (var x = 0; x < count; x++)
             {
-                getParams.Add(string.Format("key{0}", x), string.Format("value{0}", x));
+                getParams.Add(string.Format("key{0}", keyStart + x), string.Format("value{0}", valueStart + x));
             }
 
             return getParams;

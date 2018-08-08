@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
@@ -61,8 +60,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             return SendHttpPostRequest(endpoint, postParams != null ? form.data : null,
                 GetCombinedDictionary(form.headers, postHeaders));
         }
+
         /// <summary>
-        /// Returns a WWWform containing the params to use for a POST request.
+        /// Returns a WWWform containing the body params to use for a POST request.
         /// </summary>
         internal static WWWForm GetWwwForm(Dictionary<string, string> postParams)
         {
