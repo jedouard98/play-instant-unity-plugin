@@ -47,7 +47,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         /// <summary>
         /// Send a general POST request to the provided endpoint, along with the data provided in the form and headers.
-        /// parameters
+        /// parameters.
         /// </summary>
         /// <param name="endpoint">Endpoint to which the data should be sent.</param>
         /// <param name="postParams">A set of key-value pairs to be added to the request body.</param>
@@ -81,7 +81,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
-        /// <param name="endpoint">The endpoint where the GET request should be sent. Must have no query params</param>
+        /// <param name="endpoint">The endpoint where the GET request should be sent. Must have no query params.</param>
         /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET
         /// parameters.</param>
         /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
@@ -112,8 +112,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Combine two dictionaries into a single dictionary. Values in the second argument override values of the
-        /// first argument for every key that is present to both dictionaries.
+        /// Combines two dictionaries into a single dictionary. Values in the second argument override values of the
+        /// first argument for every key that is present in both dictionaries.
         /// </summary>
         internal static Dictionary<string, string> GetCombinedDictionary(Dictionary<string, string> firstDict,
             Dictionary<string, string> secondDict)

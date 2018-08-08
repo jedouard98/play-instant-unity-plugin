@@ -12,24 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     /// <summary>
-    /// Contains helper methods for Quick Deploy http helper tests.
+    /// Contains helper methods for HttpRequestHelperTest class.
     /// </summary>
     public static class HttpRequestHelperTestHelper
     {
         public delegate string KeyToValueMapper(string key);
-        
+
         /// <summary>
-        /// Get a dictionary with a given number of key-value pairs.
+        /// Generate a dictionary from given keys and mapper function.
         /// </summary>
-        /// <param name="pairsNumber">The number of key-value pairs that the returned dictionary should contain.</param>
+        /// <param name="keys">An array of keys to be included in the dictionary.</param>
+        /// <param name="keyToValueMapper">A function to be applied to the keys to generate values from a new dictionary.</param>
         internal static Dictionary<string, string> GetKeyValueDict(string[] keys, KeyToValueMapper keyToValueMapper)
         {
             var getParams = new Dictionary<string, string>();
@@ -37,6 +35,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             {
                 getParams.Add(key, keyToValueMapper(key));
             }
+
             return getParams;
         }
 
@@ -55,19 +54,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             }
 
             return getParams;
-        }
-
-        /// <summary>
-        /// Get a url query from a dictionary.
-        /// </summary>
-        /// <param name="paramsDict">A dictionary corresponding to key-value params that the url query should contain.
-        /// </param>
-        /// <returns>A url query string starting with "?" generated from the given dictionary.
-        /// Example: "?key1=value1&key2=value2</returns>
-        internal static string GetUrlQueryFromDict(Dictionary<string, string> paramsDict)
-        {
-            return "?" + string.Join("&",
-                       paramsDict.Select(kvp => string.Format("{0}={1}", kvp.Key, kvp.Value)).ToArray());
         }
     }
 }

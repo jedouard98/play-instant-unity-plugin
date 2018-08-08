@@ -66,31 +66,31 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"A", "B", "C", "D"}, key => key.ToLower());
             var thirdDict = HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "C", "D"}, key => key);
 
-            var firstAndSecond = HttpRequestHelper.GetCombinedDictionary(secondDict, firstDict);
-            Assert.AreEqual(8, firstAndSecond.Count);
-            Assert.AreEqual(secondDict.Union(firstDict).ToDictionary(s => s.Key, s => s.Value), firstAndSecond);
+            var firstAndSecondDict = HttpRequestHelper.GetCombinedDictionary(secondDict, firstDict);
+            Assert.AreEqual(8, firstAndSecondDict.Count);
+            Assert.AreEqual(secondDict.Union(firstDict).ToDictionary(s => s.Key, s => s.Value), firstAndSecondDict);
 
             // Case 2: Dictionaries share some keys. Keys in the second dictionary override keys in the first.
 
-            var firstAndThird = HttpRequestHelper.GetCombinedDictionary(firstDict, thirdDict);
-            Assert.AreEqual(6, firstAndThird.Count);
+            var firstAndThirdDict = HttpRequestHelper.GetCombinedDictionary(firstDict, thirdDict);
+            Assert.AreEqual(6, firstAndThirdDict.Count);
 
             // Values for keys "a" and "b" should be from thirdDict.
             foreach (var key in new[] {"a", "b"})
             {
-                Assert.AreEqual(thirdDict[key], firstAndThird[key]);
+                Assert.AreEqual(thirdDict[key], firstAndThirdDict[key]);
             }
 
             // Values for keys "c" and "d" should be from firstDict.
             foreach (var key in new[] {"c", "d"})
             {
-                Assert.AreEqual(firstDict[key], firstAndThird[key]);
+                Assert.AreEqual(firstDict[key], firstAndThirdDict[key]);
             }
 
             // Values for keys "C" and "D" should be from thirdDict.
             foreach (var key in new[] {"C", "D"})
             {
-                Assert.AreEqual(thirdDict[key], firstAndThird[key]);
+                Assert.AreEqual(thirdDict[key], firstAndThirdDict[key]);
             }
         }
     }
