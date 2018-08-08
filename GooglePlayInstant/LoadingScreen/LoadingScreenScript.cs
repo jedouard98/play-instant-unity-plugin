@@ -89,6 +89,7 @@ namespace GooglePlayInstant.LoadingScreen
                     Debug.LogFormat("Attempt #{0} at downloading AssetBundle...", _assetBundleRetrievalAttemptCount);
                     yield return new WaitForSeconds(2);
 
+                    //TODO: revisit this methodology of setting the loading bar
                     LoadingBar.Reset();
 
                     yield return GetAssetBundle(assetBundleUrl);
