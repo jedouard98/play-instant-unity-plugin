@@ -42,10 +42,10 @@ namespace GooglePlayInstant.LoadingScreen
         private const int LoadingBarHeight = 30;
 
         // Loading bar width as a percentage canvas object's automatic size
-        private const float LoadingBarWidthPercentage = .5f;
+        private const float LoadingBarWidthPercentage = .7f;
 
-        // Loading bar y axis placement as a percentage of canvas object's automatic y value
-        private const float LoadingBarYAxisPercentage = 2f;
+        // Loading bar y axis placement as a percentage of the screen height. 
+        private const float LoadingBarYAxisPercentage = .3f;
 
         // Names for the gameobject components
         private const string LoadingBarGameObjectName = "Loading Bar";
@@ -53,7 +53,6 @@ namespace GooglePlayInstant.LoadingScreen
         private const string LoadingBarFillGameObjectName = "Loading Bar Fill";
 
 #if UNITY_EDITOR
-        // TODO: fix persistance of loading bar
         /// <summary>
         /// Creates a loading bar component on the specified loading screen game object's bottom half. Consists of
         /// a white rounded border, with a colored loading bar fill in the middle.
@@ -63,22 +62,6 @@ namespace GooglePlayInstant.LoadingScreen
             var loadingBarGameObject = new GameObject(LoadingBarGameObjectName);
             loadingBarGameObject.AddComponent<RectTransform>();
             loadingBarGameObject.transform.SetParent(loadingScreenGameObject.transform);
-
-            var loadingBarRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-
-            var loadingScreenRectTransform = loadingScreenGameObject.GetComponent<RectTransform>();
-
-            // Set the size of the loading bar. LoadingBarWidthPercentage gives loading bar padding from the edges
-            // of the viewing device
-            loadingBarRectTransform.sizeDelta =
-                new Vector2(loadingScreenRectTransform.sizeDelta.x * LoadingBarWidthPercentage,
-                    LoadingBarHeight);
-
-            // Set the position of the loading bar
-            loadingBarRectTransform.position =
-                new Vector2(loadingScreenRectTransform.position.x,
-                    loadingScreenRectTransform.position.y -
-                    LoadingBarYAxisPercentage * loadingScreenRectTransform.position.y);
 
             SetLoadingBarOutline(loadingBarGameObject);
             SetLoadingBarFill(loadingBarGameObject);
@@ -130,10 +113,57 @@ namespace GooglePlayInstant.LoadingScreen
 #endif
 
         /// <summary>
+        /// Sets the position of the loading bar as a function of the screen height and LoadingBarYAxisPercentage constant.
+        /// </summary>
+        public static void SetPosition()
+        {
+            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
+
+            loadingBarRectTransform.position = new Vector2(Screen.width / 2f, Screen.height * LoadingBarYAxisPercentage);
+        }
+
+        /// <summary>
+        /// Sets the length of the loading bar and its children as a function of the screen width and LoadingBarWidthPercentage constant.
+        /// </summary>
+        public static void SetWidth()
+        {
+            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
+            var loadingBarFillRectTransform =
+                GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
+            var loadingBarOutlineRectTransform =
+                GameObject.Find(LoadingBarOutlineGameObjectName).GetComponent<RectTransform>();
+
+
+            loadingBarRectTransform.sizeDelta =
+                new Vector2(Screen.width * LoadingBarWidthPercentage,
+                    LoadingBarHeight);
+
+            loadingBarOutlineRectTransform.sizeDelta =
+                new Vector2(loadingBarRectTransform.sizeDelta.x,
+                    loadingBarRectTransform.sizeDelta.y);
+
+            loadingBarFillRectTransform.sizeDelta =
+                new Vector2(0, loadingBarRectTransform.sizeDelta.y - LoadingBarFillPadding);
+        }
+
+        /// <summary>
+        /// Resets the loading bar back to 0 percent.
+        /// </summary>
+        public static void Reset()
+        {
+            var loadingBarFillRectTransform =
+                GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
+
+            loadingBarFillRectTransform.sizeDelta =
+                new Vector2(0, loadingBarFillRectTransform.sizeDelta.y);
+        }
+
+
+        /// <summary>
         /// Updates a loading bar by the progress made by an asynchronous operation up to a specific percentage of
         /// the loading bar. 
         /// </summary>
-        public static IEnumerator UpdateLoadingBar(AsyncOperation operation, float percentageOfLoadingBar)
+        public static IEnumerator Update(AsyncOperation operation, float percentageOfLoadingBar)
         {
             var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
 

@@ -33,6 +33,8 @@ namespace GooglePlayInstant.LoadingScreen
 
         private IEnumerator Start()
         {
+//            Screen.orientation = ScreenOrientation.Portrait;
+
             var loadingScreenConfigJsonTextAsset =
                 Resources.Load<TextAsset>("LoadingScreenConfig");
 
@@ -54,12 +56,13 @@ namespace GooglePlayInstant.LoadingScreen
             else
             {
                 var sceneLoadOperation = SceneManager.LoadSceneAsync(_bundle.GetAllScenePaths()[0]);
-                yield return LoadingBar.UpdateLoadingBar(sceneLoadOperation, LoadingBar.SceneLoadingMaxWidthPercentage);
+
+                yield return LoadingBar.Update(sceneLoadOperation, LoadingBar.SceneLoadingMaxWidthPercentage);
             }
         }
 
         private IEnumerator GetAssetBundle(string assetBundleUrl)
-        {
+        {   
 #if UNITY_2018_1_OR_NEWER
             var webRequest = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.SendWebRequest();
@@ -70,7 +73,11 @@ namespace GooglePlayInstant.LoadingScreen
             var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.Send();
 #endif
-            yield return LoadingBar.UpdateLoadingBar(assetbundleDownloadOperation,
+            LoadingBar.SetPosition();
+            LoadingBar.SetWidth();
+            
+
+            yield return LoadingBar.Update(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage);
 
 #if UNITY_2017_1_OR_NEWER
@@ -84,6 +91,9 @@ namespace GooglePlayInstant.LoadingScreen
                     _assetBundleRetrievalAttemptCount++;
                     Debug.LogFormat("Attempt #{0} at downloading AssetBundle...", _assetBundleRetrievalAttemptCount);
                     yield return new WaitForSeconds(2);
+
+                    LoadingBar.Reset();
+
                     yield return GetAssetBundle(assetBundleUrl);
                 }
                 else
