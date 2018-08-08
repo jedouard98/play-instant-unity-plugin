@@ -13,49 +13,43 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
-using System.Threading;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
-using Random = System.Random;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     /// <summary>
-    /// Tests for Http Request Helper methods.
+    /// Tests for HttpRequestHelper class methods.
     /// </summary>
     [TestFixture]
     public class HttpRequestHelperTest
     {
         /*
          * Testing strategy:
-         *     - Use a local server to inspect contents of the requests sent.
-         *     - Partition inputs as follows:
-         *         - Method tested is SendHttpGetRequest, SendHttpPostRequest, other helper methods.
-         *         - Contents of requests are query params, form contents, bytes, headers.
+         *     - Test helper methods that manipulate data that is fed into instantiation of WWW instances.
+         *     - Exclude methods that instantiate the WWW class from unit tests to avoid sending HTTP requests.
          */
-
 
         [Test]
         public void TestGetWwwForm()
         {
-            var postParams = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
+            var postParams =
+                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => string.Concat(key, key));
             var form = HttpRequestHelper.GetWwwForm(postParams);
-            var formString = Encoding.UTF8.GetString(form.data);
             Assert.AreEqual(postParams,
-                HttpRequestHelperTestHelper.GetDictFromUrlQuery(string.Format("?{0}", formString)));
+                HttpRequestHelperTestHelper.GetDictFromUrlQuery(string.Format("?{0}",
+                    Encoding.UTF8.GetString(form.data))));
         }
 
         [Test]
         public void TestGetEndpointWithGetParams()
         {
-            var getParams = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
+            var getParams =
+                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => string.Concat(key, key));
             var endPointWithQuery = HttpRequestHelper.GetEndpointWithGetParams("http://localhost:5000", getParams);
             Assert.AreEqual(getParams,
                 HttpRequestHelperTestHelper.GetDictFromUrlQuery(new Uri(endPointWithQuery).Query));
@@ -65,10 +59,39 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestGetCombinedDictionary()
         {
-            var form = new WWWForm();
-            var newHeaders = HttpRequestHelperTestHelper.GetKeyValueDict(0, 0, 10);
-            var combinedDictionary = HttpRequestHelper.GetCombinedDictionary(form.headers, newHeaders);
-            Assert.AreEqual(form.headers.Union(newHeaders).ToDictionary(s => s.Key, s => s.Value), combinedDictionary);
+            // Case 1: Dictionaries have mutually exclusive sets of keys.
+            var firstDict =
+                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => key.ToUpper());
+            var secondDict =
+                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"A", "B", "C", "D"}, key => key.ToLower());
+            var thirdDict = HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "C", "D"}, key => key);
+
+            var firstAndSecond = HttpRequestHelper.GetCombinedDictionary(secondDict, firstDict);
+            Assert.AreEqual(8, firstAndSecond.Count);
+            Assert.AreEqual(secondDict.Union(firstDict).ToDictionary(s => s.Key, s => s.Value), firstAndSecond);
+
+            // Case 2: Dictionaries share some keys. Keys in the second dictionary override keys in the first.
+
+            var firstAndThird = HttpRequestHelper.GetCombinedDictionary(firstDict, thirdDict);
+            Assert.AreEqual(6, firstAndThird.Count);
+
+            // Values for keys "a" and "b" should be from thirdDict.
+            foreach (var key in new[] {"a", "b"})
+            {
+                Assert.AreEqual(thirdDict[key], firstAndThird[key]);
+            }
+
+            // Values for keys "c" and "d" should be from firstDict.
+            foreach (var key in new[] {"c", "d"})
+            {
+                Assert.AreEqual(firstDict[key], firstAndThird[key]);
+            }
+
+            // Values for keys "C" and "D" should be from thirdDict.
+            foreach (var key in new[] {"C", "D"})
+            {
+                Assert.AreEqual(thirdDict[key], firstAndThird[key]);
+            }
         }
     }
 }

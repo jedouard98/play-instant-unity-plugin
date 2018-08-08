@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
-using UnityEngine.SocialPlatforms;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -23,18 +24,19 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     /// </summary>
     public static class HttpRequestHelperTestHelper
     {
+        public delegate string KeyToValueMapper(string key);
+        
         /// <summary>
         /// Get a dictionary with a given number of key-value pairs.
         /// </summary>
         /// <param name="pairsNumber">The number of key-value pairs that the returned dictionary should contain.</param>
-        internal static Dictionary<string, string> GetKeyValueDict(int keyStart, int valueStart, int count)
+        internal static Dictionary<string, string> GetKeyValueDict(string[] keys, KeyToValueMapper keyToValueMapper)
         {
             var getParams = new Dictionary<string, string>();
-            for (var x = 0; x < count; x++)
+            foreach (var key in keys)
             {
-                getParams.Add(string.Format("key{0}", keyStart + x), string.Format("value{0}", valueStart + x));
+                getParams.Add(key, keyToValueMapper(key));
             }
-
             return getParams;
         }
 
