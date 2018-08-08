@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -44,31 +45,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var newHeaders = GetCombinedDictionary(form.headers, postHeaders);
             return new WWW(endpoint, postData, newHeaders);
         }
-
-        /// <summary>
-        /// Send a general POST request to the provided endpoint, along with the data provided in the form and headers.
-        /// parameters
-        /// </summary>
-        /// <param name="endpoint">Endpoint to which the data should be sent.</param>
-        /// <param name="postForm">A set of key-value pairs to be added to the request body.</param>
-        /// <param name="postHeaders"> A set of key-value pairs to be added to the request headers.</param>
-        /// <returns>A reference to the WWW instance representing the request.</returns>
-        public static WWW SendHttpPostRequest(string endpoint, Dictionary<string, string> postForm,
-            Dictionary<string, string> postHeaders)
-        {
-            var form = new WWWForm();
-            if (postForm != null)
-            {
-                foreach (var pair in postForm)
-                {
-                    form.AddField(pair.Key, pair.Value);
-                }
-            }
-
-            return SendHttpPostRequest(endpoint, postForm != null ? form.data : null,
-                GetCombinedDictionary(form.headers, postHeaders));
-        }
-
+        
         /// <summary>
         /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
         /// </summary>
@@ -80,6 +57,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
             Dictionary<string, string> getHeaders)
         {
+            return new WWW(GetEndpointWithGetParams(endpoint, getParams), null,
+                GetCombinedDictionary(new WWWForm().headers, getHeaders));
+        }
+        
+        /// <summary>
+        /// Combines endpoint with GET params and returns the result.
+        /// </summary>
+        internal static string GetEndpointWithGetParams(string endpoint, Dictionary<string, string> getParams)
+        {
             var uriBuilder = new UriBuilder(endpoint);
             if (getParams != null)
             {
@@ -88,9 +74,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         .ToArray());
             }
 
-            var form = new WWWForm();
-            var newHeaders = GetCombinedDictionary(form.headers, getHeaders);
-            return new WWW(uriBuilder.ToString(), null, newHeaders);
+            return uriBuilder.ToString();
         }
 
         /// <summary>
