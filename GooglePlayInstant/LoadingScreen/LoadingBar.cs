@@ -41,7 +41,7 @@ namespace GooglePlayInstant.LoadingScreen
 
         private const int LoadingBarHeight = 30;
 
-        // Loading bar width as a percentage canvas object's automatic size
+        // Loading bar width as a percentage screen width.
         private const float LoadingBarWidthPercentage = .7f;
 
         // Loading bar y axis placement as a percentage of the screen height. 
