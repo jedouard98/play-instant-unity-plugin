@@ -29,7 +29,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
-        public const string PlayInstantCanvasName = "PlayInstantCanvas";
+        private const string PlayInstantCanvasName = "Play Instant Canvas";
 
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 

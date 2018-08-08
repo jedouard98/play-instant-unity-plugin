@@ -33,8 +33,6 @@ namespace GooglePlayInstant.LoadingScreen
 
         private IEnumerator Start()
         {
-//            Screen.orientation = ScreenOrientation.Portrait;
-
             var loadingScreenConfigJsonTextAsset =
                 Resources.Load<TextAsset>("LoadingScreenConfig");
 
