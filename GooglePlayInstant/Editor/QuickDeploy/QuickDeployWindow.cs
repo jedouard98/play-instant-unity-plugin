@@ -200,7 +200,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 else
                 {
-                    AssetBundleVerifierWindow.ShowWindow();
+                    AssetBundleVerifierWindow.ShowWindow(_assetBundleUrl);
                 }
             }
 
