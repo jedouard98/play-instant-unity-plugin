@@ -44,13 +44,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string LoadingScreenErrorTitle = "Creating Loading Scene Error";
         private const string OkButtonText = "OK";
 
+        // Local copy of the fields from QuickDeployConfig.Config to track unsaved changes.
         private string _assetBundleFileName;
         private string _cloudStorageBucketName;
         private string _cloudStorageFileName;
         private string _cloudCredentialsFileName;
-
         private string _assetBundleUrl;
-
         private string _apkFileName;
 
         public static void ShowWindow(ToolBarSelectedButton select)
@@ -186,8 +185,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl,
-                GUILayout.MinWidth(FieldMinWidth));
+            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
@@ -259,9 +257,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _apkFileName = EditorGUILayout.TextField(_apkFileName, GUILayout.MinWidth(FieldMinWidth));
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                _apkFileName = EditorUtility.SaveFilePanel("Choose file name and location", "",
-                    "base.apk",
-                    "apk");
+                _apkFileName = EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
             }
 
             EditorGUILayout.EndHorizontal();
