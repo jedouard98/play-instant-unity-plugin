@@ -161,7 +161,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             return result;
         }
-        
+
         /// <summary>
         /// Stops the server. A future call of the Start() method on this instance will restart this server at a
         /// different endpoint.
