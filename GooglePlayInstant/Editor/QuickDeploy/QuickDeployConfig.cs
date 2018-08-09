@@ -36,16 +36,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Commit the current state of quick deploy configurations to persistent storage.
         /// </summary>
-        public static void SaveConfiguration(string assetBundleFileName, string cloudStorageBucketName,
-            string cloudStorageFileName, string cloudCredentialsFileName, string assetBundleUrl, string apkFileName)
+        public static void SaveConfiguration()
         {
-            Config.assetBundleFileName = assetBundleFileName;
-            Config.cloudStorageBucketName = cloudStorageBucketName;
-            Config.cloudStorageFileName = cloudStorageFileName;
-            Config.cloudCredentialsFileName = cloudCredentialsFileName;
-            Config.assetBundleUrl = assetBundleUrl;
-            Config.apkFileName = apkFileName;
-            
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
         }
 
