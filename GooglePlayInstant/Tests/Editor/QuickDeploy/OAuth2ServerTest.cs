@@ -14,64 +14,81 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     /// <summary>
-    /// A test class for OAuth2Server
+    /// Contains unit tests for OAuth2Server methods.
     /// </summary>
     [TestFixture]
     public class OAuth2ServerTest
     {
-        private const string AddressPrefix = "http://localhost:5000/";
+        // Testing strategy:
+        //     - Test methods that do not require starting the server.
+        //     - TODO: Implement E2E tests to ensure that the server handles requests as expected.
 
+        private const string AddressPrefix = "http://localhost:5000/";
 
         [Test]
         public void TestGetAuthorizationResponse()
         {
-            // TODO(audace): Write tests for Getting Authorization Response;
+            var someString = Path.GetRandomFileName();
+            // response is code
+            var codeResponse =
+                OAuth2Server.GetAuthorizationResponse(new Uri(string.Format("{0}?code={1}", AddressPrefix,
+                    someString)));
+            Assert.AreEqual(new KeyValuePair<string, string>("code", someString), codeResponse,
+                "Expected valid code response");
+
+            // response is error
+            var errorResponse =
+                OAuth2Server.GetAuthorizationResponse(new Uri(string.Format("{0}?error={1}", AddressPrefix,
+                    someString)));
+            Assert.AreEqual(new KeyValuePair<string, string>("error", someString), errorResponse,
+                "Expected invalid error response");
+
+            // respose is invalid
+            var invalidUrl = new Uri(string.Format("{0}?someKey=someValue", AddressPrefix));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidUrl),
+                "Expected ArgumentException");
+            LogAssert.Expect(LogType.Error, "Uri query contains invalid params");
         }
 
-        /// <summary>
-        /// Tests the helper method that evaluates request query params with respect to defined policies to determine
-        /// whether the request is valid.
-        /// Check OAuth2Server.UriContainsValidQueryParams(Uri) for policies that define a valid request.
-        /// </summary>
         [Test]
         public void TestUriContainsValidParams()
         {
-            const string PolicyNumberOneText =
-                "Uri query must include exactly one of either \"code\" or \"error\" as keys.";
+            const string codeOrErrorKeyMustBePresentText =
+                "Uri query must include either \"code\" or \"error\" as keys.";
 
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithCode),
-                PolicyNumberOneText);
+                codeOrErrorKeyMustBePresentText);
             var uriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(uriWithError),
-                "query with just \"error\" as param key should be valid.");
+                codeOrErrorKeyMustBePresentText);
 
 
-            const string PolicyNumberTwoText = "\"code\" and \"error\" cannot be present at the same time.";
+            const string codeAndErrorCannotBePresentText = "\"code\" and \"error\" cannot be present at the same time.";
             var invalidUriWithCodeAndError =
                 new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
-                PolicyNumberTwoText);
+                codeAndErrorCannotBePresentText);
 
-            const string PolicyNumberThreeText =
+            const string noOtherKeysCanBePresentText =
                 "No other keys apart from \"code\" and \"error\" are allowed.";
             var invalidUriWithOtherKeys =
                 new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys), PolicyNumberThreeText);
+            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys),
+                noOtherKeysCanBePresentText);
         }
 
-        /// <summary>
-        /// Tests the helper method that reads the uri and returns query params contained in the URI.
-        /// </summary>
         [Test]
         public void TestGetQueryParamsFromUri()
         {

@@ -20,6 +20,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -28,7 +29,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// <summary>
     /// A class representing a server that provides an endpoint to use for getting authorization code from Google's
     /// OAuth2 API's authorization page. On that page, the user grants the application to access their data on Google
-    /// Cloud platform. The server will start running at a certain endpoint on a call to Start(). The server announces
+    /// Cloud platform. The server attempt to open and start listening at a fixed port. The server announces
     /// its chosen endpoint with the CallbackEndpoint property. This server will run until it receives the first
     /// request, which it will process to retrieve the authorization response and handle the by invoking on the response
     /// the handler passed to the server during instatiation. The server will then stop listening for further requests.
@@ -38,12 +39,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public class OAuth2Server
     {
-        internal const string CloseTabText = "You may close this tab.";
-        internal const int ServerPort = 50000;
-        internal HttpListener _httpListener;
+        private const string CloseTabText = "You may close this tab.";
+        private const int ServerPort = 2806;
+        private HttpListener _httpListener;
         private string _callbackEndpoint;
 
-        private readonly Action<KeyValuePair<string, string>> _responseHandler;
+        private readonly Action<KeyValuePair<string, string>> _onResponseAction;
 
         /// <summary>
         /// An endpoint that on which the server is listening.
@@ -57,13 +58,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// An instance of a server that will run locally to retrieve authorization code. The server will stop running
         /// once the first response gets received.
         /// </summary>
-        /// <param name="responseHandler">An action to be invoked on the key-value pair representing the first
+        /// <param name="onResponseAction">An action to be invoked on the key-value pair representing the first
         /// response that will be caught by the server. Note that that the invocation of this handler will not be done
         /// on the main thread, therefore the handler should only run operations that can be run on the main thread.
         /// </param>
-        public OAuth2Server(Action<KeyValuePair<string, string>> responseHandler)
+        public OAuth2Server(Action<KeyValuePair<string, string>> onResponseAction)
         {
-            _responseHandler = responseHandler;
+            _onResponseAction = onResponseAction;
         }
 
         /// <summary>
@@ -80,31 +81,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _httpListener.Prefixes.Add(_callbackEndpoint);
             _httpListener.Start();
 
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    ThreadPool.QueueUserWorkItem(ProcessContext, _httpListener.GetContext());
-                }
-            }).Start();
+            // Server will only respond to the first request, therefore one new thread should handle it just fine.
+            new Thread(() => { ProcessContext(_httpListener.GetContext()); }).Start();
         }
 
         /// <summary>
-        /// Processes the object as an HttpListenerContext instance and retrieves authorization response. Invokes
-        /// the response handler on the response if response handler is not null, and responds to request with a
-        /// string corresponding to a script that will close the browser.
+        /// Processes the object as an HttpListenerContext instance and retrieves authorization response. Invokes the
+        /// response handler action on the response, and responds to request with a string asking the user to close tab.
         /// </summary>
-        /// <param name="o"></param>
-        private void ProcessContext(object o)
+        private void ProcessContext(HttpListenerContext context)
         {
-            var context = o as HttpListenerContext;
             var authorizationResponse = GetAuthorizationResponse(context.Request.Url);
-
-            if (_responseHandler != null)
-            {
-                _responseHandler(authorizationResponse);
-            }
-
+            _onResponseAction(authorizationResponse);
             context.Response.KeepAlive = false;
             var responsebBytes = Encoding.UTF8.GetBytes(CloseTabText);
             var outputStream = context.Response.OutputStream;
@@ -117,14 +105,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         /// <summary>
         /// Returns a key value pair corresponding to the authorization response sent from OAuth2 authorization page.
+        /// Logs error message and throws ArgumentException if the uri contains invalid params.
         /// </summary>
         /// <param name="uri">The uri of the incoming request</param>
         /// <exception cref="ArgumentException">Exception thrown if the uri contains invalid params.</exception>
-        private static KeyValuePair<string, string> GetAuthorizationResponse(Uri uri)
+        internal static KeyValuePair<string, string> GetAuthorizationResponse(Uri uri)
         {
             if (!UriContainsValidQueryParams(uri))
             {
-                throw new ArgumentException("Url query contains invalid parameters");
+                const string errorMessage = "Uri query contains invalid params";
+                Debug.LogError(errorMessage);
+                throw new ArgumentException(errorMessage);
             }
 
             return GetQueryParamsFromUri(uri).ToArray()[0];
@@ -132,25 +123,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         /// <summary>
         /// Inspect the URI and determine whether it contains valid params according to the following policies:
-        ///   1. URI query must include exactly one of either "code" or "error" as param keys.
-        ///   2. "code" and "error" can not be present at the same time.
-        ///   3. No other keys apart from "code", "error"are allowed.
+        ///   1. URI query must include "code" or "error" in param keys.
+        ///   2. "code" and "error" cannot be present at the same time.
+        ///   3. No other keys apart from "code", "error" are allowed.
         /// </summary>
         internal static bool UriContainsValidQueryParams(Uri uri)
         {
             var allowedQueries = new[] {"code", "error"};
             var queryParams = GetQueryParamsFromUri(uri);
 
-            Predicate<Dictionary<string, string>> policyNumberOne = queryParamsDict =>
+            Predicate<Dictionary<string, string>> codeOrErrorIsPresent = queryParamsDict =>
                 queryParamsDict.ContainsKey("code") || queryParamsDict.ContainsKey("error");
 
-            Predicate<Dictionary<string, string>> policyNumberTwo = queryParamsDict =>
+            Predicate<Dictionary<string, string>> notBothCodeAndErrorArePresent = queryParamsDict =>
                 !(queryParamsDict.ContainsKey("error") && queryParamsDict.ContainsKey("code"));
 
-            Predicate<Dictionary<string, string>> policyNumberThree = queryParamsDict =>
+            Predicate<Dictionary<string, string>> noOtherKeysArePresent = queryParamsDict =>
                 queryParamsDict.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
-            return policyNumberOne(queryParams) && policyNumberTwo(queryParams) &&
-                   policyNumberThree(queryParams);
+            return codeOrErrorIsPresent(queryParams) && notBothCodeAndErrorArePresent(queryParams) &&
+                   noOtherKeysArePresent(queryParams);
         }
 
         /// <summary>
@@ -170,12 +161,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             return result;
         }
-
+        
         /// <summary>
         /// Stops the server. A future call of the Start() method on this instance will restart this server at a
         /// different endpoint.
         /// </summary>
-        internal void Stop()
+        private void Stop()
         {
             _httpListener.Close();
             // Set to null for garbage collection.
