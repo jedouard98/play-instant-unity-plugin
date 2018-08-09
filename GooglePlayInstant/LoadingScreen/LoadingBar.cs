@@ -82,11 +82,6 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarOutlineImage.type = Image.Type.Sliced;
             loadingBarOutlineImage.fillCenter = false;
 
-            // Set size of component
-            var loadingBarOutlineRectTransform = loadingBarOutlineGameObject.GetComponent<RectTransform>();
-            var loadingBarRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-            loadingBarOutlineRectTransform.sizeDelta = loadingBarRectTransform.sizeDelta;
-
             // Position outline component
             loadingBarOutlineGameObject.transform.position = loadingBarGameObject.transform.position;
         }
@@ -99,13 +94,6 @@ namespace GooglePlayInstant.LoadingScreen
             loadingBarFillGameObject.AddComponent<Image>();
             var loadingBarFillImage = loadingBarFillGameObject.GetComponent<Image>();
             loadingBarFillImage.color = Color.green;
-
-            // Set size of component
-            var loadingBarFillRectTransform = loadingBarFillGameObject.GetComponent<RectTransform>();
-
-            var loadingBarRectTransform = loadingBarGameObject.GetComponent<RectTransform>();
-            loadingBarFillRectTransform.sizeDelta = new Vector2(0,
-                loadingBarRectTransform.sizeDelta.y - LoadingBarFillPadding);
 
             // Position fill component
             loadingBarFillGameObject.transform.position = loadingBarGameObject.transform.position;
