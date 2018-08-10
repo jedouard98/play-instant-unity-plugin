@@ -60,7 +60,7 @@ namespace GooglePlayInstant.LoadingScreen
         }
 
         private IEnumerator GetAssetBundle(string assetBundleUrl)
-        {   
+        {
 #if UNITY_2018_1_OR_NEWER
             var webRequest = UnityWebRequestAssetBundle.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.SendWebRequest();
@@ -72,8 +72,8 @@ namespace GooglePlayInstant.LoadingScreen
             var assetbundleDownloadOperation = webRequest.Send();
 #endif
             LoadingBar.SetPosition();
-            LoadingBar.SetWidth();
-            
+            LoadingBar.SetSize();
+
             yield return LoadingBar.Update(assetbundleDownloadOperation,
                 LoadingBar.AssetBundleDownloadMaxWidthPercentage);
 
