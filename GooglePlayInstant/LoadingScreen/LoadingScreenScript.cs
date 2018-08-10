@@ -71,8 +71,6 @@ namespace GooglePlayInstant.LoadingScreen
             var webRequest = UnityWebRequest.GetAssetBundle(assetBundleUrl);
             var assetbundleDownloadOperation = webRequest.Send();
 #endif
-//            LoadingBar.SetPosition();
-//            LoadingBar.SetSize();
             LoadingBar.UpdateSizeAndPostition();
 
             yield return LoadingBar.Update(assetbundleDownloadOperation,
