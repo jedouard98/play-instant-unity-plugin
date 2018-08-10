@@ -41,7 +41,7 @@ namespace GooglePlayInstant.LoadingScreen
 
         // Loading bar size as a proportion of the screen size. Adjust if needed.
         private const float LoadingBarWidthProportion = 0.7f;
-        private const float LoadingBarHeightProportion = 0.1f;
+        private const float LoadingBarHeightProportion = 0.02f;
 
         // Loading bar placement as a proportion of the screen size relative to the bottom left corner. Adjust if needed.
         private const float LoadingBarPositionX = 0.5f;
@@ -100,6 +100,9 @@ namespace GooglePlayInstant.LoadingScreen
         }
 #endif
 
+        /// <summary>
+        /// Sets the position and size of the loading bar as a function of the screen heighta and width. 
+        /// </summary>
         public static void UpdateSizeAndPostition()
         {
             var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
@@ -115,37 +118,6 @@ namespace GooglePlayInstant.LoadingScreen
                 Screen.height * LoadingBarHeightProportion);
 
             loadingBarOutlineRectTransform.sizeDelta = loadingBarRectTransform.sizeDelta;
-            loadingBarFillRectTransform.sizeDelta =
-                new Vector2(0, loadingBarRectTransform.sizeDelta.y - LoadingBarFillPadding);
-        }
-
-        /// <summary>
-        /// Sets the position of the loading bar as a function of the screen height.
-        /// </summary>
-        public static void SetPosition()
-        {
-            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
-
-            loadingBarRectTransform.position =
-                new Vector2(Screen.width * LoadingBarPositionX, Screen.height * LoadingBarPositionY);
-        }
-
-        /// <summary>
-        /// Sets the length of the loading bar and its children as a function of the screen width.
-        /// </summary>
-        public static void SetSize()
-        {
-            var loadingBarRectTransform = GameObject.Find(LoadingBarGameObjectName).GetComponent<RectTransform>();
-            var loadingBarFillRectTransform =
-                GameObject.Find(LoadingBarFillGameObjectName).GetComponent<RectTransform>();
-            var loadingBarOutlineRectTransform =
-                GameObject.Find(LoadingBarOutlineGameObjectName).GetComponent<RectTransform>();
-
-            loadingBarRectTransform.sizeDelta = new Vector2(Screen.width * LoadingBarWidthProportion,
-                Screen.height * LoadingBarHeightProportion);
-
-            loadingBarOutlineRectTransform.sizeDelta = loadingBarRectTransform.sizeDelta;
-
             loadingBarFillRectTransform.sizeDelta =
                 new Vector2(0, loadingBarRectTransform.sizeDelta.y - LoadingBarFillPadding);
         }
