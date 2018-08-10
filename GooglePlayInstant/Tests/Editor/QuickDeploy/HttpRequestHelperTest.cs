@@ -17,8 +17,6 @@ using System.Collections.Generic;
 using System.Text;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
-using System.Collections.ObjectModel;
-using System.Net;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
