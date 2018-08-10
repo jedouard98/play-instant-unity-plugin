@@ -54,11 +54,16 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Assert.AreEqual(new KeyValuePair<string, string>("error", someString), errorResponse,
                 "Expected invalid error response");
 
-            // respose is invalid
-            var invalidUrl = new Uri(string.Format("{0}?someKey=someValue", AddressPrefix));
-            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidUrl),
+            // response has invalid keys
+            var invalidResponse = new Uri(string.Format("{0}?someKey=someValue", AddressPrefix));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidResponse),
                 "Expected ArgumentException");
-            LogAssert.Expect(LogType.Error, "Uri query contains invalid params");
+            LogAssert.Expect(LogType.Error, OAuth2Server.InvalidQueryExceptionMessage);
+
+            // No response. Uri has no params
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(new Uri(AddressPrefix)),
+                "Expected ARgumentException");
+            LogAssert.Expect(LogType.Error, OAuth2Server.InvalidQueryExceptionMessage);
         }
 
         [Test]
@@ -74,34 +79,32 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(uriWithError),
                 codeOrErrorKeyMustBePresentText);
 
-
-            const string codeAndErrorCannotBePresentText = "\"code\" and \"error\" cannot be present at the same time.";
             var invalidUriWithCodeAndError =
                 new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
-                codeAndErrorCannotBePresentText);
+                "\"code\" and \"error\" cannot be present at the same time.");
 
-            const string noOtherKeysCanBePresentText =
-                "No other keys apart from \"code\" and \"error\" are allowed.";
             var invalidUriWithOtherKeys =
                 new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
             Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys),
-                noOtherKeysCanBePresentText);
+                "No other keys apart from \"code\" and \"error\" are allowed.");
+
+            var invalidUriWithEmptyQuery = new Uri(AddressPrefix);
+            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithEmptyQuery),
+                "Uri with empty query should be invalid");
         }
 
         [Test]
         public void TestGetQueryParamsFromUri()
         {
-            var testDict = new Dictionary<string, string>();
-            for (var x = 0; x < 10; x++)
-            {
-                testDict.Add(string.Format("key{0}", x), string.Format("value{0}", x));
-            }
-
-            var query = "?" + string.Join("&", testDict.Select(kvp => kvp.Key + "=" + kvp.Value).ToArray());
-            var uri = new Uri(AddressPrefix + query);
-            Assert.AreEqual(testDict, OAuth2Server.GetQueryParamsFromUri(uri),
-                "should return expected correct query params");
+            // Case 1: Non-empty query
+            var testDictionary = new Dictionary<string, string> {{"a", "b"}, {"c", "d"}};
+            var uri = new Uri(AddressPrefix + "?a=b&c=d");
+            Assert.AreEqual(testDictionary, OAuth2Server.GetQueryParamsFromUri(uri),
+                "Should return expected correct query params");
+            // Case 2: Empty query
+            Assert.IsEmpty(OAuth2Server.GetQueryParamsFromUri(new Uri(AddressPrefix)),
+                "Expected empty dictionary from empty query");
         }
     }
 }

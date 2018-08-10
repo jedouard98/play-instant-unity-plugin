@@ -40,14 +40,34 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     public class OAuth2Server
     {
         private const string CloseTabText = "You may close this tab.";
-        private const int ServerPort = 2806;
-        private HttpListener _httpListener;
-        private string _callbackEndpoint;
+        internal const string InvalidQueryExceptionMessage = "Uri query is not valid";
 
+        // Arbitrarily chosen port to listen for the authorization callback.
+        private const int ServerPort = 2806;
+
+        private readonly HttpListener _httpListener;
+        private readonly string _callbackEndpoint;
         private readonly Action<KeyValuePair<string, string>> _onResponseAction;
 
         /// <summary>
-        /// An endpoint that on which the server is listening.
+        /// An instance of a server that will run locally to retrieve authorization code. The server will stop running
+        /// once the first response gets received.
+        /// </summary>
+        /// <param name="onResponseAction">An action to be invoked on the key-value pair representing the first
+        /// response that will be caught by the server. Note that the invocation of this action will not be done
+        /// on Unity's main thread, therefore the action should only be performing operations that can be run off the
+        /// main thread. 
+        /// </param>
+        public OAuth2Server(Action<KeyValuePair<string, string>> onResponseAction)
+        {
+            _onResponseAction = onResponseAction;
+            _callbackEndpoint = string.Format("http://localhost:{0}/{1}/", ServerPort, Path.GetRandomFileName());
+            _httpListener = new HttpListener();
+            _httpListener.Prefixes.Add(_callbackEndpoint);
+        }
+
+        /// <summary>
+        /// The callback endpoint on which the server is listening.
         /// </summary>
         public string CallbackEndpoint
         {
@@ -55,39 +75,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// An instance of a server that will run locally to retrieve authorization code. The server will stop running
-        /// once the first response gets received.
-        /// </summary>
-        /// <param name="onResponseAction">An action to be invoked on the key-value pair representing the first
-        /// response that will be caught by the server. Note that that the invocation of this handler will not be done
-        /// on the main thread, therefore the handler should only run operations that can be run on the main thread.
-        /// </param>
-        public OAuth2Server(Action<KeyValuePair<string, string>> onResponseAction)
-        {
-            _onResponseAction = onResponseAction;
-        }
-
-        /// <summary>
-        /// Starts this server to make it listen for requests containing authorization code or error data that are
-        /// forwarded from google's OAuth2 authorization url.
-        ///
-        /// After a call to this method, the CallBackEndpoint property of this instance will provide the endpoint
-        /// at which this server is listening.
+        /// Allow this instance to start listening for incoming requests containing authorization code or error data
+        /// from OAuth2. Server will stop after processing the first request.
         /// </summary>
         public void Start()
         {
-            _callbackEndpoint = string.Format("http://localhost:{0}/{1}/", ServerPort, Path.GetRandomFileName());
-            _httpListener = new HttpListener();
-            _httpListener.Prefixes.Add(_callbackEndpoint);
             _httpListener.Start();
-
             // Server will only respond to the first request, therefore one new thread should handle it just fine.
             new Thread(() => { ProcessContext(_httpListener.GetContext()); }).Start();
         }
 
         /// <summary>
         /// Processes the object as an HttpListenerContext instance and retrieves authorization response. Invokes the
-        /// response handler action on the response, and responds to request with a string asking the user to close tab.
+        /// response handler action on the response, responds to request with a string asking the user to close tab,
+        /// and stops the server from listening for future incoming requests.
         /// </summary>
         private void ProcessContext(HttpListenerContext context)
         {
@@ -113,7 +114,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             if (!UriContainsValidQueryParams(uri))
             {
-                const string errorMessage = "Uri query contains invalid params";
+                const string errorMessage = "Uri query is not valid";
                 Debug.LogError(errorMessage);
                 throw new ArgumentException(errorMessage);
             }
@@ -145,32 +146,34 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Processes URI, extracts query params, puts them into a dictionary returns the dictionary.
+        /// Processes Uri, extracts query params, puts them into a dictionary returns the dictionary.
+        /// Uri must not be null.
         /// </summary>
         internal static Dictionary<string, string> GetQueryParamsFromUri(Uri uri)
         {
             var result = new Dictionary<string, string>();
-            foreach (var pair in uri.Query.Substring(1).Split('&'))
+            if (string.IsNullOrEmpty(uri.Query))
             {
-                if (pair.Contains("="))
-                {
-                    var keyAndValue = pair.Split('=');
-                    result.Add(keyAndValue[0], keyAndValue[1]);
-                }
+                return result;
+            }
+
+            // Uri's Query string always starts with "?" so skip the first character.
+            var query = uri.Query.Substring(1);
+            foreach (var pair in query.Split('&'))
+            {
+                var keyAndValue = pair.Split('=');
+                result.Add(Uri.UnescapeDataString(keyAndValue[0]), Uri.UnescapeDataString(keyAndValue[1]));
             }
 
             return result;
         }
 
         /// <summary>
-        /// Stops the server. A future call of the Start() method on this instance will restart this server at a
-        /// different endpoint.
+        /// Stops the server from listening from incoming requests.
         /// </summary>
         private void Stop()
         {
-            _httpListener.Close();
-            // Set to null for garbage collection.
-            _httpListener = null;
+            _httpListener.Stop();
         }
     }
 }
