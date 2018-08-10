@@ -61,6 +61,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 GetCombinedDictionary(form.headers, postHeaders));
         }
 
+
+        /// <summary>
+        /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
+        /// </summary>
+        /// <param name="endpoint">The endpoint where the GET request should be sent. Must have no query params.</param>
+        /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET
+        /// parameters.</param>
+        /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
+        /// <returns>A reference to the WWW instance representing the request.</returns>
+        public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
+            Dictionary<string, string> getHeaders)
+        {
+            return new WWW(GetEndpointWithGetParams(endpoint, getParams), null,
+                GetCombinedDictionary(new WWWForm().headers, getHeaders));
+        }
+
         /// <summary>
         /// Returns a WWWform containing the body params to use for a POST request.
         /// </summary>
@@ -79,22 +95,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Sends a general GET request to the specified endpoint along with specified parameters and headers.
-        /// </summary>
-        /// <param name="endpoint">The endpoint where the GET request should be sent. Must have no query params.</param>
-        /// <param name="getParams">A collection of key-value pairs to be attached to the endpoint as GET
-        /// parameters.</param>
-        /// <param name="getHeaders">A collection of key-value pairs to be added to the request headers.</param>
-        /// <returns>A reference to the WWW instance representing the request.</returns>
-        public static WWW SendHttpGetRequest(string endpoint, Dictionary<string, string> getParams,
-            Dictionary<string, string> getHeaders)
-        {
-            return new WWW(GetEndpointWithGetParams(endpoint, getParams), null,
-                GetCombinedDictionary(new WWWForm().headers, getHeaders));
-        }
-
-
-        /// <summary>
         /// Adds GET params to endpoint and returns result.
         /// </summary>
         /// <remarks>Assumes endpoint does not have any queries attached to it.</remarks>
@@ -104,7 +104,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (getParams != null)
             {
                 uriBuilder.Query = string.Join("&",
-                    getParams.Select(kvp => string.Format("{0}={1}", WWW.EscapeURL(kvp.Key), WWW.EscapeURL(kvp.Value)))
+                    getParams.Select(kvp => string.Format("{0}={1}", Uri.EscapeDataString(kvp.Key), Uri.EscapeDataString(kvp.Value)))
                         .ToArray());
             }
 
@@ -115,27 +115,27 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Combines two dictionaries into a single dictionary. Values in the second argument override values of the
         /// first argument for every key that is present in both dictionaries.
         /// </summary>
-        internal static Dictionary<string, string> GetCombinedDictionary(Dictionary<string, string> firstDict,
-            Dictionary<string, string> secondDict)
+        internal static Dictionary<string, string> GetCombinedDictionary(Dictionary<string, string> firstDictionary,
+            Dictionary<string, string> secondDictionary)
         {
-            var combinedDict = new Dictionary<string, string>();
-            if (firstDict != null)
+            var combinedDictionary = new Dictionary<string, string>();
+            if (firstDictionary != null)
             {
-                foreach (var pair in firstDict)
+                foreach (var pair in firstDictionary)
                 {
-                    combinedDict[pair.Key] = pair.Value;
+                    combinedDictionary[pair.Key] = pair.Value;
                 }
             }
 
-            if (secondDict != null)
+            if (secondDictionary != null)
             {
-                foreach (var pair in secondDict)
+                foreach (var pair in secondDictionary)
                 {
-                    combinedDict[pair.Key] = pair.Value;
+                    combinedDictionary[pair.Key] = pair.Value;
                 }
             }
 
-            return combinedDict;
+            return combinedDictionary;
         }
     }
 }

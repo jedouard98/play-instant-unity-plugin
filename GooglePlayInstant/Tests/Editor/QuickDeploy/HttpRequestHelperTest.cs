@@ -13,12 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
-using UnityEngine;
+using System.Collections.ObjectModel;
+using System.Net;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -28,70 +28,65 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class HttpRequestHelperTest
     {
-        /*
-         * Testing strategy:
-         *     - Test helper methods that manipulate data that is fed into instantiation of WWW instances.
-         *     - Exclude methods that instantiate the WWW class from unit tests to avoid sending HTTP requests.
-         */
-
         [Test]
         public void TestGetWwwForm()
         {
-            var postParams =
-                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => string.Concat(key, key));
-            var form = HttpRequestHelper.GetWwwForm(postParams);
-            Assert.AreEqual(postParams,
-                HttpRequestHelperTestHelper.GetDictFromUrlQuery(string.Format("?{0}",
-                    Encoding.UTF8.GetString(form.data))));
+            var formFromNonEmptyDictionary = new Dictionary<string, string> {{"a", "b"}, {"c", "d"}};
+            var form = HttpRequestHelper.GetWwwForm(formFromNonEmptyDictionary);
+            Assert.AreEqual("a=b&c=d", Encoding.UTF8.GetString(form.data));
+
+            var formFromEmptyDictionary = HttpRequestHelper.GetWwwForm(new Dictionary<string, string>());
+            Assert.IsEmpty(Encoding.UTF8.GetString(formFromEmptyDictionary.data));
+
+            var formFromNullDictionary = HttpRequestHelper.GetWwwForm(null);
+            Assert.IsEmpty(Encoding.UTF8.GetString(formFromNullDictionary.data));
         }
 
         [Test]
         public void TestGetEndpointWithGetParams()
         {
-            var getParams =
-                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => string.Concat(key, key));
-            var endPointWithQuery = HttpRequestHelper.GetEndpointWithGetParams("http://localhost:5000", getParams);
-            Assert.AreEqual(getParams,
-                HttpRequestHelperTestHelper.GetDictFromUrlQuery(new Uri(endPointWithQuery).Query));
+            const string addressPrefix = "http://localhost:5000";
+            var getParams = new Dictionary<string, string> {{"a", "b"}, {"c", "d"}, {"e", "f"}};
+            var endPointWithQuery = HttpRequestHelper.GetEndpointWithGetParams(addressPrefix, getParams);
+            Assert.AreEqual("?a=b&c=d&e=f", new Uri(endPointWithQuery).Query);
+
+            var endPointWithEscapedQuery = HttpRequestHelper.GetEndpointWithGetParams(addressPrefix,
+                new Dictionary<string, string> {{"a", " "}, {" ", "b"}});
+            Assert.AreEqual(string.Format("?a={0}&{0}=b", "%20"), new Uri(endPointWithEscapedQuery).Query);
         }
 
-
         [Test]
-        public void TestGetCombinedDictionary()
+        public void TestGetCombinedDictionaryNonEmpty()
         {
             // Case 1: Dictionaries have mutually exclusive sets of keys.
-            var firstDict =
-                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "c", "d"}, key => key.ToUpper());
-            var secondDict =
-                HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"A", "B", "C", "D"}, key => key.ToLower());
-            var thirdDict = HttpRequestHelperTestHelper.GetKeyValueDict(new[] {"a", "b", "C", "D"}, key => key);
+            var firstDictionary = new Dictionary<string, string> {{"a", "A"}, {"b", "B"}};
+            var secondDictionary = new Dictionary<string, string> {{"c", "C"}, {"d", "D"}};
+            var firstAndSecondDictionary = HttpRequestHelper.GetCombinedDictionary(secondDictionary, firstDictionary);
+            Assert.AreEqual(new Dictionary<string, string> {{"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}},
+                firstAndSecondDictionary);
 
-            var firstAndSecondDict = HttpRequestHelper.GetCombinedDictionary(secondDict, firstDict);
-            Assert.AreEqual(8, firstAndSecondDict.Count);
-            Assert.AreEqual(secondDict.Union(firstDict).ToDictionary(s => s.Key, s => s.Value), firstAndSecondDict);
+            // Case 2: Dictionaries share keys. Keys in the second dictionary override keys in the first.
+            var thirdDictionary = new Dictionary<string, string> {{"a", "1"}, {"b", "2"}};
+            var fourthDictionary = new Dictionary<string, string> {{"b", "3"}, {"c", "4"}};
+            var thirdAndFourthDictionary = HttpRequestHelper.GetCombinedDictionary(thirdDictionary, fourthDictionary);
+            Assert.AreEqual(new Dictionary<string, string> {{"a", "1"}, {"b", "3"}, {"c", "4"}},
+                thirdAndFourthDictionary);
+        }
 
-            // Case 2: Dictionaries share some keys. Keys in the second dictionary override keys in the first.
-
-            var firstAndThirdDict = HttpRequestHelper.GetCombinedDictionary(firstDict, thirdDict);
-            Assert.AreEqual(6, firstAndThirdDict.Count);
-
-            // Values for keys "a" and "b" should be from thirdDict.
-            foreach (var key in new[] {"a", "b"})
-            {
-                Assert.AreEqual(thirdDict[key], firstAndThirdDict[key]);
-            }
-
-            // Values for keys "c" and "d" should be from firstDict.
-            foreach (var key in new[] {"c", "d"})
-            {
-                Assert.AreEqual(firstDict[key], firstAndThirdDict[key]);
-            }
-
-            // Values for keys "C" and "D" should be from thirdDict.
-            foreach (var key in new[] {"C", "D"})
-            {
-                Assert.AreEqual(thirdDict[key], firstAndThirdDict[key]);
-            }
+        [Test]
+        public void TestGetCombinedDictionaryNullOrEmpty()
+        {
+            var emptyDictionary = new Dictionary<string, string>();
+            var nonEmptyDictionary = new Dictionary<string, string>{{"a","b"}};
+            // Case 1: Null dictionaries
+            Assert.AreEqual(nonEmptyDictionary, HttpRequestHelper.GetCombinedDictionary(nonEmptyDictionary, null));
+            Assert.AreEqual(nonEmptyDictionary, HttpRequestHelper.GetCombinedDictionary(null, nonEmptyDictionary));
+            Assert.AreEqual(emptyDictionary, HttpRequestHelper.GetCombinedDictionary(null, null));
+            
+            // Case 2 : Empty Dictionaries
+            Assert.AreEqual(emptyDictionary, HttpRequestHelper.GetCombinedDictionary(emptyDictionary, emptyDictionary));
+            Assert.AreEqual(nonEmptyDictionary, HttpRequestHelper.GetCombinedDictionary(emptyDictionary, nonEmptyDictionary));
+            Assert.AreEqual(nonEmptyDictionary, HttpRequestHelper.GetCombinedDictionary(nonEmptyDictionary, emptyDictionary));
         }
     }
 }
