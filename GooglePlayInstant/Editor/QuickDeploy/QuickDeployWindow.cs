@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,6 +28,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static int _toolbarSelectedButtonIndex;
 
+        // Keep track of the current tab and remove focus
+        private static ToolBarSelectedButton _previousTab;
         public enum ToolBarSelectedButton
         {
             CreateBundle,
@@ -71,9 +74,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
-            switch ((ToolBarSelectedButton) _toolbarSelectedButtonIndex)
+            var currentTab = (ToolBarSelectedButton) _toolbarSelectedButtonIndex;
+            UpdateGuiFocus(currentTab);
+            switch (/*ToolBarSelectedButton) _toolbarSelectedButtonIndex*/ currentTab)
             {
                 case ToolBarSelectedButton.CreateBundle:
+                  
                     AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
@@ -101,6 +107,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             GUI.enabled = true;
+        }
+
+        
+        /// <summary>
+        /// Removes the textfield focus from the tab if the user has changed the current quick deploy tab.
+        /// </summary>
+        /// <param name="currentTab">A toolbar select button representing the tab that the user just opened.</param>
+        private static void UpdateGuiFocus(ToolBarSelectedButton currentTab)
+        {
+            if (currentTab != _previousTab)
+            {
+                _previousTab = currentTab;
+                GUI.FocusControl(null);
+            }
         }
 
         private void OnGuiCreateBundleSelect()
