@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using GooglePlayInstant.Tests.Editor.QuickDeploy;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -31,7 +32,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _errorDescription;
         private string _mainScene;
         private double _numOfMegabytes;
-        private UnityWebRequest _webRequest;
+        private static UnityWebRequest _webRequest;
+        private AssetBundle _bundle;
+
+        public AssetBundleVerifyState state; 
+        
+        public enum AssetBundleVerifyState
+        {
+            InProgress,
+            WebRequestError,
+            BundleError,
+            DownloadSuccess
+        }
 
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
@@ -61,24 +73,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 #endif
         }
 
-        private void GetAssetBundleInfoFromDownload()
+        private void HandleAssetBundleVerifyState(AssetBundleVerifyState state)
         {
-            var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
-
-            _responseCode = _webRequest.responseCode;
-
-#if UNITY_2017_1_OR_NEWER
-            if (_webRequest.isHttpError || _webRequest.isNetworkError)
-#else
-            if (_webRequest.isError)
-#endif
+            if (state == AssetBundleVerifyState.WebRequestError)
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = _webRequest.error;
                 Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _assetBundleUrl,
                     _errorDescription);
             }
-            else if (bundle == null)
+            else if (state == AssetBundleVerifyState.BundleError)
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = "Error extracting AssetBundle. See Console log for details.";
@@ -89,13 +93,36 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 _assetBundleDownloadIsSuccessful = true;
                 _numOfMegabytes = ConvertBytesToMegabytes(_webRequest.downloadedBytes);
 
-                var scenes = bundle.GetAllScenePaths();
+                var scenes = _bundle.GetAllScenePaths();
                 _mainScene = (scenes.Length == 0) ? "No scenes in AssetBundle" : scenes[0];
 
                 // Free memory used by the AssetBundle since it will not be in use by the Editor. Set to true to destroy
                 // all objects that were loaded from this bundle.
-                bundle.Unload(true);
+                _bundle.Unload(true);
             }
+
+        }
+
+        private AssetBundleVerifyState GetAssetBundleVerifyStateInfoFromDownload()
+        {
+            _bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
+
+            _responseCode = _webRequest.responseCode;
+
+#if UNITY_2017_1_OR_NEWER
+            if (_webRequest.isHttpError || _webRequest.isNetworkError)
+#else
+            if (webRequest.isError)
+#endif
+            {
+                return AssetBundleVerifyState.WebRequestError;
+            }
+            if (_bundle == null)
+            {
+                return AssetBundleVerifyState.BundleError;
+            }
+            
+            return AssetBundleVerifyState.DownloadSuccess;
         }
 
         private static double ConvertBytesToMegabytes(ulong bytes)
@@ -128,7 +155,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorUtility.ClearProgressBar();
 
             // Performs download operation only once when webrequest is completed.
-            GetAssetBundleInfoFromDownload();
+            HandleAssetBundleVerifyState(GetAssetBundleVerifyStateInfoFromDownload(_webRequest));
             Repaint();
 
             // Turn request to null to signal ready for next call
@@ -138,6 +165,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void OnGUI()
         {
+            if (state == AssetBundleVerifyState.InProgress)
+            {
+                EditorGUILayout.LabelField("Loading...");
+                return;
+            }
+
             AddVerifyComponentInfo("AssetBundle Download Status:",
                 _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
 
