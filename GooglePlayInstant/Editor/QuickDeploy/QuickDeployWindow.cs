@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -28,8 +27,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static int _toolbarSelectedButtonIndex;
 
-        // Keep track of the current tab and remove focus
+        // Keep track of the previous tab to remove focus if user moves to a different tab. (b/112536394)
         private static ToolBarSelectedButton _previousTab;
+
         public enum ToolBarSelectedButton
         {
             CreateBundle,
@@ -75,11 +75,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames);
             var currentTab = (ToolBarSelectedButton) _toolbarSelectedButtonIndex;
-            UpdateGuiFocus(currentTab);
-            switch (/*ToolBarSelectedButton) _toolbarSelectedButtonIndex*/ currentTab)
+            UpdateGUIFocus(currentTab);
+            switch (currentTab)
             {
                 case ToolBarSelectedButton.CreateBundle:
-                  
+
                     AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
@@ -109,12 +109,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUI.enabled = true;
         }
 
-        
+
         /// <summary>
-        /// Removes the textfield focus from the tab if the user has changed the current quick deploy tab.
+        /// Unfocus the window if the user has just moved to a different quick deploy tab.
         /// </summary>
-        /// <param name="currentTab">A toolbar select button representing the tab that the user just opened.</param>
-        private static void UpdateGuiFocus(ToolBarSelectedButton currentTab)
+        /// <param name="currentTab">A ToolBarSelectedButton instance representing the current quick deploy tab.</param>
+        /// <see cref="b/112536394"/>
+        private static void UpdateGUIFocus(ToolBarSelectedButton currentTab)
         {
             if (currentTab != _previousTab)
             {
