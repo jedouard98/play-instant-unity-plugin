@@ -23,7 +23,7 @@ using UnityEngine.TestTools;
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
     /// <summary>
-    /// Contains unit tests for AssetBundleVerifier methods.
+    /// Contains tests for each of AssetBundleVerifier error states.
     /// </summary>
     [TestFixture]
     public class AssetBundleVerifierTest
