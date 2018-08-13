@@ -79,7 +79,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             switch (currentTab)
             {
                 case ToolBarSelectedButton.CreateBundle:
-
                     AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
