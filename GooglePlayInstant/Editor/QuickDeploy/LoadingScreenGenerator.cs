@@ -29,6 +29,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
+        private const string PlayInstantCanvasName = "Play Instant Canvas";
+
         private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
         private static readonly string LoadingScreenScenePath =
@@ -41,7 +43,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static string LoadingScreenImagePath { get; set; }
 
-        //TODO: fix wasteful sprite creation by deleting previous unused ones
         /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
         /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
@@ -63,7 +64,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GenerateLoadingScreenConfigFile(assetBundleUrl);
 
             var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
-            var loadingScreenGameObject = new GameObject("Canvas");
+            var loadingScreenGameObject = new GameObject(PlayInstantCanvasName);
 
             AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
             AddLoadingScreenScript(loadingScreenGameObject);

@@ -36,32 +36,42 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
-        public static void ShowWindow()
+        public static void ShowWindow(string assetBundleUrl)
         {
             // Set AssetBundle url in a private variable so that information displayed in window is consistent with
             // the url that this was called on. 
             var window = (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true,
                 "Play Instant AssetBundle Verify");
-            window._assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
+            window._assetBundleUrl = assetBundleUrl;
 
             window.StartAssetBundleVerificationDownload();
         }
 
-        //TODO: Support Unity 5.6.0+
         private void StartAssetBundleVerificationDownload()
         {
+#if UNITY_2018_1_OR_NEWER
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(_assetBundleUrl);
             _webRequest.SendWebRequest();
+#elif UNITY_2017_1_OR_NEWER
+            _webRequest = UnityWebRequest.GetAssetBundle(_assetBundleUrl);
+            _webRequest.SendWebRequest();
+#else
+            _webRequest = UnityWebRequest.GetAssetBundle(_assetBundleUrl);
+            _webRequest.Send();
+#endif
         }
 
-        //TODO: Support Unity 5.6.0+
         private void GetAssetBundleInfoFromDownload()
         {
             var bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
 
             _responseCode = _webRequest.responseCode;
 
-            if (_webRequest.isNetworkError || _webRequest.isHttpError)
+#if UNITY_2017_1_OR_NEWER
+            if (_webRequest.isHttpError || _webRequest.isNetworkError)
+#else
+            if (_webRequest.isError)
+#endif
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = _webRequest.error;
@@ -88,17 +98,34 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-        private double ConvertBytesToMegabytes(ulong bytes)
+        private static double ConvertBytesToMegabytes(ulong bytes)
         {
             return bytes / 1024f / 1024f;
         }
 
         private void Update()
         {
-            if (_webRequest == null || !_webRequest.isDone)
+            if (_webRequest == null)
             {
                 return;
             }
+
+            if (!_webRequest.isDone)
+            {
+                if (EditorUtility.DisplayCancelableProgressBar("AssetBundle Download", "",
+                    _webRequest.downloadProgress))
+                {
+                    _webRequest.Abort();
+                    _webRequest.Dispose();
+                    _webRequest = null;
+
+                    Debug.Log("Download process was cancelled.");
+                }
+
+                return;
+            }
+
+            EditorUtility.ClearProgressBar();
 
             // Performs download operation only once when webrequest is completed.
             GetAssetBundleInfoFromDownload();
@@ -109,42 +136,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _webRequest = null;
         }
 
-        // TODO: fix crashing associated with using DisplayProgressBar()
         private void OnGUI()
         {
-            if (_webRequest != null && !_webRequest.isDone)
+            AddVerifyComponentInfo("AssetBundle Download Status:",
+                _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
+
+            AddVerifyComponentInfo("AssetBundle URL:",
+                string.IsNullOrEmpty(_assetBundleUrl) ? "N/A" : _assetBundleUrl);
+
+            AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
+
+            AddVerifyComponentInfo("Error Description:",
+                _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
+
+            AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
+
+            AddVerifyComponentInfo("Size (MB):",
+                _assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A");
+
+            if (GUILayout.Button("Refresh"))
             {
-                EditorUtility.DisplayProgressBar("AssetBundle Download", "",
-                    _webRequest.downloadProgress);
-            }
-            else
-            {
-                EditorUtility.ClearProgressBar();
-
-                AddVerifyComponentInfo("AssetBundle Download Status:",
-                    _assetBundleDownloadIsSuccessful ? "SUCCESS" : "FAILED");
-
-                AddVerifyComponentInfo("AssetBundle URL:",
-                    string.IsNullOrEmpty(_assetBundleUrl) ? "N/A" : _assetBundleUrl);
-
-                AddVerifyComponentInfo("HTTP Status Code:", _responseCode == 0 ? "N/A" : _responseCode.ToString());
-
-                AddVerifyComponentInfo("Error Description:",
-                    _assetBundleDownloadIsSuccessful ? "N/A" : _errorDescription);
-
-                AddVerifyComponentInfo("Main Scene:", _assetBundleDownloadIsSuccessful ? _mainScene : "N/A");
-
-                AddVerifyComponentInfo("Size (MB):",
-                    _assetBundleDownloadIsSuccessful ? _numOfMegabytes.ToString("#.####") : "N/A");
-
-                if (GUILayout.Button("Refresh"))
-                {
-                    StartAssetBundleVerificationDownload();
-                }
+                StartAssetBundleVerificationDownload();
             }
         }
 
-        private void AddVerifyComponentInfo(string title, string response)
+        private static void AddVerifyComponentInfo(string title, string response)
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField(title, GUILayout.MinWidth(FieldMinWidth));
