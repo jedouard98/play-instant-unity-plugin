@@ -39,7 +39,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 yield return null;
             }
 
-            window.HandleAssetBundleVerifyState(AssetBundleVerifierWindow.AssetBundleVerifyState.DesintationError,
+            window.HandleAssetBundleVerifyState(AssetBundleVerifierWindow.AssetBundleVerifyState.DestinationError,
                 new UnityWebRequest());
 
             Assert.AreEqual(false, window.AssetBundleDownloadIsSuccessful,

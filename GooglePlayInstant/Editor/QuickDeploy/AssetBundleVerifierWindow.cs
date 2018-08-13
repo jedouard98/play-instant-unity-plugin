@@ -48,7 +48,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public enum AssetBundleVerifyState
         {
             InProgress,
-            DesintationError,
+            DestinationError,
             WebRequestError,
             BundleError,
             DownloadSuccess
@@ -81,7 +81,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             switch (state)
             {
-                case AssetBundleVerifyState.DesintationError:
+                case AssetBundleVerifyState.DestinationError:
                     AssetBundleDownloadIsSuccessful = false;
                     ErrorDescription = "Cannot connect to destination host. See Console log for details.";
                     // No need to log since debugging information in this case is logged from thrown exception.
@@ -120,7 +120,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             catch (InvalidOperationException e)
             {
                 Debug.LogError(e.ToString());
-                return AssetBundleVerifyState.DesintationError;
+                return AssetBundleVerifyState.DestinationError;
             }
 
             _responseCode = _webRequest.responseCode;
