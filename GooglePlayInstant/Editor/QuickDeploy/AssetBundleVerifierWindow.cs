@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using GooglePlayInstant.Tests.Editor.QuickDeploy;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -35,7 +34,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static UnityWebRequest _webRequest;
         private AssetBundle _bundle;
 
-        public AssetBundleVerifyState state; 
+        public AssetBundleVerifyState State; 
         
         public enum AssetBundleVerifyState
         {
@@ -73,16 +72,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 #endif
         }
 
-        private void HandleAssetBundleVerifyState(AssetBundleVerifyState state)
+        private void HandleAssetBundleVerifyState()
         {
-            if (state == AssetBundleVerifyState.WebRequestError)
+            if (State == AssetBundleVerifyState.WebRequestError)
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = _webRequest.error;
                 Debug.LogErrorFormat("Problem retrieving AssetBundle from {0}: {1}", _assetBundleUrl,
                     _errorDescription);
             }
-            else if (state == AssetBundleVerifyState.BundleError)
+            else if (State == AssetBundleVerifyState.BundleError)
             {
                 _assetBundleDownloadIsSuccessful = false;
                 _errorDescription = "Error extracting AssetBundle. See Console log for details.";
@@ -155,7 +154,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorUtility.ClearProgressBar();
 
             // Performs download operation only once when webrequest is completed.
-            HandleAssetBundleVerifyState(GetAssetBundleVerifyStateInfoFromDownload(_webRequest));
+            State = GetAssetBundleVerifyStateInfoFromDownload();
+            HandleAssetBundleVerifyState();
             Repaint();
 
             // Turn request to null to signal ready for next call
@@ -165,7 +165,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void OnGUI()
         {
-            if (state == AssetBundleVerifyState.InProgress)
+            if (State == AssetBundleVerifyState.InProgress)
             {
                 EditorGUILayout.LabelField("Loading...");
                 return;
