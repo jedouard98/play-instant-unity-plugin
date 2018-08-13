@@ -113,11 +113,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var query = GetQueryString(uri);
             return GetCodeOrErrorResponsePair(query);
         }
-        
+
         /// <summary>
         /// Returns a query string from the given uri.
         /// </summary>
-        /// <param name="uri"></param>
         /// <exception cref="ArgumentException">Exception thrown when the uri query is null or empty or if it does not
         /// start with '?'.</exception>
         internal static string GetQueryString(Uri uri)
@@ -135,7 +134,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             return query.Substring(1);
         }
-
 
         /// <summary>
         /// Returns a key/value pair corresponding to the code or error response present in the query, and throws

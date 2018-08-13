@@ -33,13 +33,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         private const string AddressPrefix = "http://localhost:5000/";
 
         [Test]
-        public void TestEscapeAndUnescapeDataString()
-        {
-            Assert.AreEqual("%20", Uri.EscapeDataString(" "));
-            Assert.AreEqual(" ", Uri.UnescapeDataString("%20"));
-        }
-
-        [Test]
         public void TestGetAuthorizationResponse()
         {
             var someString = Path.GetRandomFileName();
@@ -57,6 +50,10 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Assert.AreEqual(new KeyValuePair<string, string>("error", someString), errorResponse,
                 "Expected valid error response");
 
+            // response has valid key with escaped value
+            Assert.AreEqual(new KeyValuePair<string, string>("code", "a B c"),
+                OAuth2Server.GetAuthorizationResponse(new Uri(string.Format("{0}?code=a%20B%20c", AddressPrefix))));
+
             // response has invalid keys
             var invalidResponse = new Uri(string.Format("{0}?someKey=someValue", AddressPrefix));
             Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidResponse));
@@ -70,12 +67,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
             Assert.AreEqual("code=someValue", OAuth2Server.GetQueryString(validUriWithCode));
-
-            var validUriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
-            Assert.AreEqual("error=someValue", OAuth2Server.GetQueryString(validUriWithError));
-
-            var invalidUriWithEmptyQuery = new Uri(AddressPrefix);
-            Assert.Throws<ArgumentException>(() => OAuth2Server.GetQueryString(invalidUriWithEmptyQuery));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetQueryString(new Uri(AddressPrefix)));
         }
 
         [Test]
@@ -86,6 +78,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             Assert.AreEqual(new KeyValuePair<string, string>("error", "errorValue"),
                 OAuth2Server.GetCodeOrErrorResponsePair("error=errorValue"));
+            Assert.AreEqual(new KeyValuePair<string, string>("error", " "),
+                OAuth2Server.GetCodeOrErrorResponsePair("error=%20"));
         }
 
         [Test]
@@ -96,10 +90,15 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 () => OAuth2Server.GetCodeOrErrorResponsePair("code=codeValue&error=errorValue"));
             Assert.Throws<ArgumentException>(
                 () => OAuth2Server.GetCodeOrErrorResponsePair("code=codeValue&otherKey=someValue"));
-            Assert.Throws<ArgumentException>(() =>
-                OAuth2Server.GetCodeOrErrorResponsePair("error=errorValue&otherKey=someValue"));
+            Assert.Throws<ArgumentException>(
+                () => OAuth2Server.GetCodeOrErrorResponsePair("error=errorValue&otherKey=someValue"));
 
             // The single query parameter should be an equals-separated key/value pair.
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair(""));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("&"));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("="));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("code"));
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("code=value1=value2"));
             Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("code&codeValue"));
 
             // Key for the single query parameter should be either "code" or "error"
