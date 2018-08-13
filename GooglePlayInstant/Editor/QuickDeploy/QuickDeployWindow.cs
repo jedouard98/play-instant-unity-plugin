@@ -198,7 +198,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 else
                 {
-                    AssetBundleVerifierWindow.ShowWindow(_assetBundleUrl);
+                    var window = (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true,
+                        "Play Instant AssetBundle Verify");
+                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
                 }
             }
 
