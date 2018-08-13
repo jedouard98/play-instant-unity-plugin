@@ -15,12 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
-using UnityEngine;
 
 [assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
@@ -40,7 +38,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     public class OAuth2Server
     {
         private const string CloseTabText = "You may close this tab.";
-        internal const string InvalidQueryExceptionMessage = "Uri query is not valid";
 
         // Arbitrarily chosen port to listen for the authorization callback.
         private const int ServerPort = 2806;
@@ -106,66 +103,74 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         /// <summary>
         /// Returns a key value pair corresponding to the authorization response sent from OAuth2 authorization page.
-        /// Logs error message and throws ArgumentException if the uri contains invalid params.
+        /// Logs error message and throws ArgumentException if the uri query contains invalid params.
         /// </summary>
+        /// <see cref="GetCodeOrErrorResponsePair"/>On criteria for valid query params.
         /// <param name="uri">The uri of the incoming request</param>
         /// <exception cref="ArgumentException">Exception thrown if the uri contains invalid params.</exception>
         internal static KeyValuePair<string, string> GetAuthorizationResponse(Uri uri)
         {
-            if (!UriContainsValidQueryParams(uri))
+            var query = GetQueryString(uri);
+            return GetCodeOrErrorResponsePair(query);
+        }
+        
+        /// <summary>
+        /// Returns a query string from the given uri.
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <exception cref="ArgumentException">Exception thrown when the uri query is null or empty or if it does not
+        /// start with '?'.</exception>
+        internal static string GetQueryString(Uri uri)
+        {
+            var query = uri.Query;
+            if (string.IsNullOrEmpty(query))
             {
-                const string errorMessage = "Uri query is not valid";
-                Debug.LogError(errorMessage);
-                throw new ArgumentException(errorMessage);
+                throw new ArgumentException("URI is missing query parameters");
             }
 
-            return GetQueryParamsFromUri(uri).ToArray()[0];
+            if (query[0] != '?')
+            {
+                throw new ArgumentException("Expect first character of URI query is \"?\"");
+            }
+
+            return query.Substring(1);
         }
 
-        /// <summary>
-        /// Inspect the URI and determine whether it contains valid params according to the following policies:
-        ///   1. URI query must include "code" or "error" in param keys.
-        ///   2. "code" and "error" cannot be present at the same time.
-        ///   3. No other keys apart from "code", "error" are allowed.
-        /// </summary>
-        internal static bool UriContainsValidQueryParams(Uri uri)
-        {
-            var allowedQueries = new[] {"code", "error"};
-            var queryParams = GetQueryParamsFromUri(uri);
-
-            Predicate<Dictionary<string, string>> codeOrErrorIsPresent = queryParamsDict =>
-                queryParamsDict.ContainsKey("code") || queryParamsDict.ContainsKey("error");
-
-            Predicate<Dictionary<string, string>> notBothCodeAndErrorArePresent = queryParamsDict =>
-                !(queryParamsDict.ContainsKey("error") && queryParamsDict.ContainsKey("code"));
-
-            Predicate<Dictionary<string, string>> noOtherKeysArePresent = queryParamsDict =>
-                queryParamsDict.Where(kvp => !allowedQueries.Contains(kvp.Key)).ToArray().Length == 0;
-            return codeOrErrorIsPresent(queryParams) && notBothCodeAndErrorArePresent(queryParams) &&
-                   noOtherKeysArePresent(queryParams);
-        }
 
         /// <summary>
-        /// Processes Uri, extracts query params, puts them into a dictionary returns the dictionary.
-        /// Uri must not be null.
+        /// Returns a key/value pair corresponding to the code or error response present in the query, and throws
+        /// an ArgumentException when the query is not valid.
+        /// For a query to be valid:
+        ///     1. The query representing authorization response should consist of a single query parameter
+        ///     2. The single query parameter should be an equals-separated key/value pair
+        ///     3. The key for the single query parameter should be either "code" or "error"
         /// </summary>
-        internal static Dictionary<string, string> GetQueryParamsFromUri(Uri uri)
+        internal static KeyValuePair<string, string> GetCodeOrErrorResponsePair(string query)
         {
-            var result = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(uri.Query))
+            // The authorization response should consist of a single query parameter.
+            var paramPairs = query.Split('&');
+            if (paramPairs.Length != 1)
             {
-                return result;
+                throw new ArgumentException(string.Format("Unexpected number of URI parameters {0}",
+                    paramPairs.Length));
             }
 
-            // Uri's Query string always starts with "?" so skip the first character.
-            var query = uri.Query.Substring(1);
-            foreach (var pair in query.Split('&'))
+            // The single query parameter should be an equals-separated key/value pair.
+            var keyAndValue = paramPairs[0].Split('=');
+            if (keyAndValue.Length != 2)
             {
-                var keyAndValue = pair.Split('=');
-                result.Add(Uri.UnescapeDataString(keyAndValue[0]), Uri.UnescapeDataString(keyAndValue[1]));
+                throw new ArgumentException(string.Format("URI parameter pair has {0} components", keyAndValue.Length));
             }
 
-            return result;
+            // The key for the single query parameter should either be "code" or "error".
+            var key = keyAndValue[0];
+            var value = Uri.UnescapeDataString(keyAndValue[1]);
+            if (key != "code" && key != "error")
+            {
+                throw new ArgumentException(string.Format("Unexpected URI parameter key \"{0}\"", key));
+            }
+
+            return new KeyValuePair<string, string>(key, value);
         }
 
         /// <summary>

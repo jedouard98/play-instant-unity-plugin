@@ -15,12 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -35,6 +31,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         //     - TODO: Implement E2E tests to ensure that the server handles requests as expected.
 
         private const string AddressPrefix = "http://localhost:5000/";
+
+        [Test]
+        public void TestEscapeAndUnescapeDataString()
+        {
+            Assert.AreEqual("%20", Uri.EscapeDataString(" "));
+            Assert.AreEqual(" ", Uri.UnescapeDataString("%20"));
+        }
 
         [Test]
         public void TestGetAuthorizationResponse()
@@ -52,59 +55,55 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 OAuth2Server.GetAuthorizationResponse(new Uri(string.Format("{0}?error={1}", AddressPrefix,
                     someString)));
             Assert.AreEqual(new KeyValuePair<string, string>("error", someString), errorResponse,
-                "Expected invalid error response");
+                "Expected valid error response");
 
             // response has invalid keys
             var invalidResponse = new Uri(string.Format("{0}?someKey=someValue", AddressPrefix));
-            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidResponse),
-                "Expected ArgumentException");
-            LogAssert.Expect(LogType.Error, OAuth2Server.InvalidQueryExceptionMessage);
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(invalidResponse));
 
             // No response. Uri has no params
-            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(new Uri(AddressPrefix)),
-                "Expected ARgumentException");
-            LogAssert.Expect(LogType.Error, OAuth2Server.InvalidQueryExceptionMessage);
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetAuthorizationResponse(new Uri(AddressPrefix)));
         }
 
         [Test]
-        public void TestUriContainsValidParams()
+        public void TestGetQueryString()
         {
-            const string codeOrErrorKeyMustBePresentText =
-                "Uri query must include either \"code\" or \"error\" as keys.";
-
             var validUriWithCode = new Uri(string.Format("{0}?code=someValue", AddressPrefix));
-            Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(validUriWithCode),
-                codeOrErrorKeyMustBePresentText);
-            var uriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
-            Assert.IsTrue(OAuth2Server.UriContainsValidQueryParams(uriWithError),
-                codeOrErrorKeyMustBePresentText);
+            Assert.AreEqual("code=someValue", OAuth2Server.GetQueryString(validUriWithCode));
 
-            var invalidUriWithCodeAndError =
-                new Uri(string.Format("{0}?code=codeValue&error=errorValue", AddressPrefix));
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithCodeAndError),
-                "\"code\" and \"error\" cannot be present at the same time.");
-
-            var invalidUriWithOtherKeys =
-                new Uri(string.Format("{0}?code=codeValue&otherKey=someValue", AddressPrefix));
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithOtherKeys),
-                "No other keys apart from \"code\" and \"error\" are allowed.");
+            var validUriWithError = new Uri(string.Format("{0}?error=someValue", AddressPrefix));
+            Assert.AreEqual("error=someValue", OAuth2Server.GetQueryString(validUriWithError));
 
             var invalidUriWithEmptyQuery = new Uri(AddressPrefix);
-            Assert.IsFalse(OAuth2Server.UriContainsValidQueryParams(invalidUriWithEmptyQuery),
-                "Uri with empty query should be invalid");
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetQueryString(invalidUriWithEmptyQuery));
         }
 
         [Test]
-        public void TestGetQueryParamsFromUri()
+        public void TestGetCodeOrErrorResponsePairOnValidInputs()
         {
-            // Case 1: Non-empty query
-            var testDictionary = new Dictionary<string, string> {{"a", "b"}, {"c", "d"}};
-            var uri = new Uri(AddressPrefix + "?a=b&c=d");
-            Assert.AreEqual(testDictionary, OAuth2Server.GetQueryParamsFromUri(uri),
-                "Should return expected correct query params");
-            // Case 2: Empty query
-            Assert.IsEmpty(OAuth2Server.GetQueryParamsFromUri(new Uri(AddressPrefix)),
-                "Expected empty dictionary from empty query");
+            Assert.AreEqual(new KeyValuePair<string, string>("code", "codeValue"),
+                OAuth2Server.GetCodeOrErrorResponsePair("code=codeValue"));
+
+            Assert.AreEqual(new KeyValuePair<string, string>("error", "errorValue"),
+                OAuth2Server.GetCodeOrErrorResponsePair("error=errorValue"));
+        }
+
+        [Test]
+        public void TestGetCodeOrErrorResponsePairOnInvalidInputs()
+        {
+            // The authorization response should consist of a single query parameter.
+            Assert.Throws<ArgumentException>(
+                () => OAuth2Server.GetCodeOrErrorResponsePair("code=codeValue&error=errorValue"));
+            Assert.Throws<ArgumentException>(
+                () => OAuth2Server.GetCodeOrErrorResponsePair("code=codeValue&otherKey=someValue"));
+            Assert.Throws<ArgumentException>(() =>
+                OAuth2Server.GetCodeOrErrorResponsePair("error=errorValue&otherKey=someValue"));
+
+            // The single query parameter should be an equals-separated key/value pair.
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("code&codeValue"));
+
+            // Key for the single query parameter should be either "code" or "error"
+            Assert.Throws<ArgumentException>(() => OAuth2Server.GetCodeOrErrorResponsePair("someKey=someValue"));
         }
     }
 }
