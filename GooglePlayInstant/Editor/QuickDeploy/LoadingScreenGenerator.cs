@@ -33,7 +33,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
-        internal const string LoadingScreenCanvasName = "Loading Screen Canvas";
+        private const string LoadingScreenCanvasName = "Loading Screen Canvas";
 
         internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
