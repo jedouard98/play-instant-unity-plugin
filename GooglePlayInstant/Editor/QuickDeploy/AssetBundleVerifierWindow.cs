@@ -79,6 +79,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         // Visible for testing
         internal void HandleAssetBundleVerifyState(AssetBundleVerifyState state, UnityWebRequest webRequest)
         {
+            // InProgress state should not be handled.
             switch (state)
             {
                 case AssetBundleVerifyState.DestinationError:
