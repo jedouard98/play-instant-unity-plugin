@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.IO;
 using GooglePlayInstant.Editor.QuickDeploy;
 using GooglePlayInstant.LoadingScreen;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 {
@@ -26,17 +27,31 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         [Test]
         public void TestAddLoadingScreenImage()
         {
-            
         }
 
-        [Test]
-        public void TestGenerateLoadingScreenConfigFile()
+        [UnityTest]
+        public IEnumerator TestGenerateLoadingScreenConfigFile()
         {
-            var loadingScreeGameObject = new GameObject(LoadingScreenGenerator.LoadingScreenCanvasName);
             LoadingScreenGenerator.GenerateLoadingScreenConfigFile("test.co");
             
-            
+            var locationOfAsset = Path.Combine(LoadingScreenGenerator.LoadingScreenResourcesPath, LoadingScreenGenerator.LoadingScreenJsonFileName);
 
+            while (!File.Exists(locationOfAsset))
+            {
+                yield return null;
+            }
+
+            var loadingScreenConfigJson = AssetDatabase.LoadAssetAtPath(locationOfAsset, typeof(TextAsset)).ToString();
+
+            
+            var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
+
+            Assert.AreEqual("test.co", loadingScreenConfig.assetBundleUrl);
+
+            AssetDatabase.DeleteAsset(locationOfAsset);
+            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
+            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenScenePath);
+            
         }
     }
 }

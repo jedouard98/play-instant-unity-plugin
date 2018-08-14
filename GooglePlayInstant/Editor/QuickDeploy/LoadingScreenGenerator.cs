@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using GooglePlayInstant.LoadingScreen;
@@ -34,12 +35,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         internal const string LoadingScreenCanvasName = "Loading Screen Canvas";
 
-        private const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
-        private static readonly string LoadingScreenScenePath =
+        internal static readonly string LoadingScreenScenePath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
 
-        private static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
+        internal static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
 
         /// <summary>
         /// The path to a fullscreen image displayed in the background while the game loads.
@@ -53,29 +54,37 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static void GenerateLoadingScreenScene(string assetBundleUrl)
         {
-            if (!File.Exists(LoadingScreenImagePath))
+            try
             {
-                Debug.LogErrorFormat("Loading screen image file cannot be found: {0}", LoadingScreenImagePath);
-                return;
+                var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+
+                if (!File.Exists(LoadingScreenImagePath))
+                {
+                    Debug.LogErrorFormat("Loading screen image file cannot be found: {0}", LoadingScreenImagePath);
+                    return;
+                }
+
+                // Removes the loading scene if it is present, otherwise does nothing.
+                EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
+
+                Directory.CreateDirectory(LoadingScreenResourcesPath);
+
+                GenerateLoadingScreenConfigFile(assetBundleUrl);
+
+                var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
+
+                AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
+                AddLoadingScreenScript(loadingScreenGameObject);
+
+                LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
+
+                EditorSceneManager.SaveScene(loadingScreenScene,
+                    Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
             }
-
-            // Removes the loading scene if it is present, otherwise does nothing.
-            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
-
-            Directory.CreateDirectory(LoadingScreenResourcesPath);
-
-            GenerateLoadingScreenConfigFile(assetBundleUrl);
-
-            var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
-            var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
-
-            AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
-            AddLoadingScreenScript(loadingScreenGameObject);
-
-            LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
-
-            EditorSceneManager.SaveScene(loadingScreenScene,
-                Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
+            catch (InvalidOperationException e)
+            {
+                Debug.LogError(e.ToString());
+            }
         }
 
         internal static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
