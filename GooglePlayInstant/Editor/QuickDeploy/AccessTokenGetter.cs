@@ -20,7 +20,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class AccessTokenGetter
     {
-        private const string OAuth2GrantType = "authorization_code";
+        private const string OAuth2CodeGrantType = "authorization_code";
 
         /// <summary>
         /// Full control scope is required, since the application needs to read, write as well as change access
@@ -29,7 +29,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string OAuth2Scope = "https://www.googleapis.com/auth/devstorage.full_control";
 
         private static KeyValuePair<string, string>? _authorizationResponse;
-        
+
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
         // Use to store access token.
@@ -40,7 +40,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static GCPAccessToken AccessToken
         {
-            //TODO(audace): Implement functionality for tokens to be reused in future unity sessions without re-doing the OAuth2 Flow.
+            //TODO(audace): Implement functionality for tokens to be re-used in future unity sessions without re-doing the OAuth2 Flow.
             get { return _accessToken; }
             private set { _accessToken = value; }
         }
@@ -132,16 +132,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static void RequestAndStoreAccessToken(AuthorizationCode authCode, Action postTokenAction)
         {
             var credentials = OAuth2Credentials.GetCredentials();
-            var tokenEndpiont = credentials.token_uri;
-            var formData = new Dictionary<string, string>();
-            formData.Add("code", authCode.code);
-            formData.Add("client_id", credentials.client_id);
-            formData.Add("client_secret", credentials.client_secret);
-            formData.Add("redirect_uri", authCode.redirect_uri);
-            formData.Add("grant_type", OAuth2GrantType);
-
+            var formData = new Dictionary<string, string>
+            {
+                {"code", authCode.code},
+                {"client_id", credentials.client_id},
+                {"client_secret", credentials.client_secret},
+                {"redirect_uri", authCode.redirect_uri},
+                {"grant_type", OAuth2CodeGrantType}
+            };
             WwwRequestInProgress.TrackProgress(
-                HttpRequestHelper.SendHttpPostRequest(tokenEndpiont, formData, null),
+                HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, formData, null),
                 "Requesting access token",
                 doneWww =>
                 {

@@ -250,10 +250,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType,
             string accessToken)
         {
-            var requestHeaders = new Dictionary<string, string>();
-            requestHeaders.Add("Authorization",
-                string.Format("Bearer {0}", accessToken));
-            requestHeaders.Add("Content-Type", contentType);
+            var requestHeaders = new Dictionary<string, string>
+            {
+                {"Authorization", string.Format("Bearer {0}", accessToken)},
+                {"Content-Type", contentType}
+                
+            };
             return HttpRequestHelper.SendHttpPostRequest(endpoint, content, requestHeaders);
         }
 
