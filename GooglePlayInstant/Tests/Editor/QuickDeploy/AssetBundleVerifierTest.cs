@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections;
 using GooglePlayInstant.Editor.QuickDeploy;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.TestTools;
@@ -38,7 +36,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             Assert.IsFalse(window.AssetBundleDownloadIsSuccessful,
                 "AssetBundle download should not be marked successful during destination error state.");
-            
+
             window.Close();
         }
 
@@ -56,7 +54,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             LogAssert.Expect(LogType.Error,
                 string.Format(AssetBundleVerifierWindow.WebRequestErrorFormatMessage, window.AssetBundleUrl,
                     window.ErrorDescription));
-            
+
             window.Close();
         }
 
@@ -70,7 +68,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             Assert.IsFalse(window.AssetBundleDownloadIsSuccessful,
                 "AssetBundle download should not be marked successful during bundle error state.");
-            
+
             window.Close();
         }
     }
