@@ -27,24 +27,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public class AssetBundleVerifierWindow : EditorWindow
     {
-        private const int FieldMinWidth = 170;
-
-        internal bool AssetBundleDownloadIsSuccessful;
-        internal string AssetBundleUrl;
-
-        private long _responseCode;
-
-        internal string ErrorDescription;
-
-        private string _mainScene;
-        private double _numOfMegabytes;
-        private UnityWebRequest _webRequest;
-        private AssetBundle _bundle;
-
-        public AssetBundleVerifyState State;
-
-        internal static string WebRequestErrorFormatMessage = "Problem retrieving AssetBundle from {0}: {1}";
-
         public enum AssetBundleVerifyState
         {
             InProgress,
@@ -53,13 +35,30 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             BundleError,
             DownloadSuccess
         }
+        
+        private const int FieldMinWidth = 170;
+        internal const string WebRequestErrorFormatMessage = "Problem retrieving AssetBundle from {0}: {1}";
+        
+        private long _responseCode;
+        
+        private string _mainScene;
+        private double _numOfMegabytes;
+        private UnityWebRequest _webRequest;
+        private AssetBundle _bundle;
+        
+        // Visible for testing
+        internal bool AssetBundleDownloadIsSuccessful;
+        internal string AssetBundleUrl;
+        internal string ErrorDescription;
+
+        public AssetBundleVerifyState State;
 
         /// <summary>
         /// Creates a dialog box that details the success or failure of an AssetBundle retrieval from a given assetBundleUrl.
         /// </summary>
-        public static void ShowWindow()
+        public static AssetBundleVerifierWindow ShowWindow()
         {
-            GetWindow(typeof(AssetBundleVerifierWindow), true, "Play Instant AssetBundle Verify");
+            return (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true, "Play Instant AssetBundle Verify");
         }
 
         public void StartAssetBundleVerificationDownload(string assetBundleUrl)
@@ -77,6 +76,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 #endif
         }
 
+        // Visible for testing
         internal void HandleAssetBundleVerifyState(AssetBundleVerifyState state, UnityWebRequest webRequest)
         {
             switch (state)
@@ -102,7 +102,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     _numOfMegabytes = ConvertBytesToMegabytes(webRequest.downloadedBytes);
                     var scenes = _bundle.GetAllScenePaths();
                     _mainScene = (scenes.Length == 0) ? "No scenes in AssetBundle" : scenes[0];
+                    // Free memory used by the AssetBundle since it will not be in use by the Editor. Set to true to destroy
+                    // all objects that were loaded from this bundle.
+                    _bundle.Unload(true);
                     break;
+                default:
+                    throw new NotImplementedException(string.Format("Unexpected state {0}", state));
             }
         }
 
@@ -119,7 +124,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             catch (InvalidOperationException e)
             {
-                Debug.LogError(e.ToString());
+                Debug.LogErrorFormat("Failed to obtain AssetBundle content: {0}", e);
                 return AssetBundleVerifyState.DestinationError;
             }
 
@@ -128,7 +133,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 #if UNITY_2017_1_OR_NEWER
             if (_webRequest.isHttpError || _webRequest.isNetworkError)
 #else
-            if (webRequest.isError)
+            if (_webRequest.isError)
 #endif
             {
                 return AssetBundleVerifyState.WebRequestError;
@@ -175,10 +180,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorUtility.ClearProgressBar();
             HandleAssetBundleVerifyState(State, _webRequest);
             Repaint();
-
-            // Free memory used by the AssetBundle since it will not be in use by the Editor. Set to true to destroy
-            // all objects that were loaded from this bundle.
-            _bundle.Unload(true);
 
             // Turn request to null to signal ready for next call
             _webRequest.Dispose();

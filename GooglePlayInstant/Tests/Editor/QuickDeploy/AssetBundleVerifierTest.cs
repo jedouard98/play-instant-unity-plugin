@@ -28,62 +28,50 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class AssetBundleVerifierTest
     {
-        [UnityTest]
-        public IEnumerator TestDestinationError()
+        [Test]
+        public void TestDestinationError()
         {
-            var window = (AssetBundleVerifierWindow) EditorWindow.GetWindow(typeof(AssetBundleVerifierWindow), true,
-                "Play Instant AssetBundle Verify");
-
-            while (window == null)
-            {
-                yield return null;
-            }
+            var window = AssetBundleVerifierWindow.ShowWindow();
 
             window.HandleAssetBundleVerifyState(AssetBundleVerifierWindow.AssetBundleVerifyState.DestinationError,
                 new UnityWebRequest());
 
-            Assert.AreEqual(false, window.AssetBundleDownloadIsSuccessful,
+            Assert.IsFalse(window.AssetBundleDownloadIsSuccessful,
                 "AssetBundle download should not be marked successful during destination error state.");
+            
+            window.Close();
         }
 
-        [UnityTest]
-        public IEnumerator TestWebRequestError()
+        [Test]
+        public void TestWebRequestError()
         {
-            var window = (AssetBundleVerifierWindow) EditorWindow.GetWindow(typeof(AssetBundleVerifierWindow), true,
-                "Play Instant AssetBundle Verify");
-
-            while (window == null)
-            {
-                yield return null;
-            }
+            var window = AssetBundleVerifierWindow.ShowWindow();
 
             window.HandleAssetBundleVerifyState(AssetBundleVerifierWindow.AssetBundleVerifyState.WebRequestError,
                 new UnityWebRequest());
 
-            Assert.AreEqual(false, window.AssetBundleDownloadIsSuccessful,
+            Assert.IsFalse(window.AssetBundleDownloadIsSuccessful,
                 "AssetBundle download should not be marked successful during destination error state.");
 
             LogAssert.Expect(LogType.Error,
                 string.Format(AssetBundleVerifierWindow.WebRequestErrorFormatMessage, window.AssetBundleUrl,
                     window.ErrorDescription));
+            
+            window.Close();
         }
 
-        [UnityTest]
-        public IEnumerator TestBundleError()
+        [Test]
+        public void TestBundleError()
         {
-            var window = (AssetBundleVerifierWindow) EditorWindow.GetWindow(typeof(AssetBundleVerifierWindow), true,
-                "Play Instant AssetBundle Verify");
-
-            while (window == null)
-            {
-                yield return null;
-            }
+            var window = AssetBundleVerifierWindow.ShowWindow();
 
             window.HandleAssetBundleVerifyState(AssetBundleVerifierWindow.AssetBundleVerifyState.BundleError,
                 new UnityWebRequest());
 
-            Assert.AreEqual(false, window.AssetBundleDownloadIsSuccessful,
+            Assert.IsFalse(window.AssetBundleDownloadIsSuccessful,
                 "AssetBundle download should not be marked successful during bundle error state.");
+            
+            window.Close();
         }
     }
 }
