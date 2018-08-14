@@ -31,21 +31,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public class LoadingScreenGenerator
     {
-        public const string LoadingSceneName = "play-instant-loading-screen-scene";
-
-        private const string LoadingScreenCanvasName = "Loading Screen Canvas";
-
-        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
-
-        internal static readonly string LoadingScreenScenePath =
-            Path.Combine("Assets", "PlayInstantLoadingScreen");
-
-        internal static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
-
         /// <summary>
         /// The path to a fullscreen image displayed in the background while the game loads.
         /// </summary>
         public static string LoadingScreenImagePath { get; set; }
+        
+        public const string LoadingSceneName = "play-instant-loading-screen-scene";
+
+        private const string LoadingScreenCanvasName = "Loading Screen Canvas";
+
+        // Visible for testing
+        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        internal static readonly string LoadingScreenScenePath =
+            Path.Combine("Assets", "PlayInstantLoadingScreen");
+        internal static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
 
         /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
@@ -87,12 +86,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
+        // Visible for testing
         internal static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
         {
             loadingScreenGameObject.AddComponent<LoadingScreenScript>();
         }
 
 
+        // Visible for testing
         internal static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
@@ -111,6 +112,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             loadingScreenImage.sprite = loadingImageSprite;
         }
 
+        // Visible for testing
         internal static void GenerateLoadingScreenConfigFile(string assetBundleUrl)
         {
             var loadingScreenConfig =
