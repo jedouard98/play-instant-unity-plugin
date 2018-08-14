@@ -1,11 +1,21 @@
-﻿using System.Collections;
+﻿// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System.IO;
 using GooglePlayInstant.Editor.QuickDeploy;
 using GooglePlayInstant.LoadingScreen;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace GooglePlayInstant.Tests.Editor.QuickDeploy
@@ -39,13 +49,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             AssetDatabase.DeleteAsset(testImage);
 
             Assert.IsNotNull(loadingScreenGameObject.GetComponent<Canvas>(),
-                "A canvas component should have been added.");
+                "A canvas component should have been added to the loading screen game object.");
             Assert.IsNotNull(loadingScreenGameObject.GetComponent<Image>(),
-                "An image component should have been added.");
+                "An image component should have been added to the loading screen game object.");
         }
 
-        [UnityTest]
-        public IEnumerator TestGenerateLoadingScreenConfigFileWithString()
+        [Test]
+        public void TestGenerateLoadingScreenConfigFileWithString()
         {
             const string testUrl = "test.co";
 
@@ -55,11 +65,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             var loadingScreenJsonPath = Path.Combine(LoadingScreenGenerator.LoadingScreenResourcesPath,
                 LoadingScreenGenerator.LoadingScreenJsonFileName);
-
-            while (!File.Exists(loadingScreenJsonPath))
-            {
-                yield return null;
-            }
 
             var loadingScreenConfigJson =
                 AssetDatabase.LoadAssetAtPath(loadingScreenJsonPath, typeof(TextAsset)).ToString();
@@ -71,11 +76,12 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
             FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenScenePath);
 
-            Assert.AreEqual(testUrl, loadingScreenConfig.assetBundleUrl);
+            Assert.AreEqual(testUrl, loadingScreenConfig.assetBundleUrl,
+                string.Format("AssetBundle Url from Config file should be {0}", testUrl));
         }
 
-        [UnityTest]
-        public IEnumerator TestGenerateLoadingScreenConfigFileWithEmptyString()
+        [Test]
+        public void TestGenerateLoadingScreenConfigFileWithEmptyString()
         {
             Directory.CreateDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
 
@@ -84,18 +90,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var loadingScreenJsonPath = Path.Combine(LoadingScreenGenerator.LoadingScreenResourcesPath,
                 LoadingScreenGenerator.LoadingScreenJsonFileName);
 
-            while (!File.Exists(loadingScreenJsonPath))
-            {
-                yield return null;
-            }
-
             var loadingScreenConfigJson =
                 AssetDatabase.LoadAssetAtPath(loadingScreenJsonPath, typeof(TextAsset)).ToString();
 
 
             var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
 
-            Assert.AreEqual("", loadingScreenConfig.assetBundleUrl);
+            Assert.IsEmpty(loadingScreenConfig.assetBundleUrl, "AssetBundle Url from Config file should be empty.");
 
             AssetDatabase.DeleteAsset(loadingScreenJsonPath);
             FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
