@@ -1,4 +1,6 @@
-﻿// Licensed under the Apache License, Version 2.0 (the "License");
+﻿// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -26,10 +28,15 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class LoadingScreenGeneratorTest
     {
+        private const string TestGameObjectName = "testing_object";
+
+        private static readonly string TestLoadingScreenJsonPath =
+            Path.Combine("Assets", LoadingScreenGenerator.LoadingScreenJsonFileName);
+
         [Test]
         public void TestAddLoadingScreenScript()
         {
-            var loadingScreenGameObject = new GameObject();
+            var loadingScreenGameObject = new GameObject(TestGameObjectName);
             LoadingScreenGenerator.AddLoadingScreenScript(loadingScreenGameObject);
             Assert.IsNotNull(loadingScreenGameObject.GetComponent<LoadingScreenScript>(),
                 "A script should be attached to the loading screen object.");
@@ -40,13 +47,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             const string testImage = "example.png";
 
-            File.Create(testImage).Dispose();
+            // Creates the file stream and disposes of it, so that adding loading screen image to scene can
+            // also read from said file.
+            using (File.Create(testImage)) ;
 
-            var loadingScreenGameObject = new GameObject();
+            var loadingScreenGameObject = new GameObject(TestGameObjectName);
 
             LoadingScreenGenerator.AddLoadingScreenImageToScene(loadingScreenGameObject, testImage);
-
-            AssetDatabase.DeleteAsset(testImage);
 
             Assert.IsNotNull(loadingScreenGameObject.GetComponent<Canvas>(),
                 "A canvas component should have been added to the loading screen game object.");
@@ -59,48 +66,34 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             const string testUrl = "test.co";
 
-            Directory.CreateDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
-
-            LoadingScreenGenerator.GenerateLoadingScreenConfigFile(testUrl);
-
-            var loadingScreenJsonPath = Path.Combine(LoadingScreenGenerator.LoadingScreenResourcesPath,
-                LoadingScreenGenerator.LoadingScreenJsonFileName);
+            LoadingScreenGenerator.GenerateLoadingScreenConfigFile(testUrl, TestLoadingScreenJsonPath);
 
             var loadingScreenConfigJson =
-                AssetDatabase.LoadAssetAtPath(loadingScreenJsonPath, typeof(TextAsset)).ToString();
-
+                AssetDatabase.LoadAssetAtPath(TestLoadingScreenJsonPath, typeof(TextAsset)).ToString();
 
             var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
 
-            AssetDatabase.DeleteAsset(loadingScreenJsonPath);
-            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
-            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenScenePath);
-
-            Assert.AreEqual(testUrl, loadingScreenConfig.assetBundleUrl,
-                string.Format("AssetBundle Url from Config file should be {0}", testUrl));
+            Assert.AreEqual(testUrl, loadingScreenConfig.assetBundleUrl);
         }
 
         [Test]
         public void TestGenerateLoadingScreenConfigFileWithEmptyString()
         {
-            Directory.CreateDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
-
-            LoadingScreenGenerator.GenerateLoadingScreenConfigFile("");
-
-            var loadingScreenJsonPath = Path.Combine(LoadingScreenGenerator.LoadingScreenResourcesPath,
-                LoadingScreenGenerator.LoadingScreenJsonFileName);
+            LoadingScreenGenerator.GenerateLoadingScreenConfigFile("", TestLoadingScreenJsonPath);
 
             var loadingScreenConfigJson =
-                AssetDatabase.LoadAssetAtPath(loadingScreenJsonPath, typeof(TextAsset)).ToString();
-
+                AssetDatabase.LoadAssetAtPath(TestLoadingScreenJsonPath, typeof(TextAsset)).ToString();
 
             var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
 
-            Assert.IsEmpty(loadingScreenConfig.assetBundleUrl, "AssetBundle Url from Config file should be empty.");
+            Assert.IsEmpty(loadingScreenConfig.assetBundleUrl);
+        }
 
-            AssetDatabase.DeleteAsset(loadingScreenJsonPath);
-            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenResourcesPath);
-            FileUtil.DeleteFileOrDirectory(LoadingScreenGenerator.LoadingScreenScenePath);
+        // Dispose of temporarily created file.  
+        [OneTimeTearDown]
+        public void Cleanup()
+        {
+            AssetDatabase.DeleteAsset(TestLoadingScreenJsonPath);
         }
     }
 }
