@@ -14,8 +14,6 @@
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Security.Permissions;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -30,12 +28,12 @@ namespace GooglePlayInstant.Editor
     public static class WwwRequestInProgress
     {
         // Only one request can be performed at a time
-        private static OnGoingRequest _onGoingRequest;
+        private static OngoingRequest _ongoingRequest;
 
 
         /// <summary>
-        /// Monitor an HTTP request being made. Assumes one request will be made at a time, therefore will provide
-        /// a warning message and stop monitoring a previous request if one was still being monitored.
+        /// Monitor an HTTP request being made. Assumes one request will be made at a time, therefore will throw
+        /// an exception if a previous request is still being monitored.
         /// </summary>
         /// <param name="www">A www instance holding a request that was made</param>
         /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
@@ -43,12 +41,12 @@ namespace GooglePlayInstant.Editor
         /// is available.</param>
         public static void TrackProgress(WWW www, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
         {
-            if (_onGoingRequest != null)
+            if (_ongoingRequest != null)
             {
                 throw new Exception("Cannot start another request while the previous one is not complete.");
             }
 
-            _onGoingRequest = new OnGoingRequest(www, progressBarTitleText, onResponseAvailableAction);
+            _ongoingRequest = new OngoingRequest(www, progressBarTitleText, onResponseAvailableAction);
         }
 
         /// <summary>
@@ -59,39 +57,39 @@ namespace GooglePlayInstant.Editor
         /// </summary>
         public static void Update()
         {
-            if (_onGoingRequest == null)
+            if (_ongoingRequest == null)
             {
                 return;
             }
 
-            if (_onGoingRequest.RequestWww.isDone)
+            if (_ongoingRequest.RequestWww.isDone)
             {
                 EditorUtility.ClearProgressBar();
-                var onGoingRequest = _onGoingRequest;
+                var onGoingRequest = _ongoingRequest;
                 // Set the static field _requestInProgress to null before invoking the  post-completion action
                 // because the action could be executing an action that will read or overwrite the static field.
-                _onGoingRequest = null;
+                _ongoingRequest = null;
                 onGoingRequest.OnResponseAvailableAction(onGoingRequest.RequestWww);
                 onGoingRequest.Dispose();
             }
             else
             {
-                if (EditorUtility.DisplayCancelableProgressBar(_onGoingRequest.ProgressBarTitleText,
-                    string.Format("Progress: {0}%", Math.Floor(_onGoingRequest.RequestWww.uploadProgress * 100)),
-                    _onGoingRequest.RequestWww.uploadProgress))
+                if (EditorUtility.DisplayCancelableProgressBar(_ongoingRequest.ProgressBarTitleText,
+                    string.Format("Progress: {0}%", Math.Floor(_ongoingRequest.RequestWww.uploadProgress * 100)),
+                    _ongoingRequest.RequestWww.uploadProgress))
                 {
                     EditorUtility.ClearProgressBar();
-                    _onGoingRequest.Dispose();
-                    _onGoingRequest = null;
+                    _ongoingRequest.Dispose();
+                    _ongoingRequest = null;
                 }
             }
         }
 
         /// <summary>
-        /// Encapsulates a WWW instance used to send an HTTP request, the tItle to display in the progress bar and
+        /// Encapsulates a WWW instance used to send an HTTP request, the title to display in the progress bar and
         /// an action to invoke on the WWW instance when the request is complete.
         /// </summary>
-        private class OnGoingRequest : IDisposable
+        private class OngoingRequest : IDisposable
         {
             public WWW RequestWww { get; private set; }
             public string ProgressBarTitleText { get; private set; }
@@ -104,7 +102,7 @@ namespace GooglePlayInstant.Editor
             /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
             /// <param name="onResponseAvailableAction">An action to be invoked on the WWW instance holding the request
             /// when the response is available.</param>
-            public OnGoingRequest(WWW requestWww, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
+            public OngoingRequest(WWW requestWww, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
             {
                 RequestWww = requestWww;
                 ProgressBarTitleText = progressBarTitleText;

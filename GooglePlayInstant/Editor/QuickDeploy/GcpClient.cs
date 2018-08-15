@@ -26,9 +26,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public static class GcpClient
     {
-        private const string TokenUpdateFailedExceptionMessage =
-            "Failed to retrieve access token to use for HTTP request";
-
         /// <summary>
         /// Executes all the steps required for deploying a file to GCP according to developer's configuration.
         /// First verifies if configured bucket exists, and creates the bucket if it does not exist. It then uploads
@@ -36,40 +33,49 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static void DeployConfiguredFile()
         {
-            VerifyBucketExistence(
-                // To be executed if bucket exists.
-                bucketExistsResponse => { UploadBundleAndMakePublic(); },
-                // To be executed if bucket does not exist.
-                bucketNotFoundResponse =>
+            InvokeAccessRestrictedAction(CheckBucketExistence, bucketInfoResponse =>
+            {
+                if (!string.IsNullOrEmpty(bucketInfoResponse.error))
                 {
-                    CreateBucket(bucketCreationResponse =>
+                    if (bucketInfoResponse.error.StartsWith("404"))
                     {
-                        var error = bucketCreationResponse.error;
-                        if (!string.IsNullOrEmpty(error))
+                        InvokeAccessRestrictedAction(CreateBucket, bucketCreationResponse =>
                         {
-                            throw new Exception(string.Format("Got error attempting to create bucket: {0}\n{1}", error,
-                                bucketCreationResponse.text));
-                        }
+                            var error = bucketCreationResponse.error;
+                            if (!string.IsNullOrEmpty(error))
+                            {
+                                throw new Exception(string.Format("Got error attempting to create bucket: {0}\n{1}",
+                                    error,
+                                    bucketCreationResponse.text));
+                            }
 
-                        Debug.Log("Google Cloud Storage bucket was successfully created.");
-                        UploadBundleAndMakePublic();
-                    });
-                });
+                            Debug.Log("Google Cloud Storage bucket was successfully created.");
+                            UploadBundleAndMakePublic();
+                        });
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format(
+                            "Got error when verifying bucket existence: {0} \n {1}", bucketInfoResponse.error,
+                            bucketInfoResponse.error));
+                    }
+                }
+                else
+                {
+                    var response = JsonUtility.FromJson<BucketInfoResponse>(bucketInfoResponse.text);
+                    var bucketName = response.name;
+                    if (!string.Equals(bucketName, QuickDeployConfig.Config.cloudStorageBucketName))
+                    {
+                        throw new Exception(string.Format(
+                            "Response bucket name \"{0}\" doesn't match expected name \"{1}\"", bucketName
+                            , QuickDeployConfig.Config.assetBundleFileName));
+                    }
+
+                    UploadBundleAndMakePublic();
+                }
+            });
         }
-        
-        private static void InvokeAccessRestrictedAction(
-            Action<Action<WWW>> initialAction, Action<WWW> postResponseAction)
-        {
-            var token = AccessTokenGetter.AccessToken;
-            if (token == null)
-            {
-                AccessTokenGetter.UpdateAccessToken(() => initialAction(postResponseAction));
-            }
-            else
-            {
-                initialAction(postResponseAction);
-            }
-        }
+
 
         /// <summary>
         /// Uploads configured file to GCP and makes the file public.
@@ -99,7 +105,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 if (fileName != QuickDeployConfig.Config.cloudStorageFileName)
                 {
-                    throw new Exception("FILL THIS IN AS ABOVE");
+                    throw new Exception(string.Format(
+                        "Response file name \"{0}\" doesn't match expected name \"{1}\"",
+                        fileName, QuickDeployConfig.Config.assetBundleFileName));
                 }
 
                 QuickDeployConfig.Config.assetBundleUrl =
@@ -114,14 +122,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                             makeBundlePublicWww.text));
                     }
 
-                    Debug.Log("Set visibility of file to public.");
+                    Debug.Log("Set visibility of deployed file to public.");
                 });
             });
         }
-        
+
         /// <summary>
         /// Sends an HTTP request to GCP to upload the file according to quick deploy configurations, and
-        /// invokes the handler action on the response. Updates access token before making this request if necessary.
+        /// invokes the handler action on the response.
         /// </summary>
         /// <param name="postResponseAction">An action to be invoked on the www instance holding the http request
         /// once the response to the request to upload the bundle is available</param>
@@ -133,17 +141,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.cloudStorageFileName);
             var assetBundleFileBytes = File.ReadAllBytes(QuickDeployConfig.Config.assetBundleFileName);
             var request =
-                SendAuthenticatedPostRequest(
-                    uploadEndpoint,
-                    assetBundleFileBytes,
-                    "application/octet-stream",
+                SendAuthenticatedPostRequest(uploadEndpoint, assetBundleFileBytes, "application/octet-stream",
                     AccessTokenGetter.AccessToken.access_token);
             WwwRequestInProgress.TrackProgress(request, "Uploading file to Google Cloud Storage", postResponseAction);
         }
 
         /// <summary>
-        /// Sends an HTTP request to GCP to create a bucket with the configured name, and invokes the result
-        /// handler on the HTTP response. Updates access token before making this request if necessary.
+        /// Sends an HTTP request to GCP to create a bucket with the configured name, and invokes the response
+        /// handler on the HTTP response.
         /// </summary>
         /// <param name="onCreateBucketResponseAction">An action to be invoked on the www instance holding the HTTP request
         /// once the response to the request to create bucket is available</param>
@@ -169,99 +174,72 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
                 onCreateBucketResponseAction);
         }
-        
-        /// ===================
-
-      
-
-      
 
         /// <summary>
         /// Sends a request to GCP to change visibility of specified file to public, and invokes the result handler
-        /// action on the HTTP response. Updates access token before making this request if necessary.
+        /// action on the HTTP response.
         /// </summary>
         /// <param name="onMakeBundlePublicResponseAction">An action to be invoked on the WWW instance holding the HTTP
         /// request once the response to the request to make the bundle public is available.</param>
         private static void MakeBundlePublic(Action<WWW> onMakeBundlePublicResponseAction)
         {
-                // see https://cloud.google.com/storage/docs/access-control/making-data-public on making data public.
-                var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
-                    QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.assetBundleFileName);
-                var requestJsonContents = JsonUtility.ToJson(new PublicAccessRequest());
-                var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
-                    Encoding.UTF8.GetBytes(requestJsonContents), "application/json", AccessTokenGetter.AccessToken.access_token);
-                WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote file public",
-                    onMakeBundlePublicResponseAction);
+            // see https://cloud.google.com/storage/docs/access-control/making-data-public on making data public.
+            var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
+                QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.cloudStorageFileName);
+            var requestJsonContents = JsonUtility.ToJson(new PublicAccessRequest());
+            var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
+                Encoding.UTF8.GetBytes(requestJsonContents), "application/json",
+                AccessTokenGetter.AccessToken.access_token);
+            WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote file public",
+                onMakeBundlePublicResponseAction);
         }
 
         /// <summary>
         /// Sends an HTTP request to GCP to verify whether or not configured bucket name exist. Invokes action
-        /// onBucketExists on the WWW instance holding the request if bucket exists, and invokes action
-        /// onBucketDoesNotExists if bucket does not exist. Updates access token before making this request if necessary.
-        /// Throws an exception if the server responds with unexpected error when verifying bucket existence.
+        /// postResponseAction on the WWW instance holding the request when a response to the request is received.
         /// </summary>
-        /// <param name="onBucketExistsResponseAction">An action to be invoked on the WWW instance holding the HTTP request
-        /// when bucket exists.</param>
-        /// <param name="onBucketDoesNotExistResponseAction">An action to be invoked on the WWW instance holding the
-        /// HTTP request when the bucket does not exist.</param>
-        /// <param name="retrying">An optional flag to indicate whether this is a retry after having to update access
-        /// token. If this is set to true, an exception will be thrown instead of a subsequent retry if the access token
-        /// is still not updated. Default value is false.</param>
-        private static void VerifyBucketExistence(Action<WWW> onBucketExistsResponseAction,
-            Action<WWW> onBucketDoesNotExistResponseAction, bool retrying = false)
+        /// <param name="postResponseAction">An action to be invoked on the WWW instance holding the HTTP request
+        /// when the response is available.</param>
+        private static void CheckBucketExistence(Action<WWW> postResponseAction)
+        {
+            // see https://cloud.google.com/storage/docs/getting-bucket-information on getting bucket information.
+            var bucketInfoUrl =
+                string.Format("https://www.googleapis.com/storage/v1/b/{0}",
+                    QuickDeployConfig.Config.cloudStorageBucketName);
+            var headers = new Dictionary<string, string>();
+            headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
+            var request = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
+            WwwRequestInProgress.TrackProgress(request, "Checking whether bucket exists.", postResponseAction);
+        }
+
+        /// <summary>
+        /// Invokes an initial action that requires access token to send an HTTP requests, and schedules invocation of
+        /// the post completion action on the WWW instance holding the request for when the
+        /// response to the request is received. Updates access token before making this request if necessary.
+        /// </summary>
+        /// <param name="initialAction">An action that will need an updated access token.</param>
+        /// <param name="postResponseAction">An action to execute when the response to the request has been received.</param>
+        private static void InvokeAccessRestrictedAction(
+            Action<Action<WWW>> initialAction, Action<WWW> postResponseAction)
         {
             var token = AccessTokenGetter.AccessToken;
-            if (token != null)
+            if (token == null)
             {
-                // see https://cloud.google.com/storage/docs/getting-bucket-information on getting bucket information.
-                var bucketInfoUrl =
-                    string.Format("https://www.googleapis.com/storage/v1/b/{0}",
-                        QuickDeployConfig.Config.cloudStorageBucketName);
-                var headers = new Dictionary<string, string>();
-                headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
-                var request = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
-                WwwRequestInProgress.TrackProgress(request, "Checking whether bucket exists.",
-                    completeRequest =>
-                    {
-                        var error = completeRequest.error;
-                        if (!string.IsNullOrEmpty(error))
-                        {
-                            if (error.StartsWith("404"))
-                            {
-                                onBucketDoesNotExistResponseAction(completeRequest);
-                            }
-                            else
-                            {
-                                throw new Exception(string.Format(
-                                    "Got error when verifying bucket existence: {0} \n {1}", error,
-                                    completeRequest.text));
-                            }
-                        }
-                        else
-                        {
-                            onBucketExistsResponseAction(completeRequest);
-                        }
-                    });
+                AccessTokenGetter.UpdateAccessToken(() => initialAction(postResponseAction));
             }
             else
             {
-                if (retrying)
-                {
-                    throw new Exception(TokenUpdateFailedExceptionMessage);
-                }
-
-                AccessTokenGetter.UpdateAccessToken(() =>
-                    VerifyBucketExistence(onBucketExistsResponseAction, onBucketDoesNotExistResponseAction, true));
+                initialAction(postResponseAction);
             }
         }
 
         /// <summary>
-        /// Helps send an authenticated HTTP POST request to GCP.
+        /// Helps send an authenticated HTTP POST request to a GCP endpoint.
         /// </summary>
         /// <param name="endpoint">A GCP endpoint to which the request is going.</param>
         /// <param name="content">Content bytes to be put in the body of the request.</param>
         /// <param name="contentType">Type of content to be used in headers.</param>
-        /// <param name="accessToken">OAuth2 Access token to be used in the headers.</param>
+        /// <param name="accessToken">GCP OAuth2 Access token to be used in the headers.</param>
         private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType,
             string accessToken)
         {
@@ -304,6 +282,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             // Uses unconventional naming for public fields to conform to the format of GCP JSON API requests.
             public string name;
             public string bucket;
+        }
+
+        /// <summary>
+        /// A representation fo a JSON received when checking bucket info.
+        /// <see cref="https://cloud.google.com/storage/docs/getting-bucket-information"/>
+        /// </summary>
+        [Serializable]
+        private class BucketInfoResponse
+        {
+            public string name;
         }
     }
 }

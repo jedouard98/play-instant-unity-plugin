@@ -73,8 +73,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         void Update()
         {
-            // Call Update on AccessTokenGetter and on WwwRequestInProgress to trigger execution of pending tasks
-            // if there are anuy
+            // Call Update() on AccessTokenGetter and on WwwRequestInProgress to trigger execution of pending tasks
+            // if there are any.
             AccessTokenGetter.Update();
             WwwRequestInProgress.Update();
         }
