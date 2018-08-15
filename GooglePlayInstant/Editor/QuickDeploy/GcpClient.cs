@@ -38,7 +38,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             VerifyBucketExistence(
                 // To be executed if bucket exists.
-                bucketExistsResponse => { UploadBundleAndMakeItPublic(); },
+                bucketExistsResponse => { UploadBundleAndMakePublic(); },
                 // To be executed if bucket does not exist.
                 bucketNotFoundResponse =>
                 {
@@ -52,9 +52,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         }
 
                         Debug.Log("Google Cloud Storage bucket was successfully created.");
-                        UploadBundleAndMakeItPublic();
+                        UploadBundleAndMakePublic();
                     });
                 });
+        }
+        
+        private static void InvokeAccessRestrictedAction(
+            Action<Action<WWW>> initialAction, Action<WWW> postResponseAction)
+        {
+            var token = AccessTokenGetter.AccessToken;
+            if (token == null)
+            {
+                AccessTokenGetter.UpdateAccessToken(() => initialAction(postResponseAction));
+            }
+            else
+            {
+                initialAction(postResponseAction);
+            }
         }
 
         /// <summary>
@@ -62,72 +76,69 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         /// <exception cref="Exception">Exception thrown if there was an error uploading the bundle or setting the
         /// visibility of file to public.</exception>
-        private static void UploadBundleAndMakeItPublic()
+        private static void UploadBundleAndMakePublic()
         {
-            UploadBundle(uploadBundleWww =>
+            InvokeAccessRestrictedAction(UploadBundleFile, uploadBundleWww =>
             {
                 if (!string.IsNullOrEmpty(uploadBundleWww.error))
                 {
-                    throw new Exception(string.Format("Got error uploading bundle: {0}\n{1}", uploadBundleWww.error,
+                    throw new Exception(string.Format("Error uploading bundle: {0}\n{1}", uploadBundleWww.error,
                         uploadBundleWww.text));
                 }
 
-                Debug.Log("File was uploaded to Google Cloud Platform.");
+                Debug.Log("Uploaded bundle to Google Cloud Platform.");
                 var response = JsonUtility.FromJson<FileUploadResponse>(uploadBundleWww.text);
-                // see https://cloud.google.com/storage/docs/access-public-data on accessing public cloud objects.
-                QuickDeployConfig.Config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}",
-                    response.bucket, response.name);
+                var bucketName = response.bucket;
+                var fileName = response.name;
+                if (bucketName != QuickDeployConfig.Config.cloudStorageBucketName)
+                {
+                    throw new Exception(string.Format(
+                        "Response bucket name \"{0}\" doesn't match expected name \"{1}\"",
+                        bucketName, QuickDeployConfig.Config.cloudStorageBucketName));
+                }
 
-                MakeBundlePublic(response.bucket, response.name,
-                    makeBundlePublicWww =>
+                if (fileName != QuickDeployConfig.Config.cloudStorageFileName)
+                {
+                    throw new Exception("FILL THIS IN AS ABOVE");
+                }
+
+                QuickDeployConfig.Config.assetBundleUrl =
+                    string.Format("https://storage.googleapis.com/{0}/{1}", bucketName, fileName);
+
+                InvokeAccessRestrictedAction(MakeBundlePublic, makeBundlePublicWww =>
+                {
+                    var error = makeBundlePublicWww.error;
+                    if (!string.IsNullOrEmpty(error))
                     {
-                        var error = makeBundlePublicWww.error;
-                        if (!string.IsNullOrEmpty(error))
-                        {
-                            throw new Exception(string.Format("Got error making file public : {0}\n{1}", error,
-                                makeBundlePublicWww.text));
-                        }
+                        throw new Exception(string.Format("Error making file public: {0}\n{1}", error,
+                            makeBundlePublicWww.text));
+                    }
 
-                        Debug.Log("Visibility of file was set to public.");
-                    });
+                    Debug.Log("Set visibility of file to public.");
+                });
             });
         }
-
+        
         /// <summary>
         /// Sends an HTTP request to GCP to upload the file according to quick deploy configurations, and
         /// invokes the handler action on the response. Updates access token before making this request if necessary.
         /// </summary>
-        /// <param name="onUploadBundleResponseAction">An action to be invoked on the www instance holding the http request
+        /// <param name="postResponseAction">An action to be invoked on the www instance holding the http request
         /// once the response to the request to upload the bundle is available</param>
-        /// <param name="retrying">An optional flag to indicate whether this is a retry after having to update access
-        /// token. If this is set to true, an exception will be thrown instead of a subsequent retry if the access token
-        /// is still not updated. Default value is false.</param>
-        private static void UploadBundle(Action<WWW> onUploadBundleResponseAction, bool retrying = false)
+        private static void UploadBundleFile(Action<WWW> postResponseAction)
         {
-            var token = AccessTokenGetter.AccessToken;
-            if (token != null)
-            {
-                var fileName = QuickDeployConfig.Config.assetBundleFileName;
-                var cloudStorageBucketName = QuickDeployConfig.Config.cloudStorageBucketName;
-                var cloudStorageFileName = QuickDeployConfig.Config.cloudStorageFileName;
-                // see https://cloud.google.com/storage/docs/uploading-objects on uploading objects.
-                var uploadEndpoint =
-                    string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
-                        cloudStorageBucketName, cloudStorageFileName);
-                var request = SendAuthenticatedPostRequest(uploadEndpoint, File.ReadAllBytes(fileName),
-                    "application/octet-stream", token.access_token);
-                WwwRequestInProgress.TrackProgress(request,
-                    "Uploading file to google cloud storage", onUploadBundleResponseAction);
-            }
-            else
-            {
-                if (retrying)
-                {
-                    throw new Exception(TokenUpdateFailedExceptionMessage);
-                }
-
-                AccessTokenGetter.UpdateAccessToken(() => UploadBundle(onUploadBundleResponseAction, true));
-            }
+            // See https://cloud.google.com/storage/docs/uploading-objects
+            var uploadEndpoint =
+                string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
+                    QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.cloudStorageFileName);
+            var assetBundleFileBytes = File.ReadAllBytes(QuickDeployConfig.Config.assetBundleFileName);
+            var request =
+                SendAuthenticatedPostRequest(
+                    uploadEndpoint,
+                    assetBundleFileBytes,
+                    "application/octet-stream",
+                    AccessTokenGetter.AccessToken.access_token);
+            WwwRequestInProgress.TrackProgress(request, "Uploading file to Google Cloud Storage", postResponseAction);
         }
 
         /// <summary>
@@ -136,77 +147,51 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         /// <param name="onCreateBucketResponseAction">An action to be invoked on the www instance holding the HTTP request
         /// once the response to the request to create bucket is available</param>
-        /// <param name="retrying">An optional flag to indicate whether this is a retry after having to update access
-        /// token. If this is set to true, an exception will be thrown instead of a subsequent retry if the access token
-        /// is still not updated. Default value is false.</param>
-        private static void CreateBucket(Action<WWW> onCreateBucketResponseAction, bool retrying = false)
+        private static void CreateBucket(Action<WWW> onCreateBucketResponseAction)
         {
-            var token = AccessTokenGetter.AccessToken;
-            if (token != null)
+            var credentials = OAuth2Credentials.GetCredentials();
+            // see https://cloud.google.com/storage/docs/creating-buckets on creating buckets.
+            var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
+                credentials.project_id);
+            var createBucketRequest = new CreateBucketRequest
             {
-                var credentials = OAuth2Credentials.GetCredentials();
-                // see https://cloud.google.com/storage/docs/creating-buckets on creating buckets.
-                var createBucketEndPoint = string.Format("https://www.googleapis.com/storage/v1/b?project={0}",
-                    credentials.project_id);
-                var createBucketRequest = new CreateBucketRequest
-                {
-                    name = QuickDeployConfig.Config.cloudStorageBucketName
-                };
+                name = QuickDeployConfig.Config.cloudStorageBucketName
+            };
 
-                var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
-                var createBucketWww = SendAuthenticatedPostRequest(createBucketEndPoint, jsonBytes, "application/json",
-                    token.access_token);
-                WwwRequestInProgress.TrackProgress(createBucketWww,
-                    string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
-                    onCreateBucketResponseAction);
-            }
-            else
-            {
-                if (retrying)
-                {
-                    throw new Exception(TokenUpdateFailedExceptionMessage);
-                }
-
-                AccessTokenGetter.UpdateAccessToken(() => CreateBucket(onCreateBucketResponseAction, true));
-            }
+            var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
+            var createBucketWww =
+                SendAuthenticatedPostRequest(
+                    createBucketEndPoint,
+                    jsonBytes,
+                    "application/json",
+                    AccessTokenGetter.AccessToken.access_token);
+            WwwRequestInProgress.TrackProgress(createBucketWww,
+                string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
+                onCreateBucketResponseAction);
         }
+        
+        /// ===================
+
+      
+
+      
 
         /// <summary>
         /// Sends a request to GCP to change visibility of specified file to public, and invokes the result handler
         /// action on the HTTP response. Updates access token before making this request if necessary.
         /// </summary>
-        /// <param name="bucketName">Name of the GCP bucket containing the file</param>
-        /// <param name="fileName">File name</param>
         /// <param name="onMakeBundlePublicResponseAction">An action to be invoked on the WWW instance holding the HTTP
         /// request once the response to the request to make the bundle public is available.</param>
-        /// <param name="retrying">An optional flag to indicate whether this is a retry after having to update access
-        /// token. If this is set to true, an exception will be thrown instead of a subsequent retry if the access token
-        /// is still not updated. Default value is false.</param>
-        private static void MakeBundlePublic(string bucketName, string fileName,
-            Action<WWW> onMakeBundlePublicResponseAction, bool retrying = false)
+        private static void MakeBundlePublic(Action<WWW> onMakeBundlePublicResponseAction)
         {
-            var token = AccessTokenGetter.AccessToken;
-            if (token != null)
-            {
                 // see https://cloud.google.com/storage/docs/access-control/making-data-public on making data public.
                 var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
-                    bucketName, fileName);
+                    QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.assetBundleFileName);
                 var requestJsonContents = JsonUtility.ToJson(new PublicAccessRequest());
                 var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
-                    Encoding.UTF8.GetBytes(requestJsonContents), "application/json", token.access_token);
+                    Encoding.UTF8.GetBytes(requestJsonContents), "application/json", AccessTokenGetter.AccessToken.access_token);
                 WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote file public",
                     onMakeBundlePublicResponseAction);
-            }
-            else
-            {
-                if (retrying)
-                {
-                    throw new Exception(TokenUpdateFailedExceptionMessage);
-                }
-
-                AccessTokenGetter.UpdateAccessToken(() =>
-                    MakeBundlePublic(bucketName, fileName, onMakeBundlePublicResponseAction, true));
-            }
         }
 
         /// <summary>

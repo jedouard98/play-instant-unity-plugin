@@ -33,9 +33,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
-        // Use to store access token in memory.
-        private static GcpAccessToken _accessToken;
-
         /// <summary>
         /// Get Access token to use for API calls if available. Returns null if access token is not available.
         /// </summary>
@@ -174,15 +171,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public class GcpAccessToken
         {
             // Fields are named snake_case style to match the format of the JSON response returned by GCP OAuth2 API.
-            // See https://developers.google.com/identity/protocols/OAuth2InstalledApp
 
-            // Token for the application to use when making Cloud API requests.
+            /// <summary>
+            /// Token for the application to use when making Cloud API requests.
+            /// </summary>
             public string access_token;
 
-            // Token to use when the current access token has expired in order to get a new token.
+            /// <summary>
+            /// Token to use when the current access token has expired in order to get a new token.
+            /// </summary>
             public string refresh_token;
 
-            // Seconds from the time the token was issued to when it will expire.
+            /// <summary>
+            /// Seconds from the time the token was issued to when it will expire.
+            /// </summary>
             public int expires_in;
         }
     }

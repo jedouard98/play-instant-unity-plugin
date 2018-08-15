@@ -45,7 +45,7 @@ namespace GooglePlayInstant.Editor
         {
             if (_onGoingRequest != null)
             {
-                throw new Exception("Cannot start a another request while the previous one is not complete.");
+                throw new Exception("Cannot start another request while the previous one is not complete.");
             }
 
             _onGoingRequest = new OnGoingRequest(www, progressBarTitleText, onResponseAvailableAction);
