@@ -14,6 +14,8 @@
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Security.Permissions;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEngine;
 
@@ -25,14 +27,10 @@ namespace GooglePlayInstant.Editor
     /// Provides functionality for tracking HTTP requests represented by corresponding WWW instances, as well as
     /// executing scheduled actions on the responses when the requests are complete.
     /// </summary>
-    public class WwwRequestInProgress
+    public static class WwwRequestInProgress
     {
-        private readonly WWW _www;
-        private readonly string _progressBarTitleText;
-        private readonly Action<WWW> _onResponseAvailableAction;
-
         // Only one request can be performed at a time
-        private static WwwRequestInProgress _requestInProgress;
+        private static OnGoingRequest _onGoingRequest;
 
 
         /// <summary>
@@ -45,61 +43,80 @@ namespace GooglePlayInstant.Editor
         /// is available.</param>
         public static void TrackProgress(WWW www, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
         {
-            if (_requestInProgress != null)
+            if (_onGoingRequest != null)
             {
                 throw new Exception("Cannot start a another request while the previous one is not complete.");
             }
 
-            _requestInProgress = new WwwRequestInProgress(www, progressBarTitleText, onResponseAvailableAction);
+            _onGoingRequest = new OnGoingRequest(www, progressBarTitleText, onResponseAvailableAction);
         }
 
         /// <summary>
-        /// Create an instance of the RequestInProgress class.
-        /// </summary>
-        /// <param name="www">A www instance holding a request that was made</param>
-        /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
-        /// <param name="onResponseAvailableAction">An action to be invoked on the WWW instance holding the request when the result
-        /// is available.</param>
-        private WwwRequestInProgress(WWW www, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
-        {
-            _www = www;
-            _progressBarTitleText = progressBarTitleText;
-            _onResponseAvailableAction = onResponseAvailableAction;
-        }
-
-
-        //TODO(audace): Include canceling the request when the user clicks the cancel button in the documentation.
-        /// <summary>
-        /// Verifies the state of the currently monitored request in progress. Displays progress bar for the request if
+        /// Verifies the state of the currently monitored ongoing request. Displays progress bar for the request if
         /// it is still going on. If the response is available, the scheduled post-completion action will be invoked on
-        /// the www instance, the request will stop being monitored.
+        /// the www instance of the ongoing request, the request will stop being monitored and resources used by this
+        /// request will be disposed.
         /// </summary>
         public static void Update()
         {
-            if (_requestInProgress == null)
+            if (_onGoingRequest == null)
             {
                 return;
             }
 
-            if (_requestInProgress._www.isDone)
+            if (_onGoingRequest.RequestWww.isDone)
             {
                 EditorUtility.ClearProgressBar();
-                var requestInProgress = _requestInProgress;
+                var onGoingRequest = _onGoingRequest;
                 // Set the static field _requestInProgress to null before invoking the  post-completion action
                 // because the action could be executing an action that will read or overwrite the static field.
-                _requestInProgress = null;
-                requestInProgress._onResponseAvailableAction(requestInProgress._www);
+                _onGoingRequest = null;
+                onGoingRequest.OnResponseAvailableAction(onGoingRequest.RequestWww);
+                onGoingRequest.Dispose();
             }
             else
             {
-                if (EditorUtility.DisplayCancelableProgressBar(_requestInProgress._progressBarTitleText,
-                    string.Format("Progress: {0}%", Math.Floor(_requestInProgress._www.uploadProgress * 100)),
-                    _requestInProgress._www.uploadProgress))
+                if (EditorUtility.DisplayCancelableProgressBar(_onGoingRequest.ProgressBarTitleText,
+                    string.Format("Progress: {0}%", Math.Floor(_onGoingRequest.RequestWww.uploadProgress * 100)),
+                    _onGoingRequest.RequestWww.uploadProgress))
                 {
                     EditorUtility.ClearProgressBar();
-                    _requestInProgress._www.Dispose();
-                    _requestInProgress = null;
+                    _onGoingRequest.Dispose();
+                    _onGoingRequest = null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Encapsulates a WWW instance used to send an HTTP request, the tItle to display in the progress bar and
+        /// an action to invoke on the WWW instance when the request is complete.
+        /// </summary>
+        private class OnGoingRequest : IDisposable
+        {
+            public WWW RequestWww { get; private set; }
+            public string ProgressBarTitleText { get; private set; }
+            public Action<WWW> OnResponseAvailableAction { get; private set; }
+
+            /// <summary>
+            /// Create an instance of a disposable OnGoingRequest.
+            /// </summary>
+            /// <param name="requestWww">A www instance holding a request that was made</param>
+            /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
+            /// <param name="onResponseAvailableAction">An action to be invoked on the WWW instance holding the request
+            /// when the response is available.</param>
+            public OnGoingRequest(WWW requestWwww, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
+            {
+                RequestWww = requestWwww;
+                ProgressBarTitleText = progressBarTitleText;
+                OnResponseAvailableAction = onResponseAvailableAction;
+            }
+
+            /// <summary>
+            /// Disposes of any existing resources used by the OnGoingRequest instance.
+            /// </summary>
+            public void Dispose()
+            {
+                RequestWww.Dispose();
             }
         }
     }

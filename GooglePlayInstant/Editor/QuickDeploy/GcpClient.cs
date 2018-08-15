@@ -21,19 +21,16 @@ using UnityEngine;
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
-    /// A class that implements the functionality for interacting with Google Cloud Storage API to deploy asset
-    /// bundles.
+    /// Provides methods for interacting with Google Cloud Platform (GCP), e.g. to upload an Asset Bundle file to
+    /// Google Cloud Storage.
     /// </summary>
     public static class GCPClient
     {
-        private static QuickDeployConfig.Configuration _config = QuickDeployConfig.Config;
-
         /// <summary>
-        /// Executes all the steps required for deploying an Asset Bundle to Google Cloud Storage.
+        /// Executes all the steps required for deploying an asset bundle to GCP according to developer's configuration.
         /// First verifies if configured bucket exists, and creates the bucket if it does not exist. It then uploads
-        /// asset bundle to Google Cloud Storage and sets the visibility of the asset bundle to public.
+        /// asset bundle to GCP and sets the visibility of the asset bundle to public.
         /// </summary>
-        /// <exception cref="Exception"></exception>
         public static void DeployAssetBundle()
         {
             VerifyBucketExistence(
@@ -58,7 +55,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Uploads asset bundle to Google Cloud storage and makes the bundle public.
+        /// Uploads asset bundle to GCP and makes the bundle public.
         /// </summary>
         /// <exception cref="Exception">Exception thrown if there was an error uploading the bundle or setting the
         /// visibility of asset bundle to public.</exception>
@@ -72,13 +69,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         uploadBundleWww.text));
                 }
 
-                Debug.Log("Asset bundle was uploaded to Google Cloud Storage.");
-                var response = JsonUtility.FromJson<UploadBundleJsonResponse>(uploadBundleWww.text);
+                Debug.Log("Asset bundle was uploaded to Google Cloud Platform.");
+                var response = JsonUtility.FromJson<FileUploadResponse>(uploadBundleWww.text);
                 // see https://cloud.google.com/storage/docs/access-public-data on accessing public cloud objects.
-                _config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}", response.bucket,
-                    response.name);
+                QuickDeployConfig.Config.assetBundleUrl = string.Format("https://storage.googleapis.com/{0}/{1}",
+                    response.bucket, response.name);
 
-                MakeBundlePublic(response,
+                MakeBundlePublic(response.bucket, response.name,
                     makeBundlePublicWww =>
                     {
                         var error = makeBundlePublicWww.error;
@@ -94,9 +91,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Sends an HTTP request to Google Cloud Storage to upload the asset bundle according to configurations, and
-        /// invokes the result handler on the response.
-        /// Will first update access token before making this function call if valid acess token is not present.
+        /// Sends an HTTP request to GCP to upload the asset bundle according to quick deploy configurations, and
+        /// invokes the handler action on the response. Updates access token before making this request if necessary.
         /// </summary>
         /// <param name="onUploadBundleResponseAction">An action to be invoked on the www instance holding the http request
         /// once the response to the request to upload the bundle is available</param>
@@ -105,9 +101,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var token = AccessTokenGetter.AccessToken;
             if (token != null)
             {
-                var assetBundleFileName = _config.assetBundleFileName;
-                var cloudStorageBucketName = _config.cloudStorageBucketName;
-                var cloudStorageFileName = _config.cloudStorageFileName;
+                var assetBundleFileName = QuickDeployConfig.Config.assetBundleFileName;
+                var cloudStorageBucketName = QuickDeployConfig.Config.cloudStorageBucketName;
+                var cloudStorageFileName = QuickDeployConfig.Config.cloudStorageFileName;
                 // see https://cloud.google.com/storage/docs/uploading-objects on uploading objects.
                 var uploadEndpoint =
                     string.Format("https://www.googleapis.com/upload/storage/v1/b/{0}/o?uploadType=media&name={1}",
@@ -124,9 +120,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Sends an HTTP to Google Cloud storage to create a bucket with the configured name, and invokes the result
-        /// handler on the HTTP response.
-        /// Will first update access token before making this function call if valid access token is not present.
+        /// Sends an HTTP request to GCP to create a bucket with the configured name, and invokes the result
+        /// handler on the HTTP response. Updates access token before making this request if necessary.
         /// </summary>
         /// <param name="onCreateBucketResponseAction">An action to be invoked on the www instance holding the HTTP request
         /// once the response to the request to create bucket is available</param>
@@ -141,7 +136,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     credentials.project_id);
                 var createBucketRequest = new CreateBucketRequest
                 {
-                    name = _config.cloudStorageBucketName
+                    name = QuickDeployConfig.Config.cloudStorageBucketName
                 };
 
                 var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
@@ -158,14 +153,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Uses present access token to send HTTP request to Google cloud storage to change visibility of uploaded
-        /// file to public, and invokes the result handler action on the HTTP response.
-        /// Will first update access token before making this function call if valid access token is not present.
+        /// Sends a request to GCP to change visibility of specified file to public, and invokes the result handler
+        /// action on the HTTP response. Updates access token before making this request if necessary.
         /// </summary>
-        /// <param name="response">UploadBundleJsonResponse instance containing remote file and bucket name.</param>
+        /// <param name="bucketName">Name of the GCP bucket containing the file</param>
+        /// <param name="fileName">File name</param>
         /// <param name="onMakeBundlePublicResponseAction">An action to be invoked on the WWW instance holding the HTTP
         /// request once the response to the request to make the bundle public is available.</param>
-        private static void MakeBundlePublic(UploadBundleJsonResponse response,
+        private static void MakeBundlePublic(string bucketName, string fileName,
             Action<WWW> onMakeBundlePublicResponseAction)
         {
             var token = AccessTokenGetter.AccessToken;
@@ -173,8 +168,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 // see https://cloud.google.com/storage/docs/access-control/making-data-public on making data public.
                 var makePublicEndpoint = string.Format("https://www.googleapis.com/storage/v1/b/{0}/o/{1}/acl",
-                    response.bucket, response.name);
-                var requestJsonContents = JsonUtility.ToJson(new MakeBundlePublicRequest());
+                    bucketName, fileName);
+                var requestJsonContents = JsonUtility.ToJson(new PublicAccessRequest());
                 var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
                     Encoding.UTF8.GetBytes(requestJsonContents), "application/json", token.access_token);
                 WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote asset bundle public",
@@ -182,21 +177,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             else
             {
-                AccessTokenGetter.UpdateAccessToken(() => MakeBundlePublic(response, onMakeBundlePublicResponseAction));
+                AccessTokenGetter.UpdateAccessToken(() =>
+                    MakeBundlePublic(bucketName, fileName, onMakeBundlePublicResponseAction));
             }
         }
 
         /// <summary>
-        /// If access token is present, sends an HTTP request to GCP to verify whether the configured bucket name exists
-        /// or not. Invokes action onBucketExists if bucket exists, or action onBucketDoesNotExists if bucket does
-        /// not exist.
-        /// Will first update access token before making this function call if valid access token is not present.
-        /// Throws an exception if the server responds with error when verifying bucket existence.
+        /// Sends an HTTP request to GCP to verify whether or not configured bucket name exist. Invokes action
+        /// onBucketExists on the WWW instance holding the request if bucket exists, and invokes action
+        /// onBucketDoesNotExists if bucket does not exist. Updates access token before making this request if necessary.
+        /// Throws an exception if the server responds with unexpected error when verifying bucket existence.
         /// </summary>
         /// <param name="onBucketExistsResponseAction">An action to be invoked on the WWW instance holding the HTTP request
         /// when bucket exists.</param>
-        /// <param name="onBucketDoesNotExistResponseAction">An action to be invoked on the WWW instance holding the HTTP request
-        /// when the bucket does not exist.</param>
+        /// <param name="onBucketDoesNotExistResponseAction">An action to be invoked on the WWW instance holding the
+        /// HTTP request when the bucket does not exist.</param>
         private static void VerifyBucketExistence(Action<WWW> onBucketExistsResponseAction,
             Action<WWW> onBucketDoesNotExistResponseAction)
         {
@@ -205,7 +200,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 // see https://cloud.google.com/storage/docs/getting-bucket-information on getting bucket information.
                 var bucketInfoUrl =
-                    string.Format("https://www.googleapis.com/storage/v1/b/{0}", _config.cloudStorageBucketName);
+                    string.Format("https://www.googleapis.com/storage/v1/b/{0}",
+                        QuickDeployConfig.Config.cloudStorageBucketName);
                 var headers = new Dictionary<string, string>();
                 headers.Add("Authorization", string.Format("Bearer {0}", token.access_token));
                 var request = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
@@ -240,13 +236,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Helps send an authenticated HTTP post request to Google Cloud Storage.
+        /// Helps send an authenticated HTTP POST request to GCP.
         /// </summary>
-        /// <param name="endpoint">endpoint to which the request is going.</param>
+        /// <param name="endpoint">A GCP endpoint to which the request is going.</param>
         /// <param name="content">Content bytes to be put in the body of the request.</param>
         /// <param name="contentType">Type of content to be used in headers.</param>
         /// <param name="accessToken">OAuth2 Access token to be used in the headers.</param>
-        /// <returns></returns>
         private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType,
             string accessToken)
         {
@@ -254,13 +249,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 {"Authorization", string.Format("Bearer {0}", accessToken)},
                 {"Content-Type", contentType}
-                
             };
             return HttpRequestHelper.SendHttpPostRequest(endpoint, content, requestHeaders);
         }
 
         /// <summary>
-        /// A representation of the body of the JSON request sent to Google Cloud Storage to create a bucket.
+        /// A representation of the body of the JSON request sent to GCP to create a bucket.
         /// </summary>
         [Serializable]
         private class CreateBucketRequest
@@ -269,23 +263,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// A representation of the body of the JSON request sent to Google Cloud Storage to set asset bundle
-        /// visibility to public. 
+        /// A representation of the body of the JSON request sent to GCP to set file visibility to public. 
         /// </summary>
         [Serializable]
-        private class MakeBundlePublicRequest
+        private class PublicAccessRequest
         {
             public string entity = "allUsers";
             public string role = "READER";
         }
 
         /// <summary>
-        /// A representation of a JSON response received once the asset bundle has been successfully uploaded to
-        /// Google cloud storage.
+        /// A representation of a JSON response received once the asset bundle has been successfully uploaded to GCP.
         /// </summary>
 #pragma warning disable CS0649
         [Serializable]
-        private class UploadBundleJsonResponse
+        private class FileUploadResponse
         {
             public string name;
             public string bucket;

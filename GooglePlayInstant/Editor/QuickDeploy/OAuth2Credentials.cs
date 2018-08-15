@@ -25,21 +25,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         /// <summary>
         /// Returns a Credentials instance containing credentials from the path specified in Quick Deploy
-        /// configurations. Throws an exception if the file cannot be parsed as a valid OAuth2 client ID file.
+        /// configurations.
         /// <see cref="https://console.cloud.google.com/apis/credentials"/>
         /// </summary>
-        /// <exception cref="Exception"></exception>
+        /// <exception cref="Exception">Exception thrown if the file cannot be parsed as a valid OAuth2 client ID file.
+        /// </exception>
         public static Credentials GetCredentials()
         {
             var credentialsFilePath = QuickDeployConfig.Config.cloudCredentialsFileName;
-            var allText = File.ReadAllText(credentialsFilePath);
-            var credentialsFile = JsonUtility.FromJson<CredentialsFile>(allText);
+            var credentialsFile = JsonUtility.FromJson<CredentialsFile>(File.ReadAllText(credentialsFilePath));
             if (credentialsFile == null || credentialsFile.installed == null)
             {
                 throw new Exception(string.Format(
                     "File at {0} is not a valid OAuth 2.0 credentials file for installed application. Please visit " +
                     "https://console.cloud.google.com/apis/credentials to create a valid OAuth 2.0 credentials file " +
-                    "for your project",
+                    "for your project.",
                     credentialsFilePath));
             }
 

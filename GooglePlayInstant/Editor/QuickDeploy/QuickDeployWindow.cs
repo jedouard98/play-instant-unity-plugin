@@ -60,6 +60,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GetWindow<QuickDeployWindow>("Quick Deploy");
             _toolbarSelectedButtonIndex = (int) select;
         }
+
         void Awake()
         {
             _assetBundleFileName = QuickDeployConfig.Config.assetBundleFileName;
@@ -68,6 +69,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _cloudCredentialsFileName = QuickDeployConfig.Config.cloudCredentialsFileName;
             _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
             _apkFileName = QuickDeployConfig.Config.apkFileName;
+        }
+
+        void Update()
+        {
+            // Call Update on AccessTokenGetter and on WwwRequestInProgress to execute any pending tasks.
+            AccessTokenGetter.Update();
+            WwwRequestInProgress.Update();
         }
 
         void OnGUI()

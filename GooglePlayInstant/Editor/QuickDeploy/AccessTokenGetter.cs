@@ -18,32 +18,28 @@ using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
+    /// <summary>
+    /// Provides methods for using the OAuth2 flow to get user authorization and to retrieve an access token that is
+    /// used send HTTP requests to Google Cloud Platform APIs.
+    /// </summary>
     public static class AccessTokenGetter
     {
         private const string OAuth2CodeGrantType = "authorization_code";
 
-        /// <summary>
-        /// Full control scope is required, since the application needs to read, write as well as change access
-        /// permissions of buckets and asset bundles.
-        /// </summary>
+        // Full control scope is required, since the application needs to read, write and change access
+        // permissions of buckets and objects.
         private const string OAuth2Scope = "https://www.googleapis.com/auth/devstorage.full_control";
-
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
         // Use to store access token.
-        private static GCPAccessToken _accessToken;
+        private static GcpAccessToken _accessToken;
 
         /// <summary>
         /// Get Access token to use for API calls if available. Returns null if access token is not available.
         /// </summary>
-        public static GCPAccessToken AccessToken
-        {
-            //TODO(audace): Implement functionality for tokens to be re-used in future unity sessions without re-doing the OAuth2 Flow.
-            get { return _accessToken; }
-            private set { _accessToken = value; }
-        }
+        public static GcpAccessToken AccessToken { get; private set; }
 
         /// <summary>
         /// Check whether a new authorization code has been received and execute scheduled tasks accordingly.
@@ -81,7 +77,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// invocation of the code handler on the received authorization code once it is available or throw an exception
         /// once there is a failure to get the authorization code.
         /// </summary>
-        /// <param name="authorizationCodeHandler"An action to invoke on the authorization code instance when it is
+        /// <param name="authorizationCodeHandler"> An action to invoke on the authorization code instance when it is
         /// available.></param>
         /// <exception cref="Exception">Exception thrown when required authorization code cannot be received
         /// from OAuth2 flow.</exception>
@@ -101,8 +97,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 var authCode = new AuthorizationCode
                 {
-                    code = authorizationResponse.Value,
-                    redirect_uri = redirectUri
+                    Code = authorizationResponse.Value,
+                    RedirectUri = redirectUri
                 };
 
                 if (onAuthorizationCodeAction != null)
@@ -134,23 +130,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var credentials = OAuth2Credentials.GetCredentials();
             var formData = new Dictionary<string, string>
             {
-                {"code", authCode.code},
+                {"code", authCode.Code},
                 {"client_id", credentials.client_id},
                 {"client_secret", credentials.client_secret},
-                {"redirect_uri", authCode.redirect_uri},
+                {"redirect_uri", authCode.RedirectUri},
                 {"grant_type", OAuth2CodeGrantType}
             };
             WwwRequestInProgress.TrackProgress(
                 HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, formData, null),
                 "Requesting access token",
-                doneWww =>
+                completeTokenRequest =>
                 {
-                    var token = JsonUtility.FromJson<GCPAccessToken>(doneWww.text);
+                    var responseText = completeTokenRequest.text;
+                    var token = JsonUtility.FromJson<GcpAccessToken>(responseText);
                     if (string.IsNullOrEmpty(token.access_token))
                     {
                         throw new Exception(string.Format(
-                            "Attempted to get access token and got response with code {0} and text {1}", doneWww.text,
-                            doneWww.error));
+                            "Attempted to request access token and received response with error {0} and text {1}",
+                            responseText, completeTokenRequest.error));
                     }
 
                     AccessToken = token;
@@ -162,21 +159,29 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Represents authorization code received from OAuth2 Protocol when the user authorizes the application to
         /// access the cloud, and is used to get an access token used for making API requests.
         /// </summary>
-        [Serializable]
         public class AuthorizationCode
         {
-            public string code;
-            public string redirect_uri;
+            public string Code;
+            public string RedirectUri;
         }
 
         /// <summary>
-        /// Represents a Google Cloud Platform access token used for making API requests.
+        /// Represents the JSON body of the access token issued by Google Cloud OAuth2 API.
+        /// <see cref="https://developers.google.com/identity/protocols/OAuth2InstalledApp"/>
         /// </summary>
         [Serializable]
-        public class GCPAccessToken
+        public class GcpAccessToken
         {
+            // Fields are named snake_case style to match the format of the JSON response returned by GCP OAuth2 API.
+            // See https://developers.google.com/identity/protocols/OAuth2InstalledApp
+
+            // Token for the application to use when making Cloud API requests.
             public string access_token;
+
+            // Token to use when the current access token has expired in order to get a new token.
             public string refresh_token;
+
+            // Seconds from the time the token was issued to when it will expire.
             public int expires_in;
         }
     }
