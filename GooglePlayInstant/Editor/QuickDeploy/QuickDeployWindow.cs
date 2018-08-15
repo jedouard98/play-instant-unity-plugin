@@ -73,7 +73,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         void Update()
         {
-            // Call Update on AccessTokenGetter and on WwwRequestInProgress to execute any pending tasks.
+            // Call Update on AccessTokenGetter and on WwwRequestInProgress to trigger execution of pending tasks
+            // if there are anuy
             AccessTokenGetter.Update();
             WwwRequestInProgress.Update();
         }
@@ -199,7 +200,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
             {
-                GCPClient.DeployAssetBundle();
+                GcpClient.DeployConfiguredFile();
             }
 
             EditorGUILayout.Space();

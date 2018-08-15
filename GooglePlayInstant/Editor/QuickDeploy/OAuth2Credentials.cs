@@ -52,6 +52,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         [Serializable]
         public class Credentials
         {
+            // Uses unconventional naming for public fields to conform to the format of the credentials JSON contents.
             public string client_id;
             public string client_secret;
             public string auth_uri;
@@ -65,6 +66,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         [Serializable]
         public class CredentialsFile
         {
+            // Uses unconventional naming for public fields to conform to the format of the credentials file JSON contents.
             public Credentials installed;
         }
     }

@@ -28,12 +28,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         // Full control scope is required, since the application needs to read, write and change access
         // permissions of buckets and objects.
-        private const string OAuth2Scope = "https://www.googleapis.com/auth/devstorage.full_control";
+        private const string CloudStorageFullControlScope = "https://www.googleapis.com/auth/devstorage.full_control";
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
-        // Use to store access token.
+        // Use to store access token in memory.
         private static GcpAccessToken _accessToken;
 
         /// <summary>
@@ -62,6 +62,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <param name="postTokenAction">Action to be executed when valid access token is avalable.</param>
         public static void UpdateAccessToken(Action postTokenAction)
         {
+            // TODO: Implement reuse of refresh token to get a new access token when the current token is expired.
             if (AccessToken == null)
             {
                 GetAuthCode(code => RequestAndStoreAccessToken(code, postTokenAction));
@@ -111,7 +112,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var credentials = OAuth2Credentials.GetCredentials();
             var authorizationUrl =
                 string.Format("{0}?scope={1}&access_type=offline&redirect_uri={2}&response_type=code&client_id={3}",
-                    credentials.auth_uri, OAuth2Scope, redirectUri, credentials.client_id);
+                    credentials.auth_uri, CloudStorageFullControlScope, redirectUri, credentials.client_id);
 
             Application.OpenURL(authorizationUrl);
         }

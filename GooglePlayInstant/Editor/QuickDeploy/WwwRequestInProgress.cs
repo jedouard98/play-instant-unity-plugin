@@ -104,9 +104,9 @@ namespace GooglePlayInstant.Editor
             /// <param name="progressBarTitleText">A descriptive text to display as the title of the progress bar.</param>
             /// <param name="onResponseAvailableAction">An action to be invoked on the WWW instance holding the request
             /// when the response is available.</param>
-            public OnGoingRequest(WWW requestWwww, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
+            public OnGoingRequest(WWW requestWww, string progressBarTitleText, Action<WWW> onResponseAvailableAction)
             {
-                RequestWww = requestWwww;
+                RequestWww = requestWww;
                 ProgressBarTitleText = progressBarTitleText;
                 OnResponseAvailableAction = onResponseAvailableAction;
             }
