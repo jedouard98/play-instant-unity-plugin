@@ -28,10 +28,17 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class LoadingScreenGeneratorTest
     {
-        private const string TestGameObjectName = "testing_object";
+        private const string TestGameObjectName = "Testing Object";
 
         private static readonly string TestLoadingScreenJsonPath =
             Path.Combine("Assets", LoadingScreenGenerator.LoadingScreenJsonFileName);
+
+        // Dispose of temporarily created file.  
+        [TearDown]
+        public void Cleanup()
+        {
+            AssetDatabase.DeleteAsset(TestLoadingScreenJsonPath);
+        }
 
         [Test]
         public void TestAddLoadingScreenScript()
@@ -47,8 +54,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             const string testImage = "example.png";
 
-            // Creates the file stream and disposes of it, so that adding loading screen image to scene can
-            // also read from said file.
+            // Create an empty test file by immediately closing the FileStream returned by File.Create().
             using (File.Create(testImage)) ;
 
             var loadingScreenGameObject = new GameObject(TestGameObjectName);
@@ -87,13 +93,6 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             var loadingScreenConfig = JsonUtility.FromJson<LoadingScreenConfig>(loadingScreenConfigJson);
 
             Assert.IsEmpty(loadingScreenConfig.assetBundleUrl);
-        }
-
-        // Dispose of temporarily created file.  
-        [OneTimeTearDown]
-        public void Cleanup()
-        {
-            AssetDatabase.DeleteAsset(TestLoadingScreenJsonPath);
         }
     }
 }

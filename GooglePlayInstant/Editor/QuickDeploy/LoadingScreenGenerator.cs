@@ -39,11 +39,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
 
-        // Visible for testing
-        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
-
         private static readonly string LoadingScreenJsonPath =
             Path.Combine(LoadingScreenResourcesPath, LoadingScreenJsonFileName);
+
+        // Visible for testing
+        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
         /// <summary>
         /// The path to a fullscreen image displayed in the background while the game loads.
@@ -80,8 +80,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
-            EditorSceneManager.SaveScene(loadingScreenScene,
+            bool saveOK = EditorSceneManager.SaveScene(loadingScreenScene,
                 Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
+
+            if (!saveOK)
+            {
+                Debug.LogErrorFormat("Loading screen generator error: Issue while saving scene {0}.", LoadingSceneName);
+            }
         }
 
         // Visible for testing
