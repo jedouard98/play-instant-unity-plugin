@@ -75,8 +75,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// invocation of the code handler on the received authorization code once it is available or throw an exception
         /// once there is a failure to get the authorization code.
         /// </summary>
-        /// <param name="authorizationCodeHandler"> An action to invoke on the authorization code instance when it is
-        /// available.></param>
+        /// <param name="onAuthorizationCodeAction">An action to invoke on the authorization code instance when it is
+        /// available.</param>
         /// <exception cref="Exception">Exception thrown when required authorization code cannot be received
         /// from OAuth2 flow.</exception>
         public static void GetAuthCode(Action<AuthorizationCode> onAuthorizationCodeAction)

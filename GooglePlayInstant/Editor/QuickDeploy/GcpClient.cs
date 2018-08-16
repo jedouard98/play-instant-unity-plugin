@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -35,44 +36,43 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             InvokeAccessRestrictedAction(CheckBucketExistence, bucketInfoResponse =>
             {
-                if (!string.IsNullOrEmpty(bucketInfoResponse.error))
+                if (string.IsNullOrEmpty(bucketInfoResponse.error))
                 {
-                    if (bucketInfoResponse.error.StartsWith("404"))
-                    {
-                        InvokeAccessRestrictedAction(CreateBucket, bucketCreationResponse =>
-                        {
-                            var error = bucketCreationResponse.error;
-                            if (!string.IsNullOrEmpty(error))
-                            {
-                                throw new Exception(string.Format("Got error attempting to create bucket: {0}\n{1}",
-                                    error,
-                                    bucketCreationResponse.text));
-                            }
-
-                            Debug.Log("Google Cloud Storage bucket was successfully created.");
-                            UploadBundleAndMakePublic();
-                        });
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format(
-                            "Got error when verifying bucket existence: {0} \n {1}", bucketInfoResponse.error,
-                            bucketInfoResponse.error));
-                    }
-                }
-                else
-                {
+                    // No error indicates that the bucket exists. Confirm the bucket name is correct and upload the file.
                     var response = JsonUtility.FromJson<BucketInfoResponse>(bucketInfoResponse.text);
                     var bucketName = response.name;
                     if (!string.Equals(bucketName, QuickDeployConfig.Config.cloudStorageBucketName))
                     {
                         throw new Exception(string.Format(
-                            "Response bucket name \"{0}\" doesn't match expected name \"{1}\"", bucketName
-                            , QuickDeployConfig.Config.assetBundleFileName));
+                            "Response bucket name \"{0}\" doesn't match expected name \"{1}\"",
+                            bucketName, QuickDeployConfig.Config.cloudStorageBucketName));
                     }
 
                     UploadBundleAndMakePublic();
+                    return;
                 }
+
+                // Any HTTP Status Code other than 404 is a fatal error.
+                if (!bucketInfoResponse.error.StartsWith("404"))
+                {
+                    throw new Exception(string.Format(
+                        "Error verifying bucket existence: {0} \n {1}", bucketInfoResponse.error,
+                        bucketInfoResponse.error));
+                }
+
+                // HTTP Status Code 404 indicates that the bucket doesn't exist, so create it. 
+                InvokeAccessRestrictedAction(CreateBucket, bucketCreationResponse =>
+                {
+                    var error = bucketCreationResponse.error;
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        throw new Exception(string.Format("Error creating bucket: {0}\n{1}",
+                            error, bucketCreationResponse.text));
+                    }
+
+                    Debug.Log("Google Cloud Storage bucket was successfully created.");
+                    UploadBundleAndMakePublic();
+                });
             });
         }
 
@@ -107,7 +107,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     throw new Exception(string.Format(
                         "Response file name \"{0}\" doesn't match expected name \"{1}\"",
-                        fileName, QuickDeployConfig.Config.assetBundleFileName));
+                        fileName, QuickDeployConfig.Config.cloudStorageFileName));
                 }
 
                 QuickDeployConfig.Config.assetBundleUrl =
@@ -141,8 +141,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.cloudStorageFileName);
             var assetBundleFileBytes = File.ReadAllBytes(QuickDeployConfig.Config.assetBundleFileName);
             var request =
-                SendAuthenticatedPostRequest(uploadEndpoint, assetBundleFileBytes, "application/octet-stream",
-                    AccessTokenGetter.AccessToken.access_token);
+                SendAuthenticatedPostRequest(uploadEndpoint, assetBundleFileBytes, "application/octet-stream");
             WwwRequestInProgress.TrackProgress(request, "Uploading file to Google Cloud Storage", postResponseAction);
         }
 
@@ -151,7 +150,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// handler on the HTTP response.
         /// </summary>
         /// <param name="onCreateBucketResponseAction">An action to be invoked on the www instance holding the HTTP request
-        /// once the response to the request to create bucket is available</param>
+        /// once the response to the request to create bucket is available.</param>
         private static void CreateBucket(Action<WWW> onCreateBucketResponseAction)
         {
             var credentials = OAuth2Credentials.GetCredentials();
@@ -164,13 +163,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             };
 
             var jsonBytes = Encoding.UTF8.GetBytes(JsonUtility.ToJson(createBucketRequest));
-            var createBucketWww =
-                SendAuthenticatedPostRequest(
-                    createBucketEndPoint,
-                    jsonBytes,
-                    "application/json",
-                    AccessTokenGetter.AccessToken.access_token);
-            WwwRequestInProgress.TrackProgress(createBucketWww,
+            var createBucketWww = SendAuthenticatedPostRequest(createBucketEndPoint, jsonBytes, "application/json");
+            WwwRequestInProgress.TrackProgress(
+                createBucketWww,
                 string.Format("Creating bucket with name \"{0}\"", createBucketRequest.name),
                 onCreateBucketResponseAction);
         }
@@ -188,8 +183,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 QuickDeployConfig.Config.cloudStorageBucketName, QuickDeployConfig.Config.cloudStorageFileName);
             var requestJsonContents = JsonUtility.ToJson(new PublicAccessRequest());
             var makeBundlePublicWww = SendAuthenticatedPostRequest(makePublicEndpoint,
-                Encoding.UTF8.GetBytes(requestJsonContents), "application/json",
-                AccessTokenGetter.AccessToken.access_token);
+                Encoding.UTF8.GetBytes(requestJsonContents), "application/json");
             WwwRequestInProgress.TrackProgress(makeBundlePublicWww, "Making remote file public",
                 onMakeBundlePublicResponseAction);
         }
@@ -206,9 +200,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var bucketInfoUrl =
                 string.Format("https://www.googleapis.com/storage/v1/b/{0}",
                     QuickDeployConfig.Config.cloudStorageBucketName);
-            var headers = new Dictionary<string, string>();
-            headers.Add("Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token));
-            var request = HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, headers);
+            var request =
+                HttpRequestHelper.SendHttpGetRequest(bucketInfoUrl, null, GetDictionaryWithAuthorizationHeader());
             WwwRequestInProgress.TrackProgress(request, "Checking whether bucket exists.", postResponseAction);
         }
 
@@ -234,21 +227,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Helps send an authenticated HTTP POST request to a GCP endpoint.
+        /// Helps send HTTP POST request that includes Authorization header to a GCP endpoint.
         /// </summary>
         /// <param name="endpoint">A GCP endpoint to which the request is going.</param>
         /// <param name="content">Content bytes to be put in the body of the request.</param>
         /// <param name="contentType">Type of content to be used in headers.</param>
-        /// <param name="accessToken">GCP OAuth2 Access token to be used in the headers.</param>
-        private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType,
-            string accessToken)
+        private static WWW SendAuthenticatedPostRequest(string endpoint, byte[] content, string contentType)
         {
-            var requestHeaders = new Dictionary<string, string>
-            {
-                {"Authorization", string.Format("Bearer {0}", accessToken)},
-                {"Content-Type", contentType}
-            };
+            var requestHeaders = GetDictionaryWithAuthorizationHeader(
+                new Dictionary<string, string> {{"Content-Type", contentType}});
             return HttpRequestHelper.SendHttpPostRequest(endpoint, content, requestHeaders);
+        }
+
+        /// <summary>
+        /// Creates and returns new combined dictionary that includes Authorization header to use for HTTP requests.
+        /// </summary>
+        /// <param name="headers">Other headers to include in the new dictonary.</param>
+        private static Dictionary<string, string> GetDictionaryWithAuthorizationHeader(
+            Dictionary<string, string> headers = null)
+        {
+            var dictionaryWithAuthorizationHeader = new Dictionary<string, string>
+            {
+                {"Authorization", string.Format("Bearer {0}", AccessTokenGetter.AccessToken.access_token)}
+            };
+            return dictionaryWithAuthorizationHeader.Union(headers ?? new Dictionary<string, string>())
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
         }
 
         /// <summary>
