@@ -150,8 +150,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             };
             RequestToken(grantDictionary, postTokenAction);
         }
-
-
+        
         /// <summary>
         /// Sends an HTTP request to OAuth2 token uri to retrieve, process and store needed tokens.
         /// </summary>
