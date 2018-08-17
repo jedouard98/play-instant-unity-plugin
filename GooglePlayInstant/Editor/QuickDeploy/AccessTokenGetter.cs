@@ -51,8 +51,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Get new access token if access token is expired or is not available, and execute the action when the access
-        /// token is available.
+        /// Retrieves and stores a new access token if the token is expired or is not available, and executse the post
+        /// toke action when the access token is available.
         /// </summary>
         /// <param name="postTokenAction">Action to be executed when valid access token is avalable.</param>
         public static void ValidateAccessToken(Action postTokenAction)
@@ -77,15 +77,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
 
         /// <summary>
-        /// Instantiate the OAuth2 flow to retrieve authorization code for google cloud storage, and schedule
-        /// invocation of the code handler on the received authorization code once it is available or throw an exception
-        /// once there is a failure to get the authorization code.
+        /// Instantiates the OAuth2 flow to retrieve authorization code for google cloud storage, and schedules
+        /// invocation of the code handler on the received authorization code once it is available. Tthrows an exception
+        /// once there is a failure to get the authorization code from the oauth2 flow.
         /// </summary>
         /// <param name="onAuthorizationCodeAction">An action to invoke on the authorization code instance when it is
         /// available.</param>
-        /// <exception cref="Exception">Exception thrown when required authorization code cannot be received
-        /// from OAuth2 flow.</exception>
-        public static void GetAuthCode(Action<AuthorizationCode> onAuthorizationCodeAction)
+        private static void GetAuthCode(Action<AuthorizationCode> onAuthorizationCodeAction)
         {
             var server = new OAuth2Server(authorizationResponse => { _authorizationResponse = authorizationResponse; });
             server.Start();
@@ -158,7 +156,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Sends an HTTP request to OAuth2 token uri to retrieve, process and store needed tokens.
         /// </summary>
         /// <param name="grantDictionary">A dictionary containing OAuth2 grant type and grant values to be used when
-        /// requesting access token. <see cref=""/></param>
+        /// requesting access token.</param>
         /// <param name="postTokenAction"></param>
         private static void RequestToken(Dictionary<string, string> grantDictionary, Action postTokenAction)
         {
@@ -179,9 +177,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Handles received response from a token request by parsing the response to update access and refresh tokens
+        /// Handles received response from a token request by parsing the response to update access and refresh token
         /// values if available, as well as throwing an error when there was a failure getting required tokens.
         /// </summary>
+        /// <param name="completeTokenRequest">A www instance holding a token  request that has received a response.</param>
         private static void HandleTokenResponse(WWW completeTokenRequest)
         {
             var responseError = completeTokenRequest.error;
@@ -207,7 +206,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Represents authorization code received from OAuth2 Protocol when the user authorizes the application to
         /// access the cloud, and is used to get an access token used for making API requests.
         /// </summary>
-        public class AuthorizationCode
+        private class AuthorizationCode
         {
             public string Code;
             public string RedirectUri;
@@ -216,8 +215,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Represents the JSON body of the access token response returned by Google Cloud OAuth2 API.
         /// </summary>
+#pragma warning disable CS0649
         [Serializable]
-        public class GcpAccessTokenResponse
+        private class GcpAccessTokenResponse
         {
             // Fields are named snake_case style to match the format of the JSON response returned by GCP OAuth2 API.
 
@@ -266,11 +266,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             /// Update values of access and refresh tokens, as well as the time it will take for the new token to
             /// expire. The refreshToken parameter is only used if it is not null or empty.
             /// </summary>
-            /// <param name="expiresIn">Seconds until the access token expires.</param>
-            internal static void Update(string accessToken, string refreshToken, int expiresIn)
+            internal static void Update(string accessToken, string refreshToken, int secondsToExpiration)
             {
                 Value = accessToken;
-                _expiresAt = DateTime.Now.AddSeconds(expiresIn - TokenExpirationOffsetInSeconds);
+                _expiresAt = DateTime.Now.AddSeconds(secondsToExpiration - TokenExpirationOffsetInSeconds);
 
                 if (!string.IsNullOrEmpty(refreshToken))
                 {
