@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -21,10 +22,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// <summary>
     /// Provides methods for using the OAuth2 flow to get user authorization and to retrieve an access token that is
     /// used send HTTP requests to Google Cloud Platform APIs.
+    /// <see cref="https://developers.google.com/identity/protocols/OAuth2InstalledApp"/>
     /// </summary>
     public static class AccessTokenGetter
     {
         private const string OAuth2CodeGrantType = "authorization_code";
+        private const string OAuth2RefreshTokenGrantType = "refresh_token";
 
         // Full control scope is required, since the application needs to read, write and change access
         // permissions of buckets and objects.
@@ -32,11 +35,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static KeyValuePair<string, string>? _authorizationResponse;
 
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
-
-        /// <summary>
-        /// Get Access token to use for API calls if available. Returns null if access token is not available.
-        /// </summary>
-        public static GcpAccessToken AccessToken { get; private set; }
 
         /// <summary>
         /// Check whether a new authorization code has been received and execute scheduled tasks accordingly.
@@ -57,18 +55,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// token is available.
         /// </summary>
         /// <param name="postTokenAction">Action to be executed when valid access token is avalable.</param>
-        public static void UpdateAccessToken(Action postTokenAction)
+        public static void ValidateAccessToken(Action postTokenAction)
         {
-            // TODO: Implement reuse of refresh token to get a new access token when the current token is expired.
-            if (AccessToken == null)
-            {
-                GetAuthCode(code => RequestAndStoreAccessToken(code, postTokenAction));
-            }
-            else
+            // Access token is valid. No need to request a new one.
+            if (AccessToken.IsValid())
             {
                 postTokenAction();
+                return;
             }
+
+            // If there is no refresh token, go though authorization process.
+            if (string.IsNullOrEmpty(AccessToken.RefreshToken))
+            {
+                GetAuthCode(code => RequestFirstAccessToken(code, postTokenAction));
+                return;
+            }
+
+            // If refresh token  is present, request a new access token using the refresh token.
+            RefreshAccessToken(AccessToken.RefreshToken, postTokenAction);
         }
+
 
         /// <summary>
         /// Instantiate the OAuth2 flow to retrieve authorization code for google cloud storage, and schedule
@@ -115,42 +121,86 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Sends an HTTP request to retrieve an access token from the token uri in developer's OAuth2 credentials file.
-        /// Schedules an action to store the access token once the token is received from the server or to throw an
-        /// exception once there is a failure to retrieve the token, and to invoke the post token action passed as an
-        /// argument to this function once the token has been received and stored.
+        /// Sends an HTTP request to OAuth2 token uri to get a new access token from the authorization code.
+        /// Stores the values of the new access token and the refresh token, and invokes the post token action when
+        /// the tokens have been  successfuly received and stored.
         /// </summary>
         /// <param name="authCode">Authorization code received from OAuth2 to be used to fetch access token.</param>
         /// <param name="postTokenAction">An action to invoke once the token has been received and stored.</param>
-        /// <exception cref="Exception">Exception thrown when there is a failure to retrieve access token.</exception>
-        private static void RequestAndStoreAccessToken(AuthorizationCode authCode, Action postTokenAction)
+        private static void RequestFirstAccessToken(AuthorizationCode authCode, Action postTokenAction)
         {
-            var credentials = OAuth2Credentials.GetCredentials();
-            var formData = new Dictionary<string, string>
+            var grantDictionary = new Dictionary<string, string>
             {
                 {"code", authCode.Code},
-                {"client_id", credentials.client_id},
-                {"client_secret", credentials.client_secret},
                 {"redirect_uri", authCode.RedirectUri},
                 {"grant_type", OAuth2CodeGrantType}
             };
+            RequestToken(grantDictionary, postTokenAction);
+        }
+
+        /// <summary>
+        /// Sends an HTTP request to OAuth2 token uri to get a new access token from the previously issued refresh token.
+        /// Stores the value of the new access token, and invokes the post token action when the new access token has
+        /// been successfully received and stored.
+        /// </summary>
+        private static void RefreshAccessToken(string refreshToken, Action postTokenAction)
+        {
+            var grantDictionary = new Dictionary<string, string>
+            {
+                {"refresh_token", refreshToken},
+                {"grant_type", OAuth2RefreshTokenGrantType}
+            };
+            RequestToken(grantDictionary, postTokenAction);
+        }
+
+
+        /// <summary>
+        /// Sends an HTTP request to OAuth2 token uri to retrieve, process and store needed tokens.
+        /// </summary>
+        /// <param name="grantDictionary">A dictionary containing OAuth2 grant type and grant values to be used when
+        /// requesting access token. <see cref=""/></param>
+        /// <param name="postTokenAction"></param>
+        private static void RequestToken(Dictionary<string, string> grantDictionary, Action postTokenAction)
+        {
+            var credentials = OAuth2Credentials.GetCredentials();
+            var formData = grantDictionary
+                .Union(new Dictionary<string, string>
+                {
+                    {"client_id", credentials.client_id},
+                    {"client_secret", credentials.client_secret}
+                }).ToDictionary(pair => pair.Key, pair => pair.Value);
             WwwRequestInProgress.TrackProgress(
-                HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, formData, null),
-                "Requesting access token",
+                HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, formData, null), "Requesting access token",
                 completeTokenRequest =>
                 {
-                    var responseText = completeTokenRequest.text;
-                    var token = JsonUtility.FromJson<GcpAccessToken>(responseText);
-                    if (string.IsNullOrEmpty(token.access_token))
-                    {
-                        throw new Exception(string.Format(
-                            "Attempted to request access token and received response with error {0} and text {1}",
-                            responseText, completeTokenRequest.error));
-                    }
-
-                    AccessToken = token;
+                    HandleTokenResponse(completeTokenRequest);
                     postTokenAction();
                 });
+        }
+
+        /// <summary>
+        /// Handles received response from a token request by parsing the response to update access and refresh tokens
+        /// values if available, as well as throwing an error when there was a failure getting required tokens.
+        /// </summary>
+        private static void HandleTokenResponse(WWW completeTokenRequest)
+        {
+            var responseError = completeTokenRequest.error;
+            var responseText = completeTokenRequest.text;
+            if (!string.IsNullOrEmpty(completeTokenRequest.error))
+            {
+                throw new Exception(string.Format(
+                    "Sent request to get access token and received response with error {0}, and text{1}", responseError,
+                    responseText));
+            }
+
+            var tokenResponse = JsonUtility.FromJson<GcpAccessTokenResponse>(responseText);
+            if (string.IsNullOrEmpty(tokenResponse.access_token))
+            {
+                throw new Exception(string.Format("Couldn't retrieve access token from response text: {0}",
+                    responseText));
+            }
+
+            AccessToken.Update(tokenResponse.access_token, tokenResponse.refresh_token, tokenResponse.expires_in);
         }
 
         /// <summary>
@@ -164,11 +214,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Represents the JSON body of the access token issued by Google Cloud OAuth2 API.
-        /// <see cref="https://developers.google.com/identity/protocols/OAuth2InstalledApp"/>
+        /// Represents the JSON body of the access token response returned by Google Cloud OAuth2 API.
         /// </summary>
         [Serializable]
-        public class GcpAccessToken
+        public class GcpAccessTokenResponse
         {
             // Fields are named snake_case style to match the format of the JSON response returned by GCP OAuth2 API.
 
@@ -186,6 +235,56 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             /// Seconds from the time the token was issued to when it will expire.
             /// </summary>
             public int expires_in;
+        }
+
+        /// <summary>
+        /// Holds utility values and methods that enable to hold and retrieve the values of the current access and
+        /// refresh tokens, as well as to track whether the current token has expired or not. 
+        /// </summary>
+        [Serializable]
+        public static class AccessToken
+        {
+            /// <summary>
+            ///  An offset to compensate for timing differences between the time when the token response was created on
+            /// the server and the time when client application received the token response.
+            /// </summary>
+            private const int TokenExpirationOffsetInSeconds = 5;
+
+            private static DateTime _expiresAt;
+
+            /// <summary>
+            ///  A refresh token to use for further access token requests without repeating authorization flow.
+            /// </summary>
+            internal static string RefreshToken { get; private set; }
+
+            /// <summary>
+            ///  The value of the current access token if available.
+            /// </summary>
+            public static string Value { get; private set; }
+
+            /// <summary>
+            /// Update values of access and refresh tokens, as well as the time it will take for the new token to
+            /// expire. The refreshToken parameter is only used if it is not null or empty.
+            /// </summary>
+            /// <param name="expiresIn">Seconds until the access token expires.</param>
+            internal static void Update(string accessToken, string refreshToken, int expiresIn)
+            {
+                Value = accessToken;
+                _expiresAt = DateTime.Now.AddSeconds(expiresIn - TokenExpirationOffsetInSeconds);
+
+                if (!string.IsNullOrEmpty(refreshToken))
+                {
+                    RefreshToken = refreshToken;
+                }
+            }
+
+            /// <summary>
+            ///  Determine whether there is an access token that is valid and ready to be used for a request now.
+            /// </summary>
+            public static bool IsValid()
+            {
+                return !string.IsNullOrEmpty(Value) && DateTime.Now < _expiresAt;
+            }
         }
     }
 }
