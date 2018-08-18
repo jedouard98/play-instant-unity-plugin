@@ -15,7 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+
+[assembly: InternalsVisibleTo("GooglePlayInstant.Tests.Editor.QuickDeploy")]
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
@@ -37,6 +40,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static Action<KeyValuePair<string, string>> _onOAuthResponseReceived;
 
         /// <summary>
+        /// Get access token to use for API calls if available. Starts with invalid value until validated.
+        /// </summary>
+        public static GcpAccessToken AccessToken = new GcpAccessToken(null, null, 0);
+
+        /// <summary>
         /// Check whether a new authorization code has been received and execute scheduled tasks accordingly.
         /// </summary>
         public static void Update()
@@ -51,8 +59,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Retrieves and stores a new access token if the token is expired or is not available, and executse the post
-        /// toke action when the access token is available.
+        /// Retrieves and stores a new access token if the current token is invalid, and executes the post token action
+        /// when the new valid access token is available.
         /// </summary>
         /// <param name="postTokenAction">Action to be executed when valid access token is avalable.</param>
         public static void ValidateAccessToken(Action postTokenAction)
@@ -65,20 +73,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             // If there is no refresh token, go though authorization process.
-            if (string.IsNullOrEmpty(AccessToken.RefreshToken))
+            if (string.IsNullOrEmpty(GcpAccessToken.RefreshToken))
             {
                 GetAuthCode(code => RequestFirstAccessToken(code, postTokenAction));
                 return;
             }
 
             // If refresh token  is present, request a new access token using the refresh token.
-            RefreshAccessToken(AccessToken.RefreshToken, postTokenAction);
+            RefreshAccessToken(GcpAccessToken.RefreshToken, postTokenAction);
         }
 
 
         /// <summary>
         /// Instantiates the OAuth2 flow to retrieve authorization code for google cloud storage, and schedules
-        /// invocation of the code handler on the received authorization code once it is available. Tthrows an exception
+        /// invocation of the code handler on the received authorization code once it is available. Throws an exception
         /// once there is a failure to get the authorization code from the oauth2 flow.
         /// </summary>
         /// <param name="onAuthorizationCodeAction">An action to invoke on the authorization code instance when it is
@@ -150,24 +158,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             };
             RequestToken(grantDictionary, postTokenAction);
         }
-        
+
         /// <summary>
         /// Sends an HTTP request to OAuth2 token uri to retrieve, process and store needed tokens.
         /// </summary>
         /// <param name="grantDictionary">A dictionary containing OAuth2 grant type and grant values to be used when
-        /// requesting access token.</param>
+        /// requesting access token. The dictionary will be mutated by adding more credentials values needed to
+        /// send the token request.</param>
         /// <param name="postTokenAction"></param>
         private static void RequestToken(Dictionary<string, string> grantDictionary, Action postTokenAction)
         {
             var credentials = OAuth2Credentials.GetCredentials();
-            var formData = grantDictionary
-                .Union(new Dictionary<string, string>
-                {
-                    {"client_id", credentials.client_id},
-                    {"client_secret", credentials.client_secret}
-                }).ToDictionary(pair => pair.Key, pair => pair.Value);
+            grantDictionary.Add("client_id", credentials.client_id);
+            grantDictionary.Add("client_secret", credentials.client_secret);
             WwwRequestInProgress.TrackProgress(
-                HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, formData, null), "Requesting access token",
+                HttpRequestHelper.SendHttpPostRequest(credentials.token_uri, grantDictionary, null),
+                "Requesting access token",
                 completeTokenRequest =>
                 {
                     HandleTokenResponse(completeTokenRequest);
@@ -184,21 +190,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             var responseError = completeTokenRequest.error;
             var responseText = completeTokenRequest.text;
-            if (!string.IsNullOrEmpty(completeTokenRequest.error))
+            if (!string.IsNullOrEmpty(responseError))
             {
                 throw new Exception(string.Format(
-                    "Sent request to get access token and received response with error {0}, and text{1}", responseError,
+                    "Sent request to get access token and received response with error: \"{0}\", and text: \"{1}\"",
+                    responseError,
                     responseText));
             }
 
             var tokenResponse = JsonUtility.FromJson<GcpAccessTokenResponse>(responseText);
             if (string.IsNullOrEmpty(tokenResponse.access_token))
             {
-                throw new Exception(string.Format("Couldn't retrieve access token from response text: {0}",
+                throw new Exception(string.Format("Couldn't retrieve access token from response text: \"{0}\"",
                     responseText));
             }
 
-            AccessToken.Update(tokenResponse.access_token, tokenResponse.refresh_token, tokenResponse.expires_in);
+            AccessToken = new GcpAccessToken(tokenResponse.access_token, tokenResponse.refresh_token,
+                tokenResponse.expires_in);
         }
 
         /// <summary>
@@ -241,7 +249,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// refresh tokens, as well as to track whether the current token has expired or not. 
         /// </summary>
         [Serializable]
-        public static class AccessToken
+        public class GcpAccessToken
         {
             /// <summary>
             ///  An offset to compensate for timing differences between the time when the token response was created on
@@ -249,23 +257,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             /// </summary>
             private const int TokenExpirationOffsetInSeconds = 5;
 
-            private static DateTime _expiresAt;
-
             /// <summary>
-            ///  A refresh token to use for further access token requests without repeating authorization flow.
+            ///  A shared refresh token to use for further access token requests without repeating authorization flow.
             /// </summary>
             internal static string RefreshToken { get; private set; }
+
 
             /// <summary>
             ///  The value of the current access token if available.
             /// </summary>
-            public static string Value { get; private set; }
+            public readonly string Value;
+
+            private readonly DateTime _expiresAt;
 
             /// <summary>
-            /// Update values of access and refresh tokens, as well as the time it will take for the new token to
-            /// expire. The refreshToken parameter is only used if it is not null or empty.
+            /// Create a instance of GcpAccessToken with the given access token, refresh token and seconds until
+            /// expiration. The new refresh token, if valid, replaces the current refresh token and is used for
+            /// further requests for new access tokens as needed.
             /// </summary>
-            internal static void Update(string accessToken, string refreshToken, int secondsToExpiration)
+            internal GcpAccessToken(string accessToken, string refreshToken, int secondsToExpiration)
             {
                 Value = accessToken;
                 _expiresAt = DateTime.Now.AddSeconds(secondsToExpiration - TokenExpirationOffsetInSeconds);
@@ -279,7 +289,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             /// <summary>
             ///  Determine whether there is an access token that is valid and ready to be used for a request now.
             /// </summary>
-            public static bool IsValid()
+            public bool IsValid()
             {
                 return !string.IsNullOrEmpty(Value) && DateTime.Now < _expiresAt;
             }
