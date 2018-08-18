@@ -23,6 +23,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
     [TestFixture]
     public class AccessTokenGetterTest
     {
+        private static int HourInSeconds = 3600;
+
         [Test]
         public void TestStartsWithInvalidAccesstoken()
         {
@@ -30,20 +32,28 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         }
 
         [Test]
+        public void TestAccessTokenIsValid()
+        {
+            Assert.IsTrue(new AccessTokenGetter.GcpAccessToken("Access", "Refresh", HourInSeconds).IsValid());
+            Assert.IsFalse(new AccessTokenGetter.GcpAccessToken("Access", "Refresh", -1).IsValid());
+        }
+
+        [Test]
         public void TestHasCorrectAccessAndRefreshTokenValues()
         {
             // Ensure that new created access token has a correct value.
-            const string firstAccessToken = "accessToken";
-            const string firstRefreshToken = "refreshToken";
-            var firstGcpcessToken = new AccessTokenGetter.GcpAccessToken(firstAccessToken, firstRefreshToken, 10);
+            const string firstAccessToken = "firstAccessToken";
+            const string firstRefreshToken = "firstRefreshToken";
+            var firstGcpcessToken =
+                new AccessTokenGetter.GcpAccessToken(firstAccessToken, firstRefreshToken, HourInSeconds);
             Assert.AreEqual(firstAccessToken, firstGcpcessToken.Value);
             // Ensure that refresh token has been shared by the entire class.
             Assert.AreEqual(firstRefreshToken, AccessTokenGetter.GcpAccessToken.RefreshToken);
 
             // Create new token instances with null and empty refresh tokens, which should not replace the first refresh token.
             const string secondAccessToken = "secondAccessToken";
-            var secondGcpAccessToken = new AccessTokenGetter.GcpAccessToken(secondAccessToken, null, 10);
-            var thirdGcpAccessToken = new AccessTokenGetter.GcpAccessToken(secondAccessToken, "", 10);
+            var secondGcpAccessToken = new AccessTokenGetter.GcpAccessToken(secondAccessToken, null, HourInSeconds);
+            var thirdGcpAccessToken = new AccessTokenGetter.GcpAccessToken(secondAccessToken, "", HourInSeconds);
             // Ensure that created token has correct value, and that the refresh token is not different from the first valid one.
             Assert.AreEqual(secondAccessToken, secondGcpAccessToken.Value);
             Assert.AreEqual(secondAccessToken, thirdGcpAccessToken.Value);
@@ -54,7 +64,8 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             const string thirdAccessToken = "thirdAccessToken";
             const string thirdRefreshToken = "thirdRefreshToken";
             // Pass new refresh token
-            var fourthGcpAccessToken = new AccessTokenGetter.GcpAccessToken(thirdAccessToken, thirdRefreshToken, 10);
+            var fourthGcpAccessToken =
+                new AccessTokenGetter.GcpAccessToken(thirdAccessToken, thirdRefreshToken, HourInSeconds);
             Assert.AreEqual(thirdAccessToken, fourthGcpAccessToken.Value);
             // Ensure that the shared refresh token has been updated this time.
             Assert.AreEqual(thirdRefreshToken, AccessTokenGetter.GcpAccessToken.RefreshToken);

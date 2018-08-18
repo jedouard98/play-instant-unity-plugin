@@ -262,7 +262,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             /// </summary>
             internal static string RefreshToken { get; private set; }
 
-
             /// <summary>
             ///  The value of the current access token if available.
             /// </summary>
