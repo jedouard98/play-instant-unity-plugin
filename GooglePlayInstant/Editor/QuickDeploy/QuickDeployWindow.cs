@@ -103,17 +103,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     OnGuiCreateBuildSelect();
                     break;
             }
-
-            // Disable the Save button unless one of the fields has changed.
-            GUI.enabled = IsAnyFieldChanged();
-
-            if (GUILayout.Button("Save"))
-            {
-                QuickDeployConfig.SaveConfiguration(_assetBundleFileName, _cloudStorageBucketName,
-                    _cloudStorageFileName, _cloudCredentialsFileName, _assetBundleUrl, _apkFileName);
-            }
-
-            GUI.enabled = true;
         }
 
 
@@ -137,30 +126,38 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
                                        "and bundle it (and its dependencies) into an AssetBundle file.",
                 EditorStyles.wordWrappedLabel);
+            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 string.Format("Asset Bundle Browser version: {0}",
                     AssetBundleBrowserClient.GetAssetBundleBrowserVersion()),
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
 
+            EditorGUILayout.Space();
             // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
             if (AssetBundleBrowserClient.AssetBundleBrowserIsPresent())
             {
-                if (GUILayout.Button("Open Asset Bundle Browser", GUILayout.Width(ButtonWidth)))
+                if (GUILayout.Button("Open Asset Bundle Browser"))
                 {
                     AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                 }
             }
             else
             {
-                if (GUILayout.Button("Download Asset Bundle Browser from GitHub", GUILayout.Width(LongButtonWidth)))
+                if (GUILayout.Button("Download Asset Bundle Browser from GitHub"))
                 {
                     Application.OpenURL("https://github.com/Unity-Technologies/AssetBundles-Browser/releases");
                 }
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.Space();
 
                 EditorGUILayout.Space();
-                if (GUILayout.Button("Open Asset Bundle Browser Documentation", GUILayout.Width(LongButtonWidth)))
+                if (GUILayout.Button("Open Asset Bundle Browser Documentation"))
                 {
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
@@ -303,16 +300,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
             }
-        }
-
-        private bool IsAnyFieldChanged()
-        {
-            return _assetBundleFileName != QuickDeployConfig.Config.assetBundleFileName ||
-                   _cloudStorageBucketName != QuickDeployConfig.Config.cloudStorageBucketName ||
-                   _cloudStorageFileName != QuickDeployConfig.Config.cloudStorageFileName ||
-                   _cloudCredentialsFileName != QuickDeployConfig.Config.cloudCredentialsFileName ||
-                   _assetBundleUrl != QuickDeployConfig.Config.assetBundleUrl ||
-                   _apkFileName != QuickDeployConfig.Config.apkFileName;
         }
     }
 }
