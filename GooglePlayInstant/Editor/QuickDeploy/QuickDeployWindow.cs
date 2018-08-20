@@ -171,12 +171,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("AssetBundle Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
                                        "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
             // TODO: Allow the user to browse to the asset bundle file without having to always manually enter the path 
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Asset Bundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
-            _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("AssetBundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
+            _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));       
             EditorGUILayout.EndHorizontal();
+                        
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                _assetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
+            }
+            EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
@@ -195,13 +205,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _cloudCredentialsFileName =
                 EditorGUILayout.TextField(_cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-            if (GUILayout.Button("Upload to Google Cloud Storage", GUILayout.Width(LongButtonWidth)))
+            
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                _cloudCredentialsFileName = EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.EndVertical();
+            if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
                 GcpClient.DeployConfiguredFile();
             }
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Open Google Cloud Storage Console", GUILayout.Width(LongButtonWidth)))
+            if (GUILayout.Button("Open Google Cloud Storage Console"))
             {
                 Application.OpenURL("https://console.cloud.google.com/storage/browser");
             }
