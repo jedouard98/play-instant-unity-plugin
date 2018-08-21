@@ -269,28 +269,42 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void OnGuiLoadingScreenSelect()
         {
+            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "no file specified";
+
             EditorGUILayout.LabelField("Loading Screen", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
                                        "specified below while downloading and opening the main scene.",
                 EditorStyles.wordWrappedLabel);
+            EditorGUILayout.BeginVertical("textfield");
+            
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            if (GUILayout.Button("Choose Loading Image", GUILayout.Width(ButtonWidth)))
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
+            displayedPath = EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.EndHorizontal();
+            
+            
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 LoadingScreenGenerator.LoadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
-
-            EditorGUILayout.Space();
-
-            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "no file specified";
-            EditorGUILayout.LabelField(string.Format("Image file: {0}", displayedPath),
-                GUILayout.MinWidth(FieldMinWidth));
-
+            EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.Space();
             EditorGUILayout.Space();
+            
+            EditorGUILayout.EndVertical();
+  
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-            if (GUILayout.Button("Create Loading Scene", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Create Loading Scene"))
             {
                 if (string.IsNullOrEmpty(_assetBundleUrl))
                 {
