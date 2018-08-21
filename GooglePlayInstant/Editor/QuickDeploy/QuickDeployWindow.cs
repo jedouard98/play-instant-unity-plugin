@@ -215,12 +215,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
                 GcpClient.DeployConfiguredFile();
             }
 
             EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
             if (GUILayout.Button("Open Google Cloud Storage Console"))
             {
                 Application.OpenURL("https://console.cloud.google.com/storage/browser");
@@ -232,17 +235,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
-                                       "metadata including file version and compression type.",
+                                       "information including the first scene in bundle and size in MB.",
                 EditorStyles.wordWrappedLabel);
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
             _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
 
-            if (GUILayout.Button("Verify AssetBundle", GUILayout.Width(ButtonWidth)))
+            if (GUILayout.Button("Verify AssetBundle"))
             {
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
                 {
