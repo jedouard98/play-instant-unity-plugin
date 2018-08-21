@@ -232,7 +232,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private void OnGuiVerifyBundleSelect()
         {
             EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
-            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
                                        "information including the first scene in bundle and size in MB.",
                 EditorStyles.wordWrappedLabel);
