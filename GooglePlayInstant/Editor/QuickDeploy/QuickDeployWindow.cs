@@ -174,7 +174,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                                        "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
-            // TODO: Allow the user to browse to the asset bundle file without having to always manually enter the path 
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Path to Google Cloud OAuth2 Credentials", GUILayout.MinWidth(FieldMinWidth));
+            _cloudCredentialsFileName =
+                EditorGUILayout.TextField(_cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                _cloudCredentialsFileName = EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
+            }
+
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
             _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
@@ -199,21 +212,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             _cloudStorageFileName = EditorGUILayout.TextField(_cloudStorageFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            // TODO: Allow the user to browse to credentials file without having to always manually enter the path
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Path to Google Cloud OAuth2 Credentials", GUILayout.MinWidth(FieldMinWidth));
-            _cloudCredentialsFileName =
-                EditorGUILayout.TextField(_cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
-            {
-                _cloudCredentialsFileName = EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
-            }
-
-            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
