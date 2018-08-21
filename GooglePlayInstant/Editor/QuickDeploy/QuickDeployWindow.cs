@@ -202,6 +202,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 _assetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
             }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -223,6 +224,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 GcpClient.DeployConfiguredFile();
             }
+
             EditorGUILayout.Space();
             EditorGUILayout.Space();
 
