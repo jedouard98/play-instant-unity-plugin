@@ -178,7 +178,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Path to Google Cloud OAuth2 Credentials", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("Google Cloud OAuth2 Credentials File Path", GUILayout.MinWidth(FieldMinWidth));
             _cloudCredentialsFileName =
                 EditorGUILayout.TextField(_cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
@@ -192,7 +192,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle File Path Name", GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
             _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
