@@ -39,6 +39,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Build
         }
 
+        private const int WindowMaxWidth = 475;
+        private const int WindowMaxHeight = 325;
+
         private const int FieldMinWidth = 100;
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
@@ -57,7 +60,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>("Quick Deploy");
-            window.minSize = new Vector2(425, 325);
+            window.minSize = new Vector2(WindowMaxWidth, WindowMaxHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
 
