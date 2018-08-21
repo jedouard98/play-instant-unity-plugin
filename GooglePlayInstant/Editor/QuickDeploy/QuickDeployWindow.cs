@@ -21,8 +21,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         private static readonly string[] ToolbarButtonNames =
         {
-            "Create Bundle", "Deploy Bundle", "Verify Bundle",
-            "Loading Screen", "Build"
+            "Create Bundle", "Deploy Bundle", "Loading Screen", "Build"
         };
 
         private static int _toolbarSelectedButtonIndex;
@@ -34,7 +33,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             CreateBundle,
             DeployBundle,
-            VerifyBundle,
             LoadingScreen,
             Build
         }
@@ -96,9 +94,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
                 case ToolBarSelectedButton.DeployBundle:
                     OnGuiDeployBundleSelect();
-                    break;
-                case ToolBarSelectedButton.VerifyBundle:
-                    OnGuiVerifyBundleSelect();
                     break;
                 case ToolBarSelectedButton.LoadingScreen:
                     OnGuiLoadingScreenSelect();
@@ -174,7 +169,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             EditorGUILayout.LabelField("AssetBundle Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Use the Google Cloud Storage to host the AssetBundle as a public " +
-                                       "file. Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
+                                       "file (optional). Or host the file on your own CDN.", EditorStyles.wordWrappedLabel);
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -233,26 +228,61 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 Application.OpenURL("https://console.cloud.google.com/storage/browser");
             }
         }
+//
+//        private void OnGuiVerifyBundleSelect()
+//        {
+//            EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
+//            EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
+//                                       "information including the first scene in bundle and size in MB.",
+//                EditorStyles.wordWrappedLabel);
+//            EditorGUILayout.BeginVertical("textfield");
+//            EditorGUILayout.Space();
+//            EditorGUILayout.Space();
+//            EditorGUILayout.BeginHorizontal();
+//            EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
+//            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
+//            EditorGUILayout.EndHorizontal();
+//            EditorGUILayout.Space();
+//            EditorGUILayout.Space();
+//            EditorGUILayout.EndVertical();
+//            EditorGUILayout.Space();
+//            EditorGUILayout.BeginVertical();
+//            if (GUILayout.Button("Verify AssetBundle"))
+//            {
+//                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
+//                {
+//                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+//                }
+//                else
+//                {
+//                    var window = AssetBundleVerifierWindow.ShowWindow();
+//                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
+//                }
+//            }
+//
+//            EditorGUILayout.EndVertical();
+//        }
 
-        private void OnGuiVerifyBundleSelect()
+        private void OnGuiLoadingScreenSelect()
         {
-            EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
-                                       "information including the first scene in bundle and size in MB.",
+            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "";
+            EditorGUILayout.LabelField("Loading Screen", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Construct a loading scene using the AssetBundle from the specified url and " + 
+                                       "selected loading image. Additionally, use the verify button to report " +
+                                       "AssetBundle validity and information.",
                 EditorStyles.wordWrappedLabel);
-            EditorGUILayout.BeginVertical("textfield");
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
+            
+            EditorGUILayout.Space();  
+            EditorGUILayout.BeginVertical("textfield"); 
+            EditorGUILayout.Space();  
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
             _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginVertical();
-            if (GUILayout.Button("Verify AssetBundle"))
+
+                        
+            if (GUILayout.Button("Verify URL"))
             {
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
                 {
@@ -264,18 +294,19 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     window.StartAssetBundleVerificationDownload(_assetBundleUrl);
                 }
             }
-
+            EditorGUILayout.Space();
+//            EditorGUILayout.Space();
+            
             EditorGUILayout.EndVertical();
-        }
+            EditorGUILayout.Space();
 
-        private void OnGuiLoadingScreenSelect()
-        {
-            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "no file specified";
-            EditorGUILayout.LabelField("Loading Screen", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
-                                       "specified below while downloading and opening the main scene.",
-                EditorStyles.wordWrappedLabel);
-            EditorGUILayout.BeginVertical("textfield");
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.BeginVertical("textfield"); 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -293,6 +324,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
+            
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
             if (GUILayout.Button("Create Loading Scene"))
