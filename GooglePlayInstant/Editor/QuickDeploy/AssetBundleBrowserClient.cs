@@ -141,6 +141,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 ErrorLogger.DisplayError(errorMessage,
                     "Unity Asset Bundle Browser was unable to opened. See Console log for more details.");
+                
+                // Error message is automatically console logged.
             }
         }
 
