@@ -178,7 +178,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                     Debug.Log("Download process was cancelled.");
                 }
-
+                
                 return;
             }
 
