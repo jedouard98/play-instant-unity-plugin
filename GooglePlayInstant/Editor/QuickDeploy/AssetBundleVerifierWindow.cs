@@ -35,17 +35,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             BundleError,
             DownloadSuccess
         }
-        
+
         private const int FieldMinWidth = 170;
         internal const string WebRequestErrorFormatMessage = "Problem retrieving AssetBundle from {0}: {1}";
-        
+
         private long _responseCode;
-        
+
         private string _mainScene;
         private double _numOfMegabytes;
         private UnityWebRequest _webRequest;
         private AssetBundle _bundle;
-        
+
         // Visible for testing
         internal bool AssetBundleDownloadIsSuccessful;
         internal string AssetBundleUrl;
@@ -58,7 +58,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         public static AssetBundleVerifierWindow ShowWindow()
         {
-            return (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true, "Play Instant AssetBundle Verify");
+            return (AssetBundleVerifierWindow) GetWindow(typeof(AssetBundleVerifierWindow), true,
+                "Play Instant AssetBundle Verify");
         }
 
         public void StartAssetBundleVerificationDownload(string assetBundleUrl)
@@ -108,7 +109,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     _bundle.Unload(true);
                     break;
                 default:
-                    throw new NotImplementedException(string.Format("Unexpected state {0}", state));
+                    var errorMessage =
+                        string.Format(
+                            "An unexpected state was found while verifying the AssetBundle. Unexpected state: {0}",
+                            state);
+                    throw new NotImplementedException(errorMessage);
             }
         }
 
@@ -179,7 +184,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             // Performs download operation only once when webrequest is completed.
             EditorUtility.ClearProgressBar();
-            HandleAssetBundleVerifyState(State, _webRequest);
+
+            try
+            {
+                HandleAssetBundleVerifyState(State, _webRequest);
+            }
+            catch
+            {
+                ErrorLogger.DisplayError("Error verifying AssetBundle", "See Console log for more details.");
+            }
+
             Repaint();
 
             // Turn request to null to signal ready for next call
