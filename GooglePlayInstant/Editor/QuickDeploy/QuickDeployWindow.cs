@@ -276,7 +276,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
-            displayedPath = EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
