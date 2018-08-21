@@ -124,11 +124,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             if (!AssetBundleBrowserIsPresent())
             {
-                Debug.LogError("Cannot detect Unity Asset Bundle Browser");
+                const string errorMessage = "Cannot detect Unity Asset Bundle Browser";
+
+                ErrorLogger.DisplayError(errorMessage,
+                    "Unity Asset Bundle Browser was unable to opened. The browser was not found.");
+                Debug.LogError(errorMessage);
+
                 return;
             }
 
-            EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
+            var opened = EditorApplication.ExecuteMenuItem(AssetBundleBrowserMenuItem);
+
+            if (!opened)
+            {
+                const string errorMessage = "Error opening Unity Asset Bundle Browser";
+
+                ErrorLogger.DisplayError(errorMessage,
+                    "Unity Asset Bundle Browser was unable to opened. See Console log for more details.");
+            }
         }
 
         /// <summary>

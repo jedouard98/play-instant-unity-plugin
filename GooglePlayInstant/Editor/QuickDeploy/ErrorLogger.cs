@@ -13,22 +13,29 @@
 // limitations under the License.
 
 using UnityEditor;
-using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class ErrorLogger
     {
-        private const string DialogButton;
+        private const string DialogButtonText = "OK";
+        
         public static void DisplayError(string title, string message)
         {
-            
-            
+            EditorUtility.DisplayDialog(title, message, DialogButtonText);
         }
-
-        public static void DisplayUrlError(string message)
-        {
-            EditorUtility.DisplayDialog("Invalid Default URL", message, "OK");
-        }
+//
+//        public static void DisplayError(string title, string[] messages)
+//        {
+//            
+//            EditorUtility.DisplayDialog(title, message, DialogButtonText);
+//        }
+        
+        
+//        
+//        public static void DisplayUrlError(string message)
+//        {
+//            EditorUtility.DisplayDialog("Invalid Default URL", message, "OK");
+//        }
     }
 }
