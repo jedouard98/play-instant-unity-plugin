@@ -57,7 +57,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>("Quick Deploy");
-            window.minSize = new Vector2(400,300);
+            window.minSize = new Vector2(425, 325);
             _toolbarSelectedButtonIndex = (int) select;
         }
 
@@ -81,7 +81,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         void OnGUI()
         {
-            _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames, GUILayout.MinHeight(ToolbarHeight));
+            _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames,
+                GUILayout.MinHeight(ToolbarHeight));
             var currentTab = (ToolBarSelectedButton) _toolbarSelectedButtonIndex;
             UpdateGuiFocus(currentTab);
             switch (currentTab)
@@ -185,9 +186,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 _assetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
             }
-
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
@@ -223,7 +222,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 GcpClient.DeployConfiguredFile();
             }
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
 
@@ -252,7 +250,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
             EditorGUILayout.BeginVertical();
-
             if (GUILayout.Button("Verify AssetBundle"))
             {
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
@@ -272,22 +269,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private void OnGuiLoadingScreenSelect()
         {
             var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "no file specified";
-
             EditorGUILayout.LabelField("Loading Screen", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("A loading screen scene displays a progress bar over the image " +
                                        "specified below while downloading and opening the main scene.",
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.BeginVertical("textfield");
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
             displayedPath = EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
-
-
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
@@ -297,14 +289,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.EndVertical();
-
             EditorGUILayout.Space();
-
             if (GUILayout.Button("Create Loading Scene"))
             {
                 if (string.IsNullOrEmpty(_assetBundleUrl))
@@ -328,7 +316,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
-
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
             EditorGUILayout.Space();
@@ -345,14 +332,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.EndVertical();
-
             EditorGUILayout.Space();
-
             if (GUILayout.Button("Build Base APK"))
             {
                 QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
