@@ -131,11 +131,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!opened)
             {
-                const string errorMessage =
-                    "Unity Asset Bundle Browser was unable to opened. See Console log for more details.";
-
-                ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle, errorMessage);
-                // Error message is automatically console logged.
+                throw new Exception("Failed to execute Unity Asset Bundle Browser Menu Item.");
             }
         }
 

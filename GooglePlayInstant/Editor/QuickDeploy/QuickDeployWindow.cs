@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -269,12 +270,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     GcpClient.DeployConfiguredFile();
                 }
-                catch
+                catch (Exception ex)
                 {
                     const string errorMessage =
                         "Error uploading AssetBundle to GCP. See Console log for details.";
 
-                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, errorMessage);
+                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, ex.Message);
 
                     throw;
                 }
@@ -314,11 +315,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     window.StartAssetBundleVerificationDownload(_assetBundleUrl);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
-
-                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
+                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, ex.Message);
 
                     window.Close();
 
@@ -360,11 +359,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     LoadingScreenGenerator.GenerateLoadingScreenScene(_assetBundleUrl, _loadingScreenImagePath);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    const string errorMessage = "Error generating loading screen scene. See Console log for details.";
-
-                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
+                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, ex.Message);
 
                     throw;
                 }
