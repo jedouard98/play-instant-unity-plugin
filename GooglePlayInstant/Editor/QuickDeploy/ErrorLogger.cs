@@ -18,24 +18,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class ErrorLogger
     {
-        private const string DialogButtonText = "OK";
+        public const string AssetBundleBrowserErrorTitle = "Error Opening Unity Asset Bundle Browser";
+        
+        public const string LoadingScreenErrorTitle = "Loading Screen Creation Error";
+        
+        private const string OKButtonText = "OK";
         
         public static void DisplayError(string title, string message)
         {
-            EditorUtility.DisplayDialog(title, message, DialogButtonText);
+            EditorUtility.DisplayDialog(title, message, OKButtonText);
         }
-//
-//        public static void DisplayError(string title, string[] messages)
-//        {
-//            
-//            EditorUtility.DisplayDialog(title, message, DialogButtonText);
-//        }
-        
-        
-//        
-//        public static void DisplayUrlError(string message)
-//        {
-//            EditorUtility.DisplayDialog("Invalid Default URL", message, "OK");
-//        }
     }
 }

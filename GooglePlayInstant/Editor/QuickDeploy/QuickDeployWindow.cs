@@ -44,9 +44,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-        private const string LoadingScreenErrorTitle = "Creating Loading Scene Error";
-        private const string OkButtonText = "OK";
-
         // Local copy of the fields from QuickDeployConfig.Config to track unsaved changes.
         private string _assetBundleFileName;
         private string _cloudStorageBucketName;
