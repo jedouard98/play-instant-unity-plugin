@@ -21,7 +21,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         private static readonly string[] ToolbarButtonNames =
         {
-            "Create Bundle", "Deploy Bundle", "Loading Screen", "Build"
+            "Bundle Creation", "Bundle Deployment", "Loading Screen", "Build"
         };
 
         private static int _toolbarSelectedButtonIndex;
@@ -38,7 +38,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         private const int WindowMinWidth = 475;
-        private const int WindowMinHeight = 325;
+        private const int WindowMinHeight = 400;
 
         private const int FieldMinWidth = 100;
         private const int ShortButtonWidth = 100;
@@ -127,9 +127,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 wordWrap = true
             };
             
-            EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
-            
-            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
             
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
@@ -167,9 +165,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
-
-                EditorGUILayout.Space();
             }
+            EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
 
