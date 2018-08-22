@@ -287,7 +287,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
                 {
-                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+                    const string errorMessage = "AssetBundle URL text field cannot be empty.";
+                    
+                    ErrorLogger.DisplayError("Error verifying AssetBundle", errorMessage);
+                    Debug.LogError(errorMessage);
                 }
                 else
                 {
@@ -328,7 +331,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (string.IsNullOrEmpty(_assetBundleUrl))
                 {
-                    LogError("AssetBundle URL text field cannot be null or empty.");
+                    var errorMessage = "AssetBundle URL text field cannot be null or empty.";
+                    Debug.LogErrorFormat("Build error: {0}", errorMessage);
+                    ErrorLogger.DisplayError(LoadingScreenErrorTitle, errorMessage);
                 }
                 else
                 {
@@ -339,12 +344,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
             EditorGUILayout.EndVertical();
-        }
-
-        private static void LogError(string message)
-        {
-            Debug.LogErrorFormat("Build error: {0}", message);
-            EditorUtility.DisplayDialog(LoadingScreenErrorTitle, message, OkButtonText);
         }
 
         private void OnGuiCreateBuildSelect()
