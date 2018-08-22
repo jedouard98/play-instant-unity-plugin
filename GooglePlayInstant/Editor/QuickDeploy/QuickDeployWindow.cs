@@ -38,6 +38,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Build
         }
 
+        // Style that provides a light box background.
+        // Documentation: https://docs.unity3d.com/ScriptReference/GUISkin-textField.html
+        private const string UserInputGuiStyle = "textfield";
+
         private const int WindowMinWidth = 475;
         private const int WindowMinHeight = 400;
 
@@ -54,9 +58,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _loadingScreenImagePath;
         private string _apkFileName;
 
+
         public static void ShowWindow(ToolBarSelectedButton select)
         {
-            var window = GetWindow<QuickDeployWindow>("Quick Deploy");
+            var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
+            
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
@@ -120,15 +126,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void OnGuiCreateBundleSelect()
         {
-            var descriptionTextStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontStyle = FontStyle.Italic,
-                wordWrap = true
-            };
+            var descriptionTextStyle = CreateDescriptionTextStyle();
 
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
 
-            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
                                        "and bundle it (and its dependencies) into an AssetBundle file.",
@@ -185,17 +188,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private void OnGuiDeployBundleSelect()
         {
             //TODO: investigate sharing this code
-            var descriptionTextStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontStyle = FontStyle.Italic,
-                wordWrap = true
-            };
+            var descriptionTextStyle = CreateDescriptionTextStyle();
 
             EditorGUILayout.LabelField("Create Google Cloud Credentials", EditorStyles.boldLabel);
-            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
-                "Quick Deploy requires valid credentials to upload the AsstetBundle file.",
+                "Quick Deploy requires valid credentials to upload the AssetBundle file.",
                 descriptionTextStyle);
             EditorGUILayout.LabelField(
                 "Open Google Cloud console to create an OAuth 2.0 client ID. Select Application Type \"Other\". " +
@@ -215,7 +214,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
             EditorGUILayout.LabelField("Configure AssetBundle Deployment", EditorStyles.boldLabel);
-            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 "Specify path to credentials file created above and to AssetBundle file created with  " +
@@ -237,6 +236,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
+
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
             _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
@@ -278,19 +278,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.Space();
+            
             EditorGUILayout.EndVertical();
         }
 
         private void OnGuiLoadingScreenSelect()
         {
-            var descriptionTextStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontStyle = FontStyle.Italic,
-                wordWrap = true
-            };
-
+            var descriptionTextStyle = CreateDescriptionTextStyle();
+            
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
-            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 "Specify the URL that points to the deployed AssetBundle. The AssetBundle will be downloaded at game startup. ",
@@ -328,15 +326,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select Loading Screen Image", EditorStyles.boldLabel);
-            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
+
             EditorGUILayout.LabelField(
                 "Choose image to use as background for the loading scene.", descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
+
             _loadingScreenImagePath =
                 EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -372,7 +373,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
-            EditorGUILayout.BeginVertical("textfield");
+
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -397,6 +400,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
+        }
+
+        private GUIStyle CreateDescriptionTextStyle()
+        {
+            return new GUIStyle(GUI.skin.label)
+            {
+                fontStyle = FontStyle.Italic,
+                wordWrap = true
+            };
         }
     }
 }
