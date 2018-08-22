@@ -185,15 +185,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             // Performs download operation only once when webrequest is completed.
             EditorUtility.ClearProgressBar();
 
-            try
-            {
-                HandleAssetBundleVerifyState(State, _webRequest);
-            }
-            catch
-            {
-                const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
-                ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
-            }
+            HandleAssetBundleVerifyState(State, _webRequest);
 
             Repaint();
 

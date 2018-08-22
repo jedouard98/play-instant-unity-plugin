@@ -305,7 +305,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 else
                 {
                     var window = AssetBundleVerifierWindow.ShowWindow();
-                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
+                    
+                    try
+                    {
+                        window.StartAssetBundleVerificationDownload(_assetBundleUrl);
+                    }
+                    catch (Exception ex)
+                    {
+                        const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
+                        
+                        ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
+                        Debug.Log(ex.ToString());
+
+                        window.Close();
+                    }
                 }
             }
 
