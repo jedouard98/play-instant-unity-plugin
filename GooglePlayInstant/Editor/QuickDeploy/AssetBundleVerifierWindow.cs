@@ -116,7 +116,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 default:
                     var errorMessage =
                         string.Format(
-                            "An unexpected state was found while verifying the AssetBundle. Unexpected state: {0}",
+                            "Unexpected state while checking the AssetBundle: {0}",
                             state);
                     throw new NotImplementedException(errorMessage);
             }

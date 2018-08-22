@@ -115,7 +115,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!texLoaded)
             {
-                throw new Exception("Loading image could not be loaded into a Texture2D object for canvas.");
+                throw new Exception("Failed to load image as a Texture2D.");
             }
 
             var loadingImageSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
