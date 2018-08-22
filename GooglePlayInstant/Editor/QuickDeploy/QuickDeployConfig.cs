@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -30,23 +31,37 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// The Configuration singleton that should be used to read and modify Quick Deploy configuration.
         /// Modified values are persisted by calling SaveConfiguration.
         /// </summary>
-        public static readonly Configuration Config = LoadConfiguration();
+        private static readonly Configuration _config = LoadConfiguration();
+        
+        public static string CloudCredentialsFileName;
+        public static string AssetBundleFileName;
+        public static string CloudStorageBucketName;
+        public static string CloudStorageObjectName;
+        public static string AssetBundleUrl;
+        public static string ApkFileName;
 
-        // TODO: call this method
-        /// <summary>
-        /// Commit the current state of quick deploy configurations to persistent storage.
-        /// </summary>
-        public static void SaveConfiguration(string assetBundleFileName, string cloudStorageBucketName,
-            string cloudStorageFileName, string cloudCredentialsFileName, string assetBundleUrl, string apkFileName)
+
+        public static void SaveConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
         {
-            Config.assetBundleFileName = assetBundleFileName;
-            Config.cloudStorageBucketName = cloudStorageBucketName;
-            Config.cloudStorageFileName = cloudStorageFileName;
-            Config.cloudCredentialsFileName = cloudCredentialsFileName;
-            Config.assetBundleUrl = assetBundleUrl;
-            Config.apkFileName = apkFileName;
+            switch (currentTab)
+            {
+                case QuickDeployWindow.ToolBarSelectedButton.DeployBundle:
+                    _config.cloudCredentialsFileName = CloudCredentialsFileName;
+                    _config.assetBundleFileName = AssetBundleFileName;
+                    _config.cloudStorageBucketName = CloudStorageBucketName;
+                    _config.cloudStorageObjectName = CloudStorageObjectName;
+                    break;
+                case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
+                    _config.assetBundleUrl = AssetBundleUrl;
+                    break;
+                case QuickDeployWindow.ToolBarSelectedButton.Build:
+                    _config.apkFileName = ApkFileName;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
+            }
 
-            File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(Config));
+            File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(_config));
         }
 
         private static Configuration LoadConfiguration()
@@ -64,12 +79,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Represents the contents of the quick deploy configuration file.
         /// </summary>
         [Serializable]
-        public class Configuration
+        private class Configuration
         {
+            public string cloudCredentialsFileName;
             public string assetBundleFileName;
             public string cloudStorageBucketName;
-            public string cloudStorageFileName;
-            public string cloudCredentialsFileName;
+            public string cloudStorageObjectName;
             public string assetBundleUrl;
             public string apkFileName;
         }
