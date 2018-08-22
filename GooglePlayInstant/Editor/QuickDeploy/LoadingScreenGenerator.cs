@@ -34,6 +34,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public const string LoadingSceneName = "play-instant-loading-screen-scene";
 
         private const string LoadingScreenCanvasName = "Loading Screen Canvas";
+        
+        private const string LoadingScreenSaveErrorTitle = "Loading Screen Save Error";
 
         private static readonly string LoadingScreenScenePath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
@@ -45,6 +47,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         // Visible for testing
         internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        
 
         /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
@@ -92,7 +95,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 
                 Debug.LogWarning(warningMessage);
                 
-                Logger.DisplayMessage(Logger.LoadingScreenCreationWarningTitle, warningMessage);
+                DialogHelper.DisplayMessage(LoadingScreenSaveErrorTitle, warningMessage);
             }
         }
 

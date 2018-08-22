@@ -57,6 +57,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _assetBundleUrl;
         private string _loadingScreenImagePath;
         private string _apkFileName;
+        
+        // Titles for errors that occur
+        private const string AssetBundleBrowserErrorTitle = "AssetBundle Browser Error";
+        private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
+        private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
+        private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
 
         public static void ShowWindow(ToolBarSelectedButton select)
@@ -153,12 +159,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     {
                         AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        const string errorMessage = "Error opening AssetBundle Browser. See Console log for details.";
-
-                        Logger.DisplayMessage(Logger.AssetBundleBrowserErrorTitle,
-                            errorMessage);
+                        DialogHelper.DisplayMessage(AssetBundleBrowserErrorTitle,
+                            ex.Message);
 
                         throw;
                     }
@@ -271,7 +275,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    Logger.DisplayMessage(Logger.AssetBundleDeploymentErrorTitle, ex.Message);
+                    DialogHelper.DisplayMessage(AssetBundleDeploymentErrorTitle, ex.Message);
 
                     throw;
                 }
@@ -311,7 +315,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    Logger.DisplayMessage(Logger.AssetBundleCheckerErrorTitle, ex.Message);
+                    DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
 
                     window.Close();
 
@@ -358,7 +362,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    Logger.DisplayMessage(Logger.LoadingScreenCreationErrorTitle, ex.Message);
+                    DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
 
                     throw;
                 }
