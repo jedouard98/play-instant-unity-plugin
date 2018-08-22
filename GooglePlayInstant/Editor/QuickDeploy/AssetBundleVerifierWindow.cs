@@ -128,9 +128,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 _bundle = DownloadHandlerAssetBundle.GetContent(_webRequest);
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException ex)
             {
-                Debug.LogErrorFormat("Failed to obtain AssetBundle content: {0}", e);
+                Debug.LogErrorFormat("Failed to obtain AssetBundle content: {0}", ex);
                 return AssetBundleVerifyState.DestinationError;
             }
 
@@ -191,7 +191,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             catch
             {
-                ErrorLogger.DisplayError("Error verifying AssetBundle", "See Console log for more details.");
+                const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
+                ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
             }
 
             Repaint();

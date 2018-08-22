@@ -18,9 +18,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class ErrorLogger
     {
-        public const string AssetBundleBrowserErrorTitle = "Error Opening Unity Asset Bundle Browser";
+        public const string AssetBundleBrowserErrorTitle = "Unity Asset Bundle Browser Error";
         
-        public const string LoadingScreenErrorTitle = "Loading Screen Creation Error";
+        public const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
+        
+        public const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
         
         private const string OKButtonText = "OK";
         

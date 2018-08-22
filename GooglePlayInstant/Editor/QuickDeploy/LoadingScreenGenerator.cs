@@ -64,7 +64,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var errorMessage = string.Format("Loading screen image file cannot be found: {0}",
                     LoadingScreenImagePath);
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
                 Debug.LogErrorFormat(errorMessage);
                 return;
             }
@@ -81,7 +81,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (!generatedLoadingScreenConfig)
             {
                 // Exit function; Error has already been logged and displayed.
-                return; 
+                return;
             }
 
             var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
@@ -99,10 +99,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (!addedLoadingScreenScript)
             {
                 // Exit function; Error has already been logged and displayed.
-                return; 
+                return;
             }
 
-            
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
             bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene,
@@ -113,7 +112,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 var errorMessage = string.Format("Loading screen generator error: Issue while saving scene {0}.",
                     LoadingSceneName);
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
                 Debug.LogErrorFormat(errorMessage);
             }
         }
@@ -129,7 +128,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 const string errorMessage = "Error adding loading screen script to scene. See Console log for details.";
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
                 Debug.LogErrorFormat(ex.ToString());
 
                 return false;
@@ -157,7 +156,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 const string errorMessage = "Error while reading loading image file. See Console log for details.";
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
 
                 Debug.LogError(ex.ToString());
 
@@ -170,9 +169,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!texLoaded)
             {
-                const string errorMessage = "Error loading image as a texture for canvas game object. Data could not be loaded.";
+                const string errorMessage =
+                    "Error loading image as a texture for canvas game object. Data could not be loaded.";
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
 
                 Debug.LogError(errorMessage);
 
@@ -204,7 +204,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 const string errorMessage = "Error while reading loading image file. See Console log for details.";
 
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
 
                 Debug.LogError(ex.ToString());
 
