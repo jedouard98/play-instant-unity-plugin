@@ -47,27 +47,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
 
         /// <summary>
-        /// The path to a fullscreen image displayed in the background while the game loads.
-        /// </summary>
-        public static string LoadingScreenImagePath { get; set; }
-
-
-        /// <summary>
         /// Creates a scene in the current project that acts as a loading scene until assetbundles are
         /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
         /// and an assetbundle URL. Replaces the current loading scene with a new one if it exists.
         /// </summary>
-        public static void GenerateLoadingScreenScene(string assetBundleUrl)
+        public static void GenerateLoadingScreenScene(string assetBundleUrl, string loadingScreenImagePath)
         {
-            if (!File.Exists(LoadingScreenImagePath))
+            if (string.IsNullOrEmpty(assetBundleUrl))
             {
-                var errorMessage = string.Format("Loading screen image file cannot be found: {0}",
-                    LoadingScreenImagePath);
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-                Debug.LogErrorFormat(errorMessage);
-                return;
+                throw new ArgumentException("AssetBundle URL text field cannot be null or empty.");
             }
+            
+            if (!File.Exists(loadingScreenImagePath))
+            {
+                throw new FileNotFoundException(string.Format("Loading screen image file cannot be found: {0}",
+                    loadingScreenImagePath));
+            }
+            
+            
 
             // Removes the loading scene if it is present, otherwise does nothing.
             EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
@@ -76,31 +73,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             Directory.CreateDirectory(LoadingScreenResourcesPath);
 
-            var generatedLoadingScreenConfig = GenerateLoadingScreenConfigFile(assetBundleUrl, LoadingScreenJsonPath);
-
-            if (!generatedLoadingScreenConfig)
-            {
-                // Exit function; Error has already been logged and displayed.
-                return;
-            }
+            GenerateLoadingScreenConfigFile(assetBundleUrl, LoadingScreenJsonPath);
 
             var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
 
-            var addedLoadingScreenImage = AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
+            AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
 
-            if (!addedLoadingScreenImage)
-            {
-                // Exit function; Error has already been logged and displayed.
-                return;
-            }
-
-            var addedLoadingScreenScript = AddLoadingScreenScript(loadingScreenGameObject);
-
-            if (!addedLoadingScreenScript)
-            {
-                // Exit function; Error has already been logged and displayed.
-                return;
-            }
+            AddLoadingScreenScript(loadingScreenGameObject);
 
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
@@ -118,50 +97,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static bool AddLoadingScreenScript(GameObject loadingScreenGameObject)
+        internal static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
         {
-            try
-            {
-                loadingScreenGameObject.AddComponent<LoadingScreenScript>();
-            }
-            catch (Exception ex)
-            {
-                const string errorMessage = "Error adding loading screen script to scene. See Console log for details.";
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-                Debug.LogErrorFormat(ex.ToString());
-
-                return false;
-            }
-
-            return true;
+            loadingScreenGameObject.AddComponent<LoadingScreenScript>();
         }
 
 
         // Visible for testing
-        internal static bool AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
+        internal static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
             loadingScreenGameObject.AddComponent<Canvas>();
             var loadingScreenCanvas = loadingScreenGameObject.GetComponent<Canvas>();
             loadingScreenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-            byte[] loadingScreenImageData;
-
-            try
-            {
-                loadingScreenImageData = File.ReadAllBytes(pathToLoadingScreenImage);
-            }
-            catch (Exception ex)
-            {
-                const string errorMessage = "Error while reading loading image file. See Console log for details.";
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-
-                Debug.LogError(ex.ToString());
-
-                return false;
-            }
+            var loadingScreenImageData = File.ReadAllBytes(pathToLoadingScreenImage);
 
             var tex = new Texture2D(1, 1);
 
@@ -169,14 +119,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!texLoaded)
             {
-                const string errorMessage =
-                    "Error loading image as a texture for canvas game object. Data could not be loaded.";
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-
-                Debug.LogError(errorMessage);
-
-                return false;
+                // TODO: throw an exception
+                throw new Exception();
             }
 
             var loadingImageSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
@@ -184,37 +128,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             loadingScreenGameObject.AddComponent<Image>();
             var loadingScreenImage = loadingScreenGameObject.GetComponent<Image>();
             loadingScreenImage.sprite = loadingImageSprite;
-
-            return true;
         }
 
         // Visible for testing
-        internal static bool GenerateLoadingScreenConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
+        internal static void GenerateLoadingScreenConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
         {
             var loadingScreenConfig =
                 new LoadingScreenConfig {assetBundleUrl = assetBundleUrl};
 
             var loadingScreenConfigJson = EditorJsonUtility.ToJson(loadingScreenConfig);
 
-            try
-            {
-                File.WriteAllText(targetLoadingScreenJsonPath, loadingScreenConfigJson);
-            }
-            catch (Exception ex)
-            {
-                const string errorMessage = "Error while reading loading image file. See Console log for details.";
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-
-                Debug.LogError(ex.ToString());
-
-                return false;
-            }
+            File.WriteAllText(targetLoadingScreenJsonPath, loadingScreenConfigJson);
 
             // Force asset to import synchronously so that testing can be completed immediately after generating a loading screen.
             AssetDatabase.ImportAsset(targetLoadingScreenJsonPath, ImportAssetOptions.ForceSynchronousImport);
-
-            return true;
         }
     }
 }

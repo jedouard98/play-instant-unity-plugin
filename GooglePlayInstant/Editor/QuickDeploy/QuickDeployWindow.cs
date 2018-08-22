@@ -14,7 +14,6 @@
 
 using System;
 using UnityEditor;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -52,6 +51,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _cloudStorageFileName;
         private string _cloudCredentialsFileName;
         private string _assetBundleUrl;
+        private string _loadingScreenImagePath;
         private string _apkFileName;
 
         public static void ShowWindow(ToolBarSelectedButton select)
@@ -278,7 +278,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 wordWrap = true
             };
 
-            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "";
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
@@ -310,14 +309,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     {
                         window.StartAssetBundleVerificationDownload(_assetBundleUrl);
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
                         
                         ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
-                        Debug.Log(ex.ToString());
-
+                        
                         window.Close();
+
+                        throw;
                     }
                 }
             }
@@ -337,14 +337,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
+            _loadingScreenImagePath = EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                LoadingScreenGenerator.LoadingScreenImagePath =
-                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                _loadingScreenImagePath = EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
 
             EditorGUILayout.EndHorizontal();
@@ -352,16 +351,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Create Loading Scene"))
             {
-                if (string.IsNullOrEmpty(_assetBundleUrl))
+                try
                 {
-                    const string errorMessage = "AssetBundle URL text field cannot be null or empty.";
-                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-                    
-                    Debug.LogErrorFormat(errorMessage);
+                    LoadingScreenGenerator.GenerateLoadingScreenScene(_assetBundleUrl, _loadingScreenImagePath);
                 }
-                else
+                catch
                 {
-                    LoadingScreenGenerator.GenerateLoadingScreenScene(_assetBundleUrl);
+                    const string errorMessage = "Error generating loading screen scene. See Console log for details.";
+                        
+                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
+
+                    throw;
                 }
             }
 
