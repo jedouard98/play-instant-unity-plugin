@@ -57,14 +57,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 throw new ArgumentException("AssetBundle URL text field cannot be null or empty.");
             }
-            
+
             if (!File.Exists(loadingScreenImagePath))
             {
                 throw new FileNotFoundException(string.Format("Loading screen image file cannot be found: {0}",
                     loadingScreenImagePath));
             }
-            
-            
+
 
             // Removes the loading scene if it is present, otherwise does nothing.
             EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
@@ -88,11 +87,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!saveOk)
             {
-                var errorMessage = string.Format("Loading screen generator error: Issue while saving scene {0}.",
-                    LoadingSceneName);
-
-                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
-                Debug.LogErrorFormat(errorMessage);
+                // Not a fatal issue. User can attempt to resave this scene.
+                Debug.LogWarning(string.Format("Issue while saving scene {0}.",
+                    LoadingSceneName));
             }
         }
 
@@ -119,8 +116,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (!texLoaded)
             {
-                // TODO: throw an exception
-                throw new Exception();
+                throw new Exception("Loading image could not be loaded into a Texture2D object for canvas.");
             }
 
             var loadingImageSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));

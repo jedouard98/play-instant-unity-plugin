@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -125,9 +124,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 fontStyle = FontStyle.Italic,
                 wordWrap = true
             };
-            
+
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
-            
+
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
@@ -165,6 +164,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
             }
+
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
@@ -256,13 +256,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     GcpClient.DeployConfiguredFile();
                 }
-                catch (Exception ex)
+                catch
                 {
                     const string errorMessage =
                         "Error while uploading AssetBundle to GCP. See Console log for details.";
+
                     ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, errorMessage);
-                    
-                    Debug.LogError(ex.ToString());
+
+                    throw;
                 }
             }
 
@@ -297,14 +298,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
                 {
                     const string errorMessage = "AssetBundle URL text field cannot be empty.";
-                    
+
                     ErrorLogger.DisplayError("Error verifying AssetBundle", errorMessage);
                     Debug.LogError(errorMessage);
                 }
                 else
                 {
                     var window = AssetBundleVerifierWindow.ShowWindow();
-                    
+
                     try
                     {
                         window.StartAssetBundleVerificationDownload(_assetBundleUrl);
@@ -312,9 +313,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     catch
                     {
                         const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
-                        
+
                         ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
-                        
+
                         window.Close();
 
                         throw;
@@ -337,13 +338,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
-            _loadingScreenImagePath = EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
+            _loadingScreenImagePath =
+                EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                _loadingScreenImagePath = EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                _loadingScreenImagePath =
+                    EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
 
             EditorGUILayout.EndHorizontal();
@@ -358,7 +361,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 catch
                 {
                     const string errorMessage = "Error generating loading screen scene. See Console log for details.";
-                        
+
                     ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
 
                     throw;
