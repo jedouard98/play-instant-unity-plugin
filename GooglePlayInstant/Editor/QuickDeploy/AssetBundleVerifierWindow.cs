@@ -118,7 +118,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         string.Format(
                             "Unexpected state while checking the AssetBundle: {0}",
                             state);
-                    throw new NotImplementedException(errorMessage);
+                    throw new InvalidOperationException(errorMessage);
             }
         }
 
