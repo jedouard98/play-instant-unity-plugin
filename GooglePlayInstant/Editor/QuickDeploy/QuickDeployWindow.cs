@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -250,7 +252,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
-                GcpClient.DeployConfiguredFile();
+                try
+                {
+                    GcpClient.DeployConfiguredFile();
+                }
+                catch (Exception ex)
+                {
+                    const string errorMessage =
+                        "Error while uploading AssetBundle to GCP. See Console log for details.";
+                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, errorMessage);
+                    
+                    Debug.LogError(ex.ToString());
+                }
             }
 
             EditorGUILayout.Space();

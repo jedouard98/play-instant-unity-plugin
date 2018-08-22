@@ -20,6 +20,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         public const string AssetBundleBrowserErrorTitle = "Unity Asset Bundle Browser Error";
         
+        public const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
+        
         public const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         
         public const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
