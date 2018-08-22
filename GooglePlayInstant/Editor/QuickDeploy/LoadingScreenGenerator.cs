@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using GooglePlayInstant.LoadingScreen;
@@ -60,7 +61,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             if (!File.Exists(LoadingScreenImagePath))
             {
-                Debug.LogErrorFormat("Loading screen image file cannot be found: {0}", LoadingScreenImagePath);
+                var errorMessage = string.Format("Loading screen image file cannot be found: {0}",
+                    LoadingScreenImagePath);
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                Debug.LogErrorFormat(errorMessage);
                 return;
             }
 
@@ -71,62 +76,144 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             Directory.CreateDirectory(LoadingScreenResourcesPath);
 
-            GenerateLoadingScreenConfigFile(assetBundleUrl, LoadingScreenJsonPath);
+            var generatedLoadingScreenConfig = GenerateLoadingScreenConfigFile(assetBundleUrl, LoadingScreenJsonPath);
+
+            if (!generatedLoadingScreenConfig)
+            {
+                // Exit function; Error has already been logged and displayed.
+                return; 
+            }
 
             var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
 
-            AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
-            AddLoadingScreenScript(loadingScreenGameObject);
+            var addedLoadingScreenImage = AddLoadingScreenImageToScene(loadingScreenGameObject, LoadingScreenImagePath);
+
+            if (!addedLoadingScreenImage)
+            {
+                // Exit function; Error has already been logged and displayed.
+                return;
+            }
+
+            var addedLoadingScreenScript = AddLoadingScreenScript(loadingScreenGameObject);
+
+            if (!addedLoadingScreenScript)
+            {
+                // Exit function; Error has already been logged and displayed.
+                return; 
+            }
 
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
-            bool saveOK = EditorSceneManager.SaveScene(loadingScreenScene,
+            bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene,
                 Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
 
-            if (!saveOK)
+            if (!saveOk)
             {
-                Debug.LogErrorFormat("Loading screen generator error: Issue while saving scene {0}.", LoadingSceneName);
+                var errorMessage = string.Format("Loading screen generator error: Issue while saving scene {0}.",
+                    LoadingSceneName);
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                Debug.LogErrorFormat(errorMessage);
             }
         }
 
         // Visible for testing
-        internal static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
+        internal static bool AddLoadingScreenScript(GameObject loadingScreenGameObject)
         {
-            loadingScreenGameObject.AddComponent<LoadingScreenScript>();
+            try
+            {
+                loadingScreenGameObject.AddComponent<LoadingScreenScript>();
+            }
+            catch (Exception ex)
+            {
+                const string errorMessage = "Error adding loading screen script to scene. See Console log for details.";
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                Debug.LogErrorFormat(ex.ToString());
+
+                return false;
+            }
+
+            return true;
         }
 
 
         // Visible for testing
-        internal static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
+        internal static bool AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
             loadingScreenGameObject.AddComponent<Canvas>();
             var loadingScreenCanvas = loadingScreenGameObject.GetComponent<Canvas>();
             loadingScreenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-            var loadingScreenImageData = File.ReadAllBytes(pathToLoadingScreenImage);
+            byte[] loadingScreenImageData;
+
+            try
+            {
+                loadingScreenImageData = File.ReadAllBytes(pathToLoadingScreenImage);
+            }
+            catch (Exception ex)
+            {
+                const string errorMessage = "Error while reading loading image file. See Console log for details.";
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+
+                Debug.LogError(ex.ToString());
+
+                return false;
+            }
+
             var tex = new Texture2D(1, 1);
-            tex.LoadImage(loadingScreenImageData);
+
+            var texLoaded = tex.LoadImage(loadingScreenImageData);
+
+            if (!texLoaded)
+            {
+                const string errorMessage = "Error loading image as a texture for canvas game object. Data could not be loaded.";
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+
+                Debug.LogError(errorMessage);
+
+                return false;
+            }
 
             var loadingImageSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
 
             loadingScreenGameObject.AddComponent<Image>();
             var loadingScreenImage = loadingScreenGameObject.GetComponent<Image>();
             loadingScreenImage.sprite = loadingImageSprite;
+
+            return true;
         }
 
         // Visible for testing
-        internal static void GenerateLoadingScreenConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
+        internal static bool GenerateLoadingScreenConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
         {
             var loadingScreenConfig =
                 new LoadingScreenConfig {assetBundleUrl = assetBundleUrl};
 
             var loadingScreenConfigJson = EditorJsonUtility.ToJson(loadingScreenConfig);
 
-            File.WriteAllText(targetLoadingScreenJsonPath, loadingScreenConfigJson);
+            try
+            {
+                File.WriteAllText(targetLoadingScreenJsonPath, loadingScreenConfigJson);
+            }
+            catch (Exception ex)
+            {
+                const string errorMessage = "Error while reading loading image file. See Console log for details.";
+
+                ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+
+                Debug.LogError(ex.ToString());
+
+                return false;
+            }
 
             // Force asset to import synchronously so that testing can be completed immediately after generating a loading screen.
             AssetDatabase.ImportAsset(targetLoadingScreenJsonPath, ImportAssetOptions.ForceSynchronousImport);
+
+            return true;
         }
     }
 }

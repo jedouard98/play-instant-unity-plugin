@@ -328,9 +328,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (string.IsNullOrEmpty(_assetBundleUrl))
                 {
-                    var errorMessage = "AssetBundle URL text field cannot be null or empty.";
-                    Debug.LogErrorFormat("Build error: {0}", errorMessage);
-                    ErrorLogger.DisplayError(LoadingScreenErrorTitle, errorMessage);
+                    const string errorMessage = "AssetBundle URL text field cannot be null or empty.";
+                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenErrorTitle, errorMessage);
+                    
+                    Debug.LogErrorFormat(errorMessage);
                 }
                 else
                 {
