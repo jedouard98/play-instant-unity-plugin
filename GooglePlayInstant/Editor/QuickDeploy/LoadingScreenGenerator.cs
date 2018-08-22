@@ -102,6 +102,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 return; 
             }
 
+            
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
             bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene,
