@@ -157,7 +157,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     {
                         const string errorMessage = "Error opening AssetBundle Browser. See Console log for details.";
 
-                        ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle,
+                        Logger.DisplayMessage(Logger.AssetBundleBrowserErrorTitle,
                             errorMessage);
 
                         throw;
@@ -271,7 +271,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, ex.Message);
+                    Logger.DisplayMessage(Logger.AssetBundleDeploymentErrorTitle, ex.Message);
 
                     throw;
                 }
@@ -311,7 +311,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, ex.Message);
+                    Logger.DisplayMessage(Logger.AssetBundleCheckerErrorTitle, ex.Message);
 
                     window.Close();
 
@@ -358,7 +358,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, ex.Message);
+                    Logger.DisplayMessage(Logger.LoadingScreenCreationErrorTitle, ex.Message);
 
                     throw;
                 }

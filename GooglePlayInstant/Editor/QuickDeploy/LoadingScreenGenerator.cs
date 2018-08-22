@@ -87,8 +87,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (!saveOk)
             {
                 // Not a fatal issue. User can attempt to resave this scene.
-                Debug.LogWarning(string.Format("Issue while saving scene {0}.",
-                    LoadingSceneName));
+                var warningMessage = string.Format("Issue while saving scene {0}.",
+                    LoadingSceneName);
+                
+                Debug.LogWarning(warningMessage);
+                
+                Logger.DisplayMessage(Logger.LoadingScreenCreationWarningTitle, warningMessage);
             }
         }
 

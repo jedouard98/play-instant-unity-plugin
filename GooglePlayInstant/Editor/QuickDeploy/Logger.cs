@@ -19,23 +19,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// <summary>
     /// Utility class for displaying popup window errors.
     /// </summary>
-    public static class ErrorLogger
+    public static class Logger
     {
         /// <summary>
-        /// Error titles for various error isplays.
+        /// Error titles for various error displays.
         /// </summary>
         public const string AssetBundleBrowserErrorTitle = "Unity Asset Bundle Browser Error";
 
         public const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         public const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         public const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
+        
+        public const string LoadingScreenCreationWarningTitle = "Loading Screen Warning Error";
+
 
         private const string OkButtonText = "OK";
 
         /// <summary>
         /// Displays a popup window that details an error message with a specified title.
         /// </summary>
-        public static void DisplayError(string title, string message)
+        public static void DisplayMessage(string title, string message)
         {
             EditorUtility.DisplayDialog(title, message, OkButtonText);
         }
