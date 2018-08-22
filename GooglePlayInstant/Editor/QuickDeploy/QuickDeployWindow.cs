@@ -121,10 +121,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void OnGuiCreateBundleSelect()
         {
-//            EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
+            var descriptionTextStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontStyle = FontStyle.Italic,
+                wordWrap = true
+            };
+            
+            EditorGUILayout.LabelField("AssetBundle Creation", EditorStyles.boldLabel);
+            
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
                                        "and bundle it (and its dependencies) into an AssetBundle file.",
-                EditorStyles.wordWrappedLabel);
+                descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
@@ -159,10 +170,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 EditorGUILayout.Space();
             }
+            EditorGUILayout.EndVertical();
         }
 
         private void OnGuiDeployBundleSelect()
         {
+            //TODO: investigate sharing this code
             var descriptionTextStyle = new GUIStyle(GUI.skin.label)
             {
                 fontStyle = FontStyle.Italic,
@@ -249,52 +262,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
-//
-//        private void OnGuiVerifyBundleSelect()
-//        {
-//            EditorGUILayout.LabelField("AssetBundle Verification", EditorStyles.boldLabel);
-//            EditorGUILayout.LabelField("Verifies that the file at the specified URL is available and reports " +
-//                                       "information including the first scene in bundle and size in MB.",
-//                EditorStyles.wordWrappedLabel);
-//            EditorGUILayout.BeginVertical("textfield");
-//            EditorGUILayout.Space();
-//            EditorGUILayout.Space();
-//            EditorGUILayout.BeginHorizontal();
-//            EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-//            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
-//            EditorGUILayout.EndHorizontal();
-//            EditorGUILayout.Space();
-//            EditorGUILayout.Space();
-//            EditorGUILayout.EndVertical();
-//            EditorGUILayout.Space();
-//            EditorGUILayout.BeginVertical();
-//            if (GUILayout.Button("Verify AssetBundle"))
-//            {
-//                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
-//                {
-//                    Debug.LogError("AssetBundle URL text field cannot be empty.");
-//                }
-//                else
-//                {
-//                    var window = AssetBundleVerifierWindow.ShowWindow();
-//                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
-//                }
-//            }
-//
-//            EditorGUILayout.EndVertical();
-//        }
 
         private void OnGuiLoadingScreenSelect()
         {
+            var descriptionTextStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontStyle = FontStyle.Italic,
+                wordWrap = true
+            };
+
             var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "";
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Construct a loading scene using the AssetBundle from the specified url and " +
-                                       "selected loading image. Additionally, use the verify button to report " +
-                                       "AssetBundle validity and information.",
-                EditorStyles.wordWrappedLabel);
-
-            EditorGUILayout.Space();
             EditorGUILayout.BeginVertical("textfield");
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField(
+                "Specify the URL that points to the deployed AssetBundle. The AssetBundle will be downloaded at game startup. ",
+                descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
@@ -303,7 +286,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
 
-            if (GUILayout.Button("Verify URL"))
+            if (GUILayout.Button("Check AssetBundle"))
             {
                 if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
                 {
@@ -317,17 +300,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.Space();
-//            EditorGUILayout.Space();
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
 
 
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select Loading Screen Image", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical("textfield");
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField(
+                "Choose image to use as background for the loading scene.", descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
