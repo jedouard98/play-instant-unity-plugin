@@ -124,7 +124,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             if (!AssetBundleBrowserIsPresent())
             {
-                const string errorMessage = "Cannot detect Unity Asset Bundle Browser";
+                const string errorMessage = "Cannot detect Unity Asset Bundle Browser. The browser was not found.";
 
                 ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle,
                     errorMessage);
@@ -140,7 +140,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 const string errorMessage =
                     "Unity Asset Bundle Browser was unable to opened. See Console log for more details.";
 
-                ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle, errorMessage );
+                ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle, errorMessage);
                 // Error message is automatically console logged.
             }
         }
