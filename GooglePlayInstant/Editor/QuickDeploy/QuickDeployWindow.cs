@@ -145,7 +145,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (GUILayout.Button("Open Asset Bundle Browser"))
                 {
-                    AssetBundleBrowserClient.DisplayAssetBundleBrowser();
+                    try
+                    {
+                        AssetBundleBrowserClient.DisplayAssetBundleBrowser();
+                    }
+                    catch
+                    {
+                        const string errorMessage = "Error opening AssetBundle Browser. See Console log for details.";
+
+                        ErrorLogger.DisplayError(ErrorLogger.AssetBundleBrowserErrorTitle,
+                            errorMessage);
+
+                        throw;
+                    }
+
                 }
             }
             else
