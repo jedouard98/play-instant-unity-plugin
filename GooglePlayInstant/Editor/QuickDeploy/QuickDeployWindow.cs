@@ -159,7 +159,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                         throw;
                     }
-
                 }
             }
             else
@@ -272,9 +271,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-                    const string errorMessage =
-                        "Error uploading AssetBundle to GCP. See Console log for details.";
-
                     ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, ex.Message);
 
                     throw;
