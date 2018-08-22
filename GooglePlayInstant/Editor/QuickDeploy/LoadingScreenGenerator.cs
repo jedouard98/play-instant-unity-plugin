@@ -64,7 +64,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     loadingScreenImagePath));
             }
 
-
             // Removes the loading scene if it is present, otherwise does nothing.
             EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
 

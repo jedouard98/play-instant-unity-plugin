@@ -64,6 +64,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         public void StartAssetBundleVerificationDownload(string assetBundleUrl)
         {
+            if (string.IsNullOrEmpty(assetBundleUrl))
+            {
+                throw new ArgumentException("AssetBundle URL text field cannot be null or empty.");
+            }
+
             AssetBundleUrl = assetBundleUrl;
 #if UNITY_2018_1_OR_NEWER
             _webRequest = UnityWebRequestAssetBundle.GetAssetBundle(AssetBundleUrl);
@@ -178,7 +183,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                     Debug.Log("Download process was cancelled.");
                 }
-                
+
                 return;
             }
 

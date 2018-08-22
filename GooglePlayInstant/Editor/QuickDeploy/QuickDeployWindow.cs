@@ -259,7 +259,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 catch
                 {
                     const string errorMessage =
-                        "Error while uploading AssetBundle to GCP. See Console log for details.";
+                        "Error uploading AssetBundle to GCP. See Console log for details.";
 
                     ErrorLogger.DisplayError(ErrorLogger.AssetBundleDeploymentErrorTitle, errorMessage);
 
@@ -295,31 +295,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Check AssetBundle"))
             {
-                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
-                {
-                    const string errorMessage = "AssetBundle URL text field cannot be empty.";
+                var window = AssetBundleVerifierWindow.ShowWindow();
 
-                    ErrorLogger.DisplayError("Error verifying AssetBundle", errorMessage);
-                    Debug.LogError(errorMessage);
+                try
+                {
+                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
                 }
-                else
+                catch
                 {
-                    var window = AssetBundleVerifierWindow.ShowWindow();
+                    const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
 
-                    try
-                    {
-                        window.StartAssetBundleVerificationDownload(_assetBundleUrl);
-                    }
-                    catch
-                    {
-                        const string errorMessage = "Error checking remote AssetBundle. See Console log for details.";
+                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
 
-                        ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
+                    window.Close();
 
-                        window.Close();
-
-                        throw;
-                    }
+                    throw;
                 }
             }
 
@@ -327,7 +317,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
-
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select Loading Screen Image", EditorStyles.boldLabel);
@@ -362,7 +351,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     const string errorMessage = "Error generating loading screen scene. See Console log for details.";
 
-                    ErrorLogger.DisplayError(ErrorLogger.AssetBundleCheckerErrorTitle, errorMessage);
+                    ErrorLogger.DisplayError(ErrorLogger.LoadingScreenCreationErrorTitle, errorMessage);
 
                     throw;
                 }
