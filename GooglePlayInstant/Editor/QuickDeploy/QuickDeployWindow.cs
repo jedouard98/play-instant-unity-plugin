@@ -49,9 +49,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-
-<<<<<<< HEAD
-=======
         private string _loadingScreenImagePath;
 
         // Titles for errors that occur
@@ -60,8 +57,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
-
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
@@ -153,8 +148,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         throw;
                     }
                 }
-                
-                
             }
             else
             {
@@ -172,7 +165,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
             }
-            
+
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             if (GUILayout.Button("Create bundle with unselected scenes"))
@@ -268,10 +261,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
-<<<<<<< HEAD
-                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
-                GcpClient.DeployConfiguredFile();
-=======
                 try
                 {
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
@@ -283,7 +272,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                     throw;
                 }
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
             }
 
             EditorGUILayout.Space();
@@ -311,30 +299,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Check AssetBundle"))
             {
-<<<<<<< HEAD
-                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
-=======
                 var window = AssetBundleVerifierWindow.ShowWindow();
 
                 try
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 {
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
                 }
                 catch (Exception ex)
                 {
-<<<<<<< HEAD
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    var window = AssetBundleVerifierWindow.ShowWindow();
-                    window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
-=======
                     DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
 
                     window.Close();
 
                     throw;
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 }
             }
 
@@ -371,11 +349,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Create Loading Scene"))
             {
-<<<<<<< HEAD
-                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
-=======
                 try
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 {
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl,
@@ -383,13 +357,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 }
                 catch (Exception ex)
                 {
-<<<<<<< HEAD
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl);
-=======
                     DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
                     throw;
->>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 }
             }
 
