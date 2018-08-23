@@ -49,31 +49,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-<<<<<<< HEAD
-        private const string LoadingScreenErrorTitle = "Creating Loading Scene Error";
-        private const string OkButtonText = "OK";
-=======
-        // Local copy of the fields from QuickDeployConfig.Config to track unsaved changes.
-        private string _assetBundleFileName;
-        private string _cloudStorageBucketName;
-        private string _cloudStorageFileName;
-        private string _cloudCredentialsFileName;
-        private string _assetBundleUrl;
+
         private string _loadingScreenImagePath;
-        private string _apkFileName;
-        
+
         // Titles for errors that occur
         private const string AssetBundleBrowserErrorTitle = "AssetBundle Browser Error";
         private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
-            
+
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
@@ -109,7 +98,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
             }
         }
-
 
         /// <summary>
         /// Unfocus the window if the user has just moved to a different quick deploy tab.
@@ -268,12 +256,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
-<<<<<<< HEAD
-                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
-                GcpClient.DeployConfiguredFile();
-=======
                 try
                 {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
                     GcpClient.DeployConfiguredFile();
                 }
                 catch (Exception ex)
@@ -282,18 +267,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                     throw;
                 }
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
             }
 
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.EndVertical();
         }
 
         private void OnGuiLoadingScreenSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
-            
+
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
 
@@ -308,33 +292,22 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 EditorGUILayout.TextField(QuickDeployConfig.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-
             if (GUILayout.Button("Check AssetBundle"))
             {
-<<<<<<< HEAD
-                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
-=======
                 var window = AssetBundleVerifierWindow.ShowWindow();
 
                 try
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
                 {
-                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
                 }
                 catch (Exception ex)
                 {
-<<<<<<< HEAD
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    var window = AssetBundleVerifierWindow.ShowWindow();
-                    window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
-=======
                     DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
 
                     window.Close();
 
                     throw;
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
                 }
             }
 
@@ -371,24 +344,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Create Loading Scene"))
             {
-<<<<<<< HEAD
-                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
-=======
                 try
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
                 {
-                    LoadingScreenGenerator.GenerateLoadingScreenScene(_assetBundleUrl, _loadingScreenImagePath);
+                    LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl,
+                        _loadingScreenImagePath);
                 }
                 catch (Exception ex)
                 {
-<<<<<<< HEAD
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl);
-=======
                     DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
-
                     throw;
->>>>>>> 2ba81e4839f81ab72ee2595e8c6566bccdcb48e7
                 }
             }
 
