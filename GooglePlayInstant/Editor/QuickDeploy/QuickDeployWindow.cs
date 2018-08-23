@@ -156,83 +156,36 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
-                                       "and bundle it (and its dependencies) into an AssetBundle file.",
+            EditorGUILayout.LabelField("Select the scenes to be put into an AssetBundle and choose a name for it.",
                 descriptionTextStyle);
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("AssetBundle File Name", GUILayout.MinWidth(FieldMinWidth));
+            _assetBundleFileName =
+                EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.EndVertical();
-            
-            m_SimpleTreeView.OnGUI(new Rect(0, 100, position.width, 200));
 
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            
-            
-            
-            
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
 
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
             
             
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
+            m_SimpleTreeView.OnGUI(GUILayoutUtility.GetRect(position.width / 2, position.height / 2));
             
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            
-
             EditorGUILayout.BeginHorizontal();
 
 
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Add", GUILayout.Width(ShortButtonWidth)))
+//            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Build AssetBundle"))
             {
                 Scene[] allScenes = SceneManager.GetAllScenes();
                 for (int i = 0; i < allScenes.Length; i++)
                     Debug.Log(allScenes[i].name);
             }
-
-            if (GUILayout.Button("Remove", GUILayout.Width(ShortButtonWidth)))
-            {
-                //do something
-            }
+            
             EditorGUILayout.EndHorizontal();
         }
 

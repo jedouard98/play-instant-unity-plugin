@@ -23,6 +23,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Reload();
         }
 
+        class MyElement : TreeViewItem
+        {
+            public bool enabled;
+        }
+
         private ArrayList test;
         
         protected override TreeViewItem BuildRoot ()
@@ -39,23 +44,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 allScenes[i] = SceneManager.GetSceneAt(i); 
             
             var root = new TreeViewItem {id = 0, depth = -1, displayName = "Root"};
-//            var allItems = new List<TreeViewItem>
-//            {
-//                new TreeViewItem {id = 1, depth = 0, displayName = "Animals"},
-//                new TreeViewItem {id = 2, depth = 1, displayName = "Mammals"},
-//                new TreeViewItem {id = 3, depth = 2, displayName = "Tiger"},
-//                new TreeViewItem {id = 4, depth = 2, displayName = "Elephant"},
-//                new TreeViewItem {id = 5, depth = 2, displayName = "Okapi"},
-//                new TreeViewItem {id = 6, depth = 2, displayName = "Armadillo"},
-//                new TreeViewItem {id = 7, depth = 1, displayName = "Reptiles"},
-//                new TreeViewItem {id = 8, depth = 2, displayName = "Crocodile"},
-//                new TreeViewItem {id = 9, depth = 2, displayName = "Lizard"},
-//            };
 
             var allItems = new List<TreeViewItem>();
             for (int i = 0; i < allScenes.Length; i++)
             {
-                allItems.Add(new TreeViewItem {id = i, depth = 0, displayName = allScenes[i].name});
+                allItems.Add(new MyElement {id = i, depth = 0, displayName = allScenes[i].name});
                 var dependencies = AssetDatabase.GetDependencies(allScenes[i].path, true);
                 for (int j = 0; j < dependencies.Length; j++)
                 {
@@ -64,7 +57,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         continue;
                     }
 
-                    allItems.Add(new TreeViewItem {id = i, depth = 1, displayName = Path.GetFileNameWithoutExtension(dependencies[j])});
+                    allItems.Add(new MyElement {id = i, depth = 1, displayName = Path.GetFileNameWithoutExtension(dependencies[j])});
                 }
             }
 
@@ -75,10 +68,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             // Return root of the tree
             return root;
         }
+        
+        const float kToggleWidth = 18f;
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            EditorGUI.Toggle(new Rect(0,0,0,0), true);
+            // Make a toggle button to the left of the label text
+            Rect toggleRect = args.rowRect;
+            toggleRect.x += GetContentIndent(args.item);
+            toggleRect.width = kToggleWidth;
+
+            var item = (MyElement) args.item;
+            
+            item.enabled = EditorGUI.Toggle(toggleRect, item.enabled); 
+
+            // Default icon and label
+            args.rowRect = args.rowRect;
+            base.RowGUI(args);
         }
+
+        
+
     }
 }
