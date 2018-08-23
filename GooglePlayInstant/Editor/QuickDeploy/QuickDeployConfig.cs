@@ -14,7 +14,6 @@
 
 using System;
 using System.IO;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -32,15 +31,19 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// Modified values are persisted by calling SaveConfiguration.
         /// </summary>
         private static readonly Configuration _config = LoadConfiguration();
-        
-        public static string CloudCredentialsFileName;
-        public static string AssetBundleFileName;
-        public static string CloudStorageBucketName;
-        public static string CloudStorageObjectName;
-        public static string AssetBundleUrl;
-        public static string ApkFileName;
+
+        public static string CloudCredentialsFileName = _config.cloudCredentialsFileName;
+        public static string AssetBundleFileName = _config.assetBundleFileName;
+        public static string CloudStorageBucketName = _config.cloudStorageBucketName;
+        public static string CloudStorageObjectName = _config.cloudStorageObjectName;
+        public static string AssetBundleUrl = _config.assetBundleUrl;
+        public static string ApkFileName = _config.apkFileName;
 
 
+        /// <summary>
+        /// Store configuration from the current quick deploy tab to persistent storage.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if tab shouldn't have input fields.</exception>
         public static void SaveConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
         {
             switch (currentTab)
@@ -61,9 +64,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
             }
 
+            // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
+            // when a major action happens.
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(_config));
         }
 
+        /// <summary>
+        /// De-serialize configuration file contents into Configuration instance if the file exists exists, otherwise
+        /// return Configuration instance with empty fields.
+        /// </summary>
+        /// <returns></returns>
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
@@ -76,7 +86,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         /// <summary>
-        /// Represents the contents of the quick deploy configuration file.
+        /// Represents JSON contents of the quick deploy configuration file.
         /// </summary>
         [Serializable]
         private class Configuration
