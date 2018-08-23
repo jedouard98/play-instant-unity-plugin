@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
+using System.IO;
+using TMPro;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
@@ -124,11 +129,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
+        Vector2 scrollPos;
+        int currentPickerWindow;
+        SceneAsset scene;
+
+        private bool even = true;
+
+        private ArrayList test = new ArrayList();
+
         private void OnGuiCreateBundleSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
 
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
+
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
@@ -142,34 +156,74 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     AssetBundleBrowserClient.GetAssetBundleBrowserVersion()),
                 EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            // Allow the developer to open the AssetBundles Browser if it is present, otherwise ask them to download it
-            if (AssetBundleBrowserClient.AssetBundleBrowserIsPresent())
-            {
-                if (GUILayout.Button("Open Asset Bundle Browser"))
-                {
-                    AssetBundleBrowserClient.DisplayAssetBundleBrowser();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Download Asset Bundle Browser from GitHub"))
-                {
-                    Application.OpenURL("https://github.com/Unity-Technologies/AssetBundles-Browser/releases");
-                }
-
-                EditorGUILayout.Space();
-                EditorGUILayout.Space();
-
-                EditorGUILayout.Space();
-                if (GUILayout.Button("Open Asset Bundle Browser Documentation"))
-                {
-                    Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
-                }
-            }
 
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            GUIStyle myStyle = EditorStyles.helpBox;
+            myStyle.padding = new RectOffset(0, 0, 1, 1);
+            myStyle.margin = new RectOffset(10, 10, 0, 0);
+
+
+            if (Event.current.commandName == "ObjectSelectorUpdated")
+            {
+                scene = (SceneAsset) EditorGUIUtility.GetObjectPickerObject();
+            }
+
+            if (Event.current.commandName == "ObjectSelectorClosed" &&
+                EditorGUIUtility.GetObjectPickerControlID() == currentPickerWindow)
+            {
+                var newPath = AssetDatabase.GetAssetPath(scene);
+                test.Add(newPath);
+
+//                Debug.Log(name);
+                currentPickerWindow = -1;
+            }
+
+           
+            var myStyle3 = new GUIStyle();
+            myStyle3.alignment = TextAnchor.MiddleCenter;
+            
+//            EditorGUILayout.BeginVertical();
+            
+            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true);
+ 
+
+            if (test.Count == 0)
+            {
+                EditorGUILayout.LabelField("Add scenes to your quick deploy build.", myStyle3);
+            }
+
+            for (var i = 0; i < test.Count; i++)
+            {
+                EditorGUILayout.LabelField(Path.GetFileNameWithoutExtension((string) test[i]),
+                    even ? TreeView.DefaultStyles.backgroundEven : TreeView.DefaultStyles.backgroundOdd);
+
+                even = !even;
+            }
+
+            even = false;
+
+            EditorGUILayout.EndScrollView();
+//            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Add", GUILayout.Width(ShortButtonWidth)))
+            {
+                currentPickerWindow = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+                EditorGUIUtility.ShowObjectPicker<SceneAsset>(null, true, "", currentPickerWindow);
+            }
+
+            if (GUILayout.Button("Remove", GUILayout.Width(ShortButtonWidth)))
+            {
+                //do something
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         private void OnGuiDeployBundleSelect()
