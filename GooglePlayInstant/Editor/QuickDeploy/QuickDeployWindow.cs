@@ -355,6 +355,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Build Base APK"))
             {
+                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.Build);
                 QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
             }
 

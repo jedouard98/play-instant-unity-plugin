@@ -19,7 +19,7 @@ using UnityEngine;
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
-    /// Contains set of operations for storing and retrieving quick deploy configurations.
+    /// Contains a set of operations for storing and retrieving quick deploy configurations.
     /// </summary>
     public static class QuickDeployConfig
     {
@@ -73,7 +73,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// De-serialize configuration file contents into Configuration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
-        /// <returns></returns>
         private static Configuration LoadConfiguration()
         {
             if (!File.Exists(ConfigurationFilePath))
