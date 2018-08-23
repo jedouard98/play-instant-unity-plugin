@@ -1,26 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public static class AssetBundleBuilder
     {
-        public static void BuildQuickDeployAssetBundle(string assetBundleName, List<SceneAsset> scenes)
+        public static void BuildQuickDeployAssetBundle(string assetBundleName, string[] assetPaths)
         {
             AssetBundleBuild[] build = new AssetBundleBuild[1];
             var assetBundleBuild  =  new AssetBundleBuild();
+            
             assetBundleBuild.assetBundleName = assetBundleName;
-            var assetNames = GetUnselectedScenePaths();
-            assetBundleBuild.assetNames = assetNames;
+            
+            assetBundleBuild.assetNames = assetPaths;
             if (!Directory.Exists("AssetBundles"))
             {
                 Directory.CreateDirectory("AssetBundles");
             }
-            
+
+
+            build[0] = assetBundleBuild;
             
             var isBuilt = BuildPipeline.BuildAssetBundles("AssetBundles", build, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
-            
+            if (!isBuilt)
+            {
+                throw new Exception("Did not build assetbundle");
+            }
+
 
         }
 
@@ -33,11 +42,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (!scene.enabled)
                 {
+                    Debug.Log("Scene is not enabled");
                     unSelectedPaths.Add(scene.path);
                 }
             }
 
             return unSelectedPaths.ToArray();
+        }
+        
+        public static void  DeployUnselected(string preferredName) {
+            
+            BuildQuickDeployAssetBundle(preferredName, GetUnselectedScenePaths());
         }
 
     }

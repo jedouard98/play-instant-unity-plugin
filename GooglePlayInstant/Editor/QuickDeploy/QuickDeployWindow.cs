@@ -131,6 +131,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     AssetBundleBrowserClient.DisplayAssetBundleBrowser();
                 }
+                
+                
             }
             else
             {
@@ -147,6 +149,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     Application.OpenURL("https://docs.unity3d.com/Manual/AssetBundles-Browser.html");
                 }
+            }
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Create bundle with unselected scenes"))
+            {
+                AssetBundleBuilder.DeployUnselected("test-bundle-right-now");
             }
 
             EditorGUILayout.Space();
