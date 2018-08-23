@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -48,12 +49,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-        private const string LoadingScreenErrorTitle = "Creating Loading Scene Error";
-        private const string OkButtonText = "OK";
 
+<<<<<<< HEAD
+=======
+        private string _loadingScreenImagePath;
+
+        // Titles for errors that occur
+        private const string AssetBundleBrowserErrorTitle = "AssetBundle Browser Error";
+        private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
+        private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
+        private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
+
+
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
+
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
@@ -90,7 +102,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-
         /// <summary>
         /// Unfocus the window if the user has just moved to a different quick deploy tab.
         /// </summary>
@@ -112,6 +123,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
                                        "and bundle it (and its dependencies) into an AssetBundle file.",
@@ -129,7 +141,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 if (GUILayout.Button("Open Asset Bundle Browser"))
                 {
-                    AssetBundleBrowserClient.DisplayAssetBundleBrowser();
+                    try
+                    {
+                        AssetBundleBrowserClient.DisplayAssetBundleBrowser();
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogHelper.DisplayMessage(AssetBundleBrowserErrorTitle,
+                            ex.Message);
+
+                        throw;
+                    }
                 }
                 
                 
@@ -215,6 +237,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
+
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
             QuickDeployConfig.AssetBundleFileName = EditorGUILayout.TextField(QuickDeployConfig.AssetBundleFileName,
                 GUILayout.MinWidth(FieldMinWidth));
@@ -245,20 +268,36 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
+<<<<<<< HEAD
                 QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
                 GcpClient.DeployConfiguredFile();
+=======
+                try
+                {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
+                    GcpClient.DeployConfiguredFile();
+                }
+                catch (Exception ex)
+                {
+                    DialogHelper.DisplayMessage(AssetBundleDeploymentErrorTitle, ex.Message);
+
+                    throw;
+                }
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
             }
 
             EditorGUILayout.Space();
+
             EditorGUILayout.EndVertical();
         }
 
         private void OnGuiLoadingScreenSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
-            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "";
+
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 "Specify the URL that points to the deployed AssetBundle. The AssetBundle will be downloaded at game startup. ",
@@ -270,19 +309,32 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 EditorGUILayout.TextField(QuickDeployConfig.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-
             if (GUILayout.Button("Check AssetBundle"))
             {
+<<<<<<< HEAD
                 if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
+=======
+                var window = AssetBundleVerifierWindow.ShowWindow();
+
+                try
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 {
-                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
                 }
-                else
+                catch (Exception ex)
                 {
+<<<<<<< HEAD
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     var window = AssetBundleVerifierWindow.ShowWindow();
                     window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
+=======
+                    DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
+
+                    window.Close();
+
+                    throw;
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 }
             }
 
@@ -291,23 +343,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
 
-
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select Loading Screen Image", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
+
             EditorGUILayout.LabelField(
                 "Choose image to use as background for the loading scene.", descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
+
+            _loadingScreenImagePath =
+                EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                LoadingScreenGenerator.LoadingScreenImagePath =
+                _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
 
@@ -316,14 +371,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Create Loading Scene"))
             {
+<<<<<<< HEAD
                 if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleUrl))
-                {
-                    LogError("AssetBundle URL text field cannot be null or empty.");
-                }
-                else
+=======
+                try
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 {
                     QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl,
+                        _loadingScreenImagePath);
+                }
+                catch (Exception ex)
+                {
+<<<<<<< HEAD
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl);
+=======
+                    DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
+                    throw;
+>>>>>>> 29c5170ebd0ac8359e5bbc9f7355bda261a29493
                 }
             }
 
@@ -332,17 +398,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
         }
 
-        private static void LogError(string message)
-        {
-            Debug.LogErrorFormat("Build error: {0}", message);
-            EditorUtility.DisplayDialog(LoadingScreenErrorTitle, message, OkButtonText);
-        }
-
         private void OnGuiCreateBuildSelect()
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
+
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
