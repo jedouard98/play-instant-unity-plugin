@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -43,7 +44,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     credentialsFilePath));
             }
 
-            return credentialsFile.installed;
+            var credentials = credentialsFile.installed;
+            foreach (var field in typeof(Credentials).GetFields().Where(f => f.IsPublic))
+            {
+                if (string.IsNullOrEmpty(field.GetValue(credentials) as string))
+                {
+                    throw new Exception(string.Format("\"{0}\" field of the credentials file cannot be null or empty.",
+                        field.Name));
+                }
+            }
+
+            return credentials;
         }
 
         /// <summary>
