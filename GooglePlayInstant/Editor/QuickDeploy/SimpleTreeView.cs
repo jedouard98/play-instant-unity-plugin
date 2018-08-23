@@ -49,16 +49,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             for (int i = 0; i < allScenes.Length; i++)
             {
                 allItems.Add(new MyElement {id = i, depth = 0, displayName = allScenes[i].name});
-                var dependencies = AssetDatabase.GetDependencies(allScenes[i].path, true);
-                for (int j = 0; j < dependencies.Length; j++)
-                {
-                    if (Path.GetFileNameWithoutExtension(dependencies[j]) == allScenes[i].name || Path.GetExtension(dependencies[j]) == ".cs")
-                    {
-                        continue;
-                    }
-
-                    allItems.Add(new MyElement {id = i, depth = 1, displayName = Path.GetFileNameWithoutExtension(dependencies[j])});
-                }
             }
 
             

@@ -156,37 +156,29 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Select the scenes to be put into an AssetBundle and choose a name for it.",
+            EditorGUILayout.LabelField("Select scenes to be put into an AssetBundle and then build it.",
                 descriptionTextStyle);
             
             EditorGUILayout.Space();
+            
+            m_SimpleTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
             EditorGUILayout.Space();
-            
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("AssetBundle File Name", GUILayout.MinWidth(FieldMinWidth));
-            _assetBundleFileName =
-                EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
-            
-            EditorGUILayout.EndVertical();
 
-
-            
-            
-            m_SimpleTreeView.OnGUI(GUILayoutUtility.GetRect(position.width / 2, position.height / 2));
-            
             EditorGUILayout.BeginHorizontal();
 
-
-//            GUILayout.FlexibleSpace();
+            //            GUILayout.FlexibleSpace();
             if (GUILayout.Button("Build AssetBundle"))
             {
-                Scene[] allScenes = SceneManager.GetAllScenes();
-                for (int i = 0; i < allScenes.Length; i++)
-                    Debug.Log(allScenes[i].name);
+                _assetBundleFileName = EditorUtility.SaveFilePanel("Configure path for AssetBundle", "", "", "");
+                // do more stuff
+                
             }
-            
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+
+
+
+            EditorGUILayout.EndVertical();
         }
 
         private void OnGuiDeployBundleSelect()
