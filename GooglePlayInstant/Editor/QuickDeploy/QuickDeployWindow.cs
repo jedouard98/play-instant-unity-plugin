@@ -14,7 +14,6 @@
 
 using System.Collections;
 using System.IO;
-using TMPro;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -128,15 +127,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 GUI.FocusControl(null);
             }
         }
+        
+        // SerializeField is used to ensure the view state is written to the window 
+        // layout file. This means that the state survives restarting Unity as long as the window
+        // is not closed. If the attribute is omitted then the state is still serialized/deserialized.
+        [SerializeField] TreeViewState m_TreeViewState;
 
-        Vector2 scrollPos;
-        int currentPickerWindow;
-        SceneAsset scene;
+        //The TreeView is not serializable, so it should be reconstructed from the tree data.
+        SimpleTreeView m_SimpleTreeView;
 
-        private bool even = true;
+        
+        void OnEnable ()
+        {
+            // Check whether there is already a serialized view state (state 
+            // that survived assembly reloading)
+            if (m_TreeViewState == null)
+                m_TreeViewState = new TreeViewState ();
 
-        private ArrayList test = new ArrayList();
-
+            m_SimpleTreeView = new SimpleTreeView(m_TreeViewState);
+        }
+        
         private void OnGuiCreateBundleSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
@@ -149,74 +159,74 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("Use the Unity Asset Bundle Browser to select your game's main scene " +
                                        "and bundle it (and its dependencies) into an AssetBundle file.",
                 descriptionTextStyle);
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField(
-                string.Format("Asset Bundle Browser version: {0}",
-                    AssetBundleBrowserClient.GetAssetBundleBrowserVersion()),
-                EditorStyles.wordWrappedLabel);
-            EditorGUILayout.Space();
-
-            EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
+            
+            m_SimpleTreeView.OnGUI(new Rect(0, 100, position.width, 200));
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
-            GUIStyle myStyle = EditorStyles.helpBox;
-            myStyle.padding = new RectOffset(0, 0, 1, 1);
-            myStyle.margin = new RectOffset(10, 10, 0, 0);
-
-
-            if (Event.current.commandName == "ObjectSelectorUpdated")
-            {
-                scene = (SceneAsset) EditorGUIUtility.GetObjectPickerObject();
-            }
-
-            if (Event.current.commandName == "ObjectSelectorClosed" &&
-                EditorGUIUtility.GetObjectPickerControlID() == currentPickerWindow)
-            {
-                var newPath = AssetDatabase.GetAssetPath(scene);
-                test.Add(newPath);
-
-//                Debug.Log(name);
-                currentPickerWindow = -1;
-            }
-
-           
-            var myStyle3 = new GUIStyle();
-            myStyle3.alignment = TextAnchor.MiddleCenter;
             
-//            EditorGUILayout.BeginVertical();
             
-            scrollPos = EditorGUILayout.BeginScrollView(scrollPos, false, true);
- 
+            
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-            if (test.Count == 0)
-            {
-                EditorGUILayout.LabelField("Add scenes to your quick deploy build.", myStyle3);
-            }
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-            for (var i = 0; i < test.Count; i++)
-            {
-                EditorGUILayout.LabelField(Path.GetFileNameWithoutExtension((string) test[i]),
-                    even ? TreeView.DefaultStyles.backgroundEven : TreeView.DefaultStyles.backgroundOdd);
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-                even = !even;
-            }
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-            even = false;
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-            EditorGUILayout.EndScrollView();
-//            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            
 
             EditorGUILayout.BeginHorizontal();
+
 
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Add", GUILayout.Width(ShortButtonWidth)))
             {
-                currentPickerWindow = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
-                EditorGUIUtility.ShowObjectPicker<SceneAsset>(null, true, "", currentPickerWindow);
+                Scene[] allScenes = SceneManager.GetAllScenes();
+                for (int i = 0; i < allScenes.Length; i++)
+                    Debug.Log(allScenes[i].name);
             }
 
             if (GUILayout.Button("Remove", GUILayout.Width(ShortButtonWidth)))
@@ -433,5 +443,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 wordWrap = true
             };
         }
+        
     }
+    
 }
