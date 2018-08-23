@@ -346,12 +346,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl,
                         _loadingScreenImagePath);
                 }
                 catch (Exception ex)
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                     DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
                     throw;
                 }
