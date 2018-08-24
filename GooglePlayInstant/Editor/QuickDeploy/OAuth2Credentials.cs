@@ -14,7 +14,6 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -43,7 +42,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     " visit \"https://console.cloud.google.com/apis/credentials\" to create a valid OAuth 2.0 " +
                     "credentials file for your project.", credentialsFilePath));
             }
-            
+
             return credentials;
         }
 
