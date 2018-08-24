@@ -61,25 +61,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
-        
+
         private TreeViewState _treeViewState;
 
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
-            
+
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
-        
-        void OnEnable ()
+
+        void OnEnable()
         {
-            _treeViewState = new TreeViewState ();
+            _treeViewState = new TreeViewState();
 
             _playInstantSceneTreeTreeView = new PlayInstantSceneTreeView(_treeViewState);
         }
-        
+
 
         void Update()
         {
