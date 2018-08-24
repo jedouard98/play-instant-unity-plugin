@@ -36,7 +36,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var credentialsFilePath = QuickDeployConfig.CloudCredentialsFileName;
             var credentialsFile = JsonUtility.FromJson<CredentialsFile>(File.ReadAllText(credentialsFilePath));
             var credentials = credentialsFile.installed;
-            if (string.IsNullOrEmpty(credentialsFile.installed.auth_uri))
+            if (string.IsNullOrEmpty(credentials.auth_uri))
             {
                 throw new Exception(string.Format(
                     "File at \"{0}\" is not a valid OAuth 2.0 credentials file for installed application. Please" +
