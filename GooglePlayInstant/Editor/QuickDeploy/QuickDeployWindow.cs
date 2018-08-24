@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -50,16 +51,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-        private const string LoadingScreenErrorTitle = "Creating Loading Scene Error";
-        private const string OkButtonText = "OK";
 
-        // Local copy of the fields from QuickDeployConfig.Config to track unsaved changes.
-        private string _assetBundleFileName;
-        private string _cloudStorageBucketName;
-        private string _cloudStorageFileName;
-        private string _cloudCredentialsFileName;
-        private string _assetBundleUrl;
-        private string _apkFileName;
+        private string _loadingScreenImagePath;
+
+        // Titles for errors that occur
+        private const string AssetBundleBrowserErrorTitle = "AssetBundle Browser Error";
+        private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
+        private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
+        private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
         private TreeViewState _treeViewState;
@@ -68,6 +67,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
+
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
@@ -75,16 +75,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         void OnEnable()
         {
             _playInstantSceneTreeTreeView = new PlayInstantSceneTreeView(_treeViewState);
-        }
-
-        void Awake()
-        {
-            _assetBundleFileName = QuickDeployConfig.Config.assetBundleFileName;
-            _cloudStorageBucketName = QuickDeployConfig.Config.cloudStorageBucketName;
-            _cloudStorageFileName = QuickDeployConfig.Config.cloudStorageFileName;
-            _cloudCredentialsFileName = QuickDeployConfig.Config.cloudCredentialsFileName;
-            _assetBundleUrl = QuickDeployConfig.Config.assetBundleUrl;
-            _apkFileName = QuickDeployConfig.Config.apkFileName;
         }
 
         void Update()
@@ -119,7 +109,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-
         /// <summary>
         /// Unfocus the window if the user has just moved to a different quick deploy tab.
         /// </summary>
@@ -141,6 +130,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select scenes to be put into an AssetBundle and then build it.",
                 descriptionTextStyle);
@@ -154,7 +144,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
-                _assetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
                 // TODO(audace): build the assetbundles
             }
 
@@ -219,60 +209,77 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Google Cloud Credentials File Path", GUILayout.MinWidth(FieldMinWidth));
-            _cloudCredentialsFileName =
-                EditorGUILayout.TextField(_cloudCredentialsFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.CloudCredentialsFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.CloudCredentialsFileName,
+                    GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                _cloudCredentialsFileName = EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
+                QuickDeployConfig.CloudCredentialsFileName =
+                    EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
+
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
-            _assetBundleFileName = EditorGUILayout.TextField(_assetBundleFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.AssetBundleFileName = EditorGUILayout.TextField(QuickDeployConfig.AssetBundleFileName,
+                GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                _assetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
+                QuickDeployConfig.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            _cloudStorageBucketName =
-                EditorGUILayout.TextField(_cloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.CloudStorageBucketName =
+                EditorGUILayout.TextField(QuickDeployConfig.CloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Object Name", GUILayout.MinWidth(FieldMinWidth));
-            _cloudStorageFileName = EditorGUILayout.TextField(_cloudStorageFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.CloudStorageObjectName =
+                EditorGUILayout.TextField(QuickDeployConfig.CloudStorageObjectName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Upload to Google Cloud Storage"))
             {
-                GcpClient.DeployConfiguredFile();
+                try
+                {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
+                    GcpClient.DeployConfiguredFile();
+                }
+                catch (Exception ex)
+                {
+                    DialogHelper.DisplayMessage(AssetBundleDeploymentErrorTitle, ex.Message);
+
+                    throw;
+                }
             }
 
             EditorGUILayout.Space();
+
             EditorGUILayout.EndVertical();
         }
 
         private void OnGuiLoadingScreenSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
-            var displayedPath = LoadingScreenGenerator.LoadingScreenImagePath ?? "";
+
             EditorGUILayout.LabelField("Set AssetBundle URL", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(
                 "Specify the URL that points to the deployed AssetBundle. The AssetBundle will be downloaded at game startup. ",
@@ -280,21 +287,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            _assetBundleUrl = EditorGUILayout.TextField(_assetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.AssetBundleUrl =
+                EditorGUILayout.TextField(QuickDeployConfig.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-
             if (GUILayout.Button("Check AssetBundle"))
             {
-                if (string.IsNullOrEmpty(QuickDeployConfig.Config.assetBundleUrl))
+                var window = AssetBundleVerifierWindow.ShowWindow();
+
+                try
                 {
-                    Debug.LogError("AssetBundle URL text field cannot be empty.");
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    window.StartAssetBundleVerificationDownload(QuickDeployConfig.AssetBundleUrl);
                 }
-                else
+                catch (Exception ex)
                 {
-                    var window = AssetBundleVerifierWindow.ShowWindow();
-                    window.StartAssetBundleVerificationDownload(_assetBundleUrl);
+                    DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
+
+                    window.Close();
+
+                    throw;
                 }
             }
 
@@ -303,23 +315,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
             EditorGUILayout.Space();
 
-
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select Loading Screen Image", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
+
             EditorGUILayout.LabelField(
                 "Choose image to use as background for the loading scene.", descriptionTextStyle);
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Image File Path", GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.TextField(displayedPath, GUILayout.MinWidth(FieldMinWidth));
+
+            _loadingScreenImagePath =
+                EditorGUILayout.TextField(_loadingScreenImagePath, GUILayout.MinWidth(FieldMinWidth));
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                LoadingScreenGenerator.LoadingScreenImagePath =
+                _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
             }
 
@@ -328,13 +343,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Create Loading Scene"))
             {
-                if (string.IsNullOrEmpty(_assetBundleUrl))
+                try
                 {
-                    LogError("AssetBundle URL text field cannot be null or empty.");
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    LoadingScreenGenerator.GenerateLoadingScreenScene(QuickDeployConfig.AssetBundleUrl,
+                        _loadingScreenImagePath);
                 }
-                else
+                catch (Exception ex)
                 {
-                    LoadingScreenGenerator.GenerateLoadingScreenScene(_assetBundleUrl);
+                    DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
+                    throw;
                 }
             }
 
@@ -343,29 +361,27 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
         }
 
-        private static void LogError(string message)
-        {
-            Debug.LogErrorFormat("Build error: {0}", message);
-            EditorUtility.DisplayDialog(LoadingScreenErrorTitle, message, OkButtonText);
-        }
-
         private void OnGuiCreateBuildSelect()
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
             EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
+
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            _apkFileName = EditorGUILayout.TextField(_apkFileName, GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.ApkFileName =
+                EditorGUILayout.TextField(QuickDeployConfig.ApkFileName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                _apkFileName = EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
+                QuickDeployConfig.ApkFileName =
+                    EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
             }
 
             EditorGUILayout.EndHorizontal();
@@ -373,6 +389,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             if (GUILayout.Button("Build Base APK"))
             {
+                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.Build);
                 QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
             }
 
