@@ -5,7 +5,7 @@ using UnityEditor;
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
     /// <summary>
-    /// Contains methods for building asset bundle to be deployed.
+    /// Contains methods for building AssetBundle to be deployed.
     /// </summary>
     public static class AssetBundleBuilder
     {

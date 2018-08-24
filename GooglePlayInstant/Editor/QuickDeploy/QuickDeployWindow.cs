@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -151,7 +152,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
-                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                var assetBundleBuildPath = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+
+                // Return if they cancelled.
+                if (string.IsNullOrEmpty(assetBundleBuildPath))
+                {
+                    return;
+                }
+
+                QuickDeployConfig.AssetBundleFileName = assetBundleBuildPath;
                 QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                 try
                 {
@@ -169,7 +178,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
         }
 
-        // TODO(audace): use this for building the scenes
         private string[] GetEnabledSceneItemPaths()
         {
             var scenes = _playInstantSceneTreeTreeView.GetRows();
