@@ -1,61 +1,48 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEngine;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
+    /// <summary>
+    /// Contains methods for building asset bundle to be deployed.
+    /// </summary>
     public static class AssetBundleBuilder
     {
-        public static void BuildQuickDeployAssetBundle(string assetBundleName, string[] assetPaths)
+        /// <summary>
+        /// Builds an AssetBundle containing scenes at given paths, and stores the AssetBundle at configured path.
+        /// </summary>
+        /// <param name="scenePaths">Paths to scenes to include in the AssetBundle. Should be relative to project directory.</param>
+        public static void BuildQuickDeployAssetBundle(string[] scenePaths)
         {
-            AssetBundleBuild[] build = new AssetBundleBuild[1];
-            var assetBundleBuild  =  new AssetBundleBuild();
-            
-            assetBundleBuild.assetBundleName = assetBundleName;
-            
-            assetBundleBuild.assetNames = assetPaths;
-            if (!Directory.Exists("AssetBundles"))
+            if (scenePaths.Length == 0)
             {
-                Directory.CreateDirectory("AssetBundles");
+                throw new Exception("No scenes were selected. Please select scenes to include in AssetBundle.");
             }
 
+            if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleFileName))
+            {
+                throw new Exception("Cannot build AssetBundle with invalid file name.");
+            }
 
-            build[0] = assetBundleBuild;
-            
-            var isBuilt = BuildPipeline.BuildAssetBundles("AssetBundles", build, BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+            var assetBundleBuild = new AssetBundleBuild();
+            assetBundleBuild.assetBundleName = Path.GetFileName(QuickDeployConfig.AssetBundleFileName);
+            assetBundleBuild.assetNames = scenePaths;
+            var assetBundleDirectory = Path.GetDirectoryName(QuickDeployConfig.AssetBundleFileName);
+            if (!Directory.Exists(assetBundleDirectory))
+            {
+                Directory.CreateDirectory(assetBundleDirectory);
+            }
+
+            var isBuilt = BuildPipeline.BuildAssetBundles(assetBundleDirectory, new[] {assetBundleBuild},
+                BuildAssetBundleOptions.None, EditorUserBuildSettings.activeBuildTarget);
+
             if (!isBuilt)
             {
-                throw new Exception("Did not build assetbundle");
+                throw new Exception(
+                    "Could not build AssetBundle. Please ensure that you have properly configured AssetBundle to be buit" +
+                    "by selecting scenes to include, and that you have choosen a valid path for AssetBundle to be stored.");
             }
-
-
         }
-
-
-        public static string[] GetUnselectedScenePaths()
-        {
-            List<string> unSelectedPaths = new List<string>();
-            EditorBuildSettingsScene[] selectedScenes = EditorBuildSettings.scenes;
-            foreach (var scene in selectedScenes)
-            {
-                if (!scene.enabled)
-                {
-                    Debug.Log("Scene is not enabled");
-                    unSelectedPaths.Add(scene.path);
-                }
-            }
-
-            return unSelectedPaths.ToArray();
-        }
-        
-        public static void  DeployUnselected(string preferredName) {
-            
-            BuildQuickDeployAssetBundle(preferredName, GetUnselectedScenePaths());
-        }
-
     }
-
-   
 }

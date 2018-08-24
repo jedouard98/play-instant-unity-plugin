@@ -58,9 +58,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
-        
+
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
         private TreeViewState _treeViewState;
+
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
@@ -94,7 +95,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             switch (currentTab)
             {
                 case ToolBarSelectedButton.CreateBundle:
-                    AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
                 case ToolBarSelectedButton.DeployBundle:
@@ -151,10 +151,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
+                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                 try
                 {
-                    QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
-                    // TODO(audace): build the assetbundles
+                    AssetBundleBuilder.BuildQuickDeployAssetBundle(GetEnabledSceneItemPaths());
                 }
                 catch (Exception ex)
                 {
@@ -166,10 +167,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-            EditorGUILayout.EndVertical();
-            
-            
         }
 
         // TODO(audace): use this for building the scenes
