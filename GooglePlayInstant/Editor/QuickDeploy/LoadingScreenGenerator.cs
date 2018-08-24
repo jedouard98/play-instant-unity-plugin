@@ -102,8 +102,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             else
             {
                 //TODO: investigate GUI Layout errors that occur when moving this to DialogHelper
-                if (EditorUtility.DisplayDialog("Change Main Scene in Build?",
-                    "Would you like to change the main scene in build to the loading screen?", "Change", "Do Not Change"))
+                if (EditorUtility.DisplayDialog("Change Scenes in Build",
+                    "Would you like to replace any existing Scenes in Build with the loading screen scene?", "Yes", "No"))
                 {
                     SetMainSceneInBuild(SceneFilePath);
                 }
