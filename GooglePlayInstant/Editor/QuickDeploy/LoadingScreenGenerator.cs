@@ -39,7 +39,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private static readonly string SceneDirectoryPath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
-        
+
         private static readonly string SceneFilePath =
             Path.Combine(SceneDirectoryPath, SceneName);
 

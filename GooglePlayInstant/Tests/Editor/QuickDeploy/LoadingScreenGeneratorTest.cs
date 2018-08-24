@@ -40,16 +40,16 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             AssetDatabase.DeleteAsset(TestLoadingScreenJsonPath);
         }
-        
+
         [Test]
         public void TestSetMainSceneInBuild()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             LoadingScreenGenerator.SetMainSceneInBuild(scene.path);
-            
+
             Assert.AreEqual(EditorBuildSettings.scenes.Length, 1,
                 "There should be only one scene in Build Settings.");
-            
+
             Assert.AreEqual(EditorBuildSettings.scenes[0].path, scene.path,
                 "The new scene built should be identical to the one in Build Settings.");
         }
