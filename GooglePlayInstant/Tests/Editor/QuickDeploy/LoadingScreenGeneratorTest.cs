@@ -31,7 +31,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         private const string TestGameObjectName = "Testing Object";
 
         private static readonly string TestLoadingScreenJsonPath =
-            Path.Combine("Assets", LoadingScreenGenerator.LoadingScreenJsonFileName);
+            Path.Combine("Assets", LoadingScreenGenerator.JsonFileName);
 
         // Dispose of temporarily created file.  
         [TearDown]

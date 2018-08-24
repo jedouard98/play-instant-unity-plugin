@@ -31,22 +31,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// </summary>
     public class LoadingScreenGenerator
     {
-        public const string LoadingSceneName = "play-instant-loading-screen-scene";
+        public const string SceneName = "play-instant-loading-screen-scene.unity";
 
-        private const string LoadingScreenCanvasName = "Loading Screen Canvas";
+        private const string CanvasName = "Loading Screen Canvas";
 
-        private const string LoadingScreenSaveErrorTitle = "Loading Screen Save Error";
+        private const string SaveErrorTitle = "Loading Screen Save Error";
 
-        private static readonly string LoadingScreenScenePath =
+        private static readonly string SceneDirectoryPath =
             Path.Combine("Assets", "PlayInstantLoadingScreen");
+        
+        private static readonly string SceneFilePath =
+            Path.Combine(SceneDirectoryPath, SceneName);
 
-        private static readonly string LoadingScreenResourcesPath = Path.Combine(LoadingScreenScenePath, "Resources");
+        private static readonly string ResourcesDirectoryPath = Path.Combine(SceneDirectoryPath, "Resources");
 
-        private static readonly string LoadingScreenJsonPath =
-            Path.Combine(LoadingScreenResourcesPath, LoadingScreenJsonFileName);
+        private static readonly string JsonFilePath =
+            Path.Combine(ResourcesDirectoryPath, JsonFileName);
 
         // Visible for testing
-        internal const string LoadingScreenJsonFileName = "LoadingScreenConfig.json";
+        internal const string JsonFileName = "LoadingScreenConfig.json";
 
 
         /// <summary>
@@ -68,15 +71,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             // Removes the loading scene if it is present, otherwise does nothing.
-            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(LoadingSceneName), true);
+            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(SceneName), true);
 
             var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
 
-            Directory.CreateDirectory(LoadingScreenResourcesPath);
+            Directory.CreateDirectory(ResourcesDirectoryPath);
 
-            GenerateLoadingScreenConfigFile(assetBundleUrl, LoadingScreenJsonPath);
+            GenerateLoadingScreenConfigFile(assetBundleUrl, JsonFilePath);
 
-            var loadingScreenGameObject = new GameObject(LoadingScreenCanvasName);
+            var loadingScreenGameObject = new GameObject(CanvasName);
 
             AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
 
@@ -84,22 +87,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
 
-            bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene,
-                Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
+            bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene, SceneFilePath);
 
             if (!saveOk)
             {
                 // Not a fatal issue. User can attempt to resave this scene.
                 var warningMessage = string.Format("Issue while saving scene {0}.",
-                    LoadingSceneName);
+                    SceneName);
 
                 Debug.LogWarning(warningMessage);
 
-                DialogHelper.DisplayMessage(LoadingScreenSaveErrorTitle, warningMessage);
+                DialogHelper.DisplayMessage(SaveErrorTitle, warningMessage);
             }
             else
             {
-                SetMainSceneInBuild(Path.Combine(LoadingScreenScenePath, LoadingSceneName + ".unity"));
+                SetMainSceneInBuild(SceneFilePath);
             }
         }
 
