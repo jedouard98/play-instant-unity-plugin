@@ -57,7 +57,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// downloaded from the CDN. Takes in a loadingScreenImagePath, a path to the image shown in the loading scene,
         /// and an assetbundle URL. Replaces the current loading scene with a new one if it exists.
         /// </summary>
-        public static void GenerateLoadingScreenScene(string assetBundleUrl, string loadingScreenImagePath)
+        public static void GenerateScene(string assetBundleUrl, string loadingScreenImagePath)
         {
             if (string.IsNullOrEmpty(assetBundleUrl))
             {
@@ -77,15 +77,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             Directory.CreateDirectory(ResourcesDirectoryPath);
 
-            GenerateLoadingScreenConfigFile(assetBundleUrl, JsonFilePath);
+            GenerateConfigFile(assetBundleUrl, JsonFilePath);
 
             var loadingScreenGameObject = new GameObject(CanvasName);
 
-            AddLoadingScreenImageToScene(loadingScreenGameObject, loadingScreenImagePath);
+            AddImageToScene(loadingScreenGameObject, loadingScreenImagePath);
 
-            AddLoadingScreenScript(loadingScreenGameObject);
+            AddScript(loadingScreenGameObject);
 
-            LoadingBar.AddLoadingScreenBarComponent(loadingScreenGameObject);
+            LoadingBar.AddComponent(loadingScreenGameObject);
 
             bool saveOk = EditorSceneManager.SaveScene(loadingScreenScene, SceneFilePath);
 
@@ -105,7 +105,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
-        private static void SetMainSceneInBuild(string pathToScene)
+        // Visible for testing
+        internal static void SetMainSceneInBuild(string pathToScene)
         {
             EditorBuildSettings.scenes = new[]
             {
@@ -114,14 +115,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void AddLoadingScreenScript(GameObject loadingScreenGameObject)
+        internal static void AddScript(GameObject loadingScreenGameObject)
         {
             loadingScreenGameObject.AddComponent<LoadingScreenScript>();
         }
 
 
         // Visible for testing
-        internal static void AddLoadingScreenImageToScene(GameObject loadingScreenGameObject,
+        internal static void AddImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
             loadingScreenGameObject.AddComponent<Canvas>();
@@ -147,7 +148,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void GenerateLoadingScreenConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
+        internal static void GenerateConfigFile(string assetBundleUrl, string targetLoadingScreenJsonPath)
         {
             var loadingScreenConfig =
                 new LoadingScreenConfig {assetBundleUrl = assetBundleUrl};
