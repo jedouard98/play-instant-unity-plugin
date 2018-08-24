@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections;
-using System.IO;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
@@ -63,12 +61,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _assetBundleUrl;
         private string _apkFileName;
 
+        private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
+        private TreeViewState _treeViewState;
+
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
+        }
+
+        void OnEnable()
+        {
+            _playInstantSceneTreeTreeView = new PlayInstantSceneTreeView(_treeViewState);
         }
 
         void Awake()
@@ -127,58 +133,52 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 GUI.FocusControl(null);
             }
         }
-        
-        // SerializeField is used to ensure the view state is written to the window 
-        // layout file. This means that the state survives restarting Unity as long as the window
-        // is not closed. If the attribute is omitted then the state is still serialized/deserialized.
-        [SerializeField] TreeViewState m_TreeViewState;
 
-        //The TreeView is not serializable, so it should be reconstructed from the tree data.
-        SimpleTreeView m_SimpleTreeView;
-
-        
-        void OnEnable ()
-        {
-            // Check whether there is already a serialized view state (state 
-            // that survived assembly reloading)
-            if (m_TreeViewState == null)
-                m_TreeViewState = new TreeViewState ();
-
-            m_SimpleTreeView = new SimpleTreeView(m_TreeViewState);
-        }
-        
         private void OnGuiCreateBundleSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
 
             EditorGUILayout.LabelField("Create AssetBundle", EditorStyles.boldLabel);
 
-
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Select scenes to be put into an AssetBundle and then build it.",
                 descriptionTextStyle);
-            
+
             EditorGUILayout.Space();
-            
-            m_SimpleTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
+
+            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
 
-            //            GUILayout.FlexibleSpace();
             if (GUILayout.Button("Build AssetBundle"))
             {
-                _assetBundleFileName = EditorUtility.SaveFilePanel("Configure path for AssetBundle", "", "", "");
-                // do more stuff
-                
+                _assetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                // TODO(audace): build the assetbundles
             }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-
-
             EditorGUILayout.EndVertical();
+        }
+
+        // TODO(audace): use this
+        private string[] GetEnabledSceneItemPaths()
+        {
+            var scenes = _playInstantSceneTreeTreeView.GetRows();
+            var scenePaths = new List<string>();
+
+            foreach (PlayInstantSceneTreeView.SceneItem scene in scenes)
+            {
+                if (scene.enabled)
+                {
+                    scenePaths.Add(scene.displayName);
+                }
+            }
+
+            return scenePaths.ToArray();
         }
 
         private void OnGuiDeployBundleSelect()
@@ -388,7 +388,5 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 wordWrap = true
             };
         }
-        
     }
-    
 }
