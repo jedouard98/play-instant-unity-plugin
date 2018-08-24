@@ -48,12 +48,23 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             var scenes = GetAllScenes();
 
-            var root = new TreeViewItem {id = 0, depth = -1, displayName = "Root"};
+            var root = new TreeViewItem 
+            {
+                id = 0, 
+                depth = -1, 
+                displayName = "Root"
+            };
 
             var allItems = new List<TreeViewItem>();
             for (var i = 0; i < scenes.Length; i++)
             {
-                allItems.Add(new SceneItem {id = i, depth = 0, displayName = scenes[i].path, Enabled = true});
+                allItems.Add(new SceneItem
+                {
+                    id = i, 
+                    depth = 0, 
+                    displayName = scenes[i].path, 
+                    Enabled = true
+                });
             }
 
             SetupParentsAndChildrenFromDepths(root, allItems);
@@ -65,7 +76,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             var scenes = new Scene[SceneManager.sceneCount];
             for (var i = 0; i < scenes.Length; i++)
+            {
                 scenes[i] = SceneManager.GetSceneAt(i);
+            }
 
             return scenes;
         }

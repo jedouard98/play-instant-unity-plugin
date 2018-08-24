@@ -61,21 +61,25 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
+        
         private TreeViewState _treeViewState;
 
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
             var window = GetWindow<QuickDeployWindow>(true, "Quick Deploy");
-
+            
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
         }
-
-        void OnEnable()
+        
+        void OnEnable ()
         {
+            _treeViewState = new TreeViewState ();
+
             _playInstantSceneTreeTreeView = new PlayInstantSceneTreeView(_treeViewState);
         }
+        
 
         void Update()
         {
@@ -142,6 +146,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
+            EditorGUILayout.Space();
 
             _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
             EditorGUILayout.Space();
@@ -177,7 +182,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             foreach (var scene in scenes)
             {
-                if ((scene as PlayInstantSceneTreeView.SceneItem).Enabled)
+                if (((PlayInstantSceneTreeView.SceneItem) scene).Enabled)
                 {
                     scenePaths.Add(scene.displayName);
                 }
