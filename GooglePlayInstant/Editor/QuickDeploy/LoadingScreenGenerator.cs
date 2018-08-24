@@ -71,7 +71,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             // Removes the loading scene if it is present, otherwise does nothing.
-            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(SceneName), true);
+            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(SceneName)), true);
 
             var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
 
@@ -101,7 +101,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             else
             {
-                SetMainSceneInBuild(SceneFilePath);
+                if (EditorUtility.DisplayDialog("Change Main Scene in Build?",
+                    "Would you like to change the main scene in build to the loading screen?", "Change", "Do Not Change"))
+                {
+                    SetMainSceneInBuild(SceneFilePath);
+                }
+                
             }
         }
 
