@@ -95,5 +95,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             base.RowGUI(args);
         }
+
+        protected bool CanStartDrag(CanStartDragArgs args)
+        {
+            return true;
+        }
+
+        protected void SetupDragAndDrop(SetupDragAndDropArgs args)
+        {
+            
+        }
     }
 }
