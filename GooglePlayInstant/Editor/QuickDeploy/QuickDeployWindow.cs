@@ -55,7 +55,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _loadingScreenImagePath;
 
         // Titles for errors that occur
-        private const string AssetBundleBrowserErrorTitle = "AssetBundle Browser Error";
         private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
@@ -137,6 +136,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.Space();
 
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
+
             _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
             EditorGUILayout.Space();
 
@@ -154,15 +159,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
         }
 
-        // TODO(audace): use this
+        // TODO(audace): use this for building the scenes
         private string[] GetEnabledSceneItemPaths()
         {
             var scenes = _playInstantSceneTreeTreeView.GetRows();
             var scenePaths = new List<string>();
 
-            foreach (PlayInstantSceneTreeView.SceneItem scene in scenes)
+            foreach (var scene in scenes)
             {
-                if (scene.enabled)
+                if ((scene as PlayInstantSceneTreeView.SceneItem).Enabled)
                 {
                     scenePaths.Add(scene.displayName);
                 }
@@ -361,6 +366,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndVertical();
         }
 
+        //TODO: redo this page
         private void OnGuiCreateBuildSelect()
         {
             EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);

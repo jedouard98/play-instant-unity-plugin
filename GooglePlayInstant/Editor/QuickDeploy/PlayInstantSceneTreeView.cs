@@ -15,11 +15,13 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
 {
+    /// <summary>
+    /// Class that encapsulates the TreeView representation of all scenes found in the current project.
+    /// </summary>
     public class PlayInstantSceneTreeView : TreeView
     {
         private const int ToggleWidth = 18;
@@ -34,9 +36,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Reload();
         }
 
+        /// <summary>
+        /// Public inner class that extends the TreeViewItem representation of Scenes to include the enabled attribute.
+        /// </summary>
         public class SceneItem : TreeViewItem
         {
-            public bool enabled;
+            public bool Enabled;
         }
 
         protected override TreeViewItem BuildRoot()
@@ -48,7 +53,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             var allItems = new List<TreeViewItem>();
             for (var i = 0; i < scenes.Length; i++)
             {
-                allItems.Add(new SceneItem {id = i, depth = 0, displayName = scenes[i].path, enabled = true});
+                allItems.Add(new SceneItem {id = i, depth = 0, displayName = scenes[i].path, Enabled = true});
             }
 
             SetupParentsAndChildrenFromDepths(root, allItems);
@@ -73,7 +78,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             var item = (SceneItem) args.item;
 
-            item.enabled = EditorGUI.Toggle(toggleRect, item.enabled);
+            item.Enabled = EditorGUI.Toggle(toggleRect, item.Enabled);
 
             base.RowGUI(args);
         }
