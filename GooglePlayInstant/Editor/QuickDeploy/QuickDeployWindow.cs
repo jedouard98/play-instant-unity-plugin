@@ -55,6 +55,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private string _loadingScreenImagePath;
 
         // Titles for errors that occur
+        private const string AssetBundleBuildErrorTitle = "AssetBundle Build Error";
         private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
@@ -149,8 +150,17 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
-                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
-                // TODO(audace): build the assetbundles
+                try
+                {
+                    QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                    // TODO(audace): build the assetbundles
+                }
+                catch (Exception ex)
+                {
+                    DialogHelper.DisplayMessage(AssetBundleBuildErrorTitle,
+                        ex.Message);
+                    throw;
+                }
             }
 
             EditorGUILayout.EndHorizontal();
