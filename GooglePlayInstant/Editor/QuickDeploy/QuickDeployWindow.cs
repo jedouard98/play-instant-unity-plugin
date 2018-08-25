@@ -384,36 +384,52 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         //TODO: redo this page
         private void OnGuiCreateBuildSelect()
         {
-            EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
-
+            EditorGUILayout.LabelField("Building Instant Game with Quick Deploy", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.ApkFileName =
-                EditorGUILayout.TextField(QuickDeployConfig.ApkFileName, GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
+
 
             EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            EditorGUILayout.LabelField("Building an Instant Game with Quick Deploy will significantly reduce the size" +
+                                       " of your game by storing the main AssetBundle of the game on a remote server.",
+                CreateDescriptionTextStyle());
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Use Quick Deploy features to Build and Deploy AssetBundle, as well as to " +
+                                       "Create a Loading Screen that will be displayed at the Game's Runtime when the " +
+                                       "AssetBundle will be downloaded from a remote server. ",
+                CreateDescriptionTextStyle());
+            EditorGUILayout.EndHorizontal();
+
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Use GooglePlayInstant's Build Settings Window to change " +
+                                       "configurations such as scenes to include in the instant Apk, and then use " +
+                                       "GooglePlayInstant to Build Apk for Google Play Console or to Build and Run Apk" +
+                                       " on a device or emulator.", CreateDescriptionTextStyle());
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Open GooglePlayInstant's Build Settings Window"))
             {
-                QuickDeployConfig.ApkFileName =
-                    EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
+                BuildSettingsWindow.ShowWindow();
             }
 
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Build Base APK"))
-            {
-                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.Build);
-                QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
-            }
 
+            EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }

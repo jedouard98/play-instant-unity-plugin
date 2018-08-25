@@ -87,7 +87,7 @@ namespace GooglePlayInstant.Editor
             QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen);
         }
 
-        [MenuItem("PlayInstant/Quick Deploy/Build APK...", false, 303)]
+        [MenuItem("PlayInstant/Quick Deploy/Build...", false, 303)]
         private static void BuildApkSettings()
         {
             QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.Build);
