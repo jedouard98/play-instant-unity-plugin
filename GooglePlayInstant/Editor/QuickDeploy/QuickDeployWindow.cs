@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -152,6 +151,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
+                // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
                 var assetBundleBuildPath = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
 
                 // Return if they cancelled.
