@@ -386,41 +386,31 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         {
             EditorGUILayout.LabelField("Building Instant Game with Quick Deploy", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
-
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Building an Instant Game with Quick Deploy will significantly reduce the size" +
                                        " of your game by storing the main AssetBundle of the game on a remote server.",
                 CreateDescriptionTextStyle());
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Use Quick Deploy features to Build and Deploy AssetBundle, as well as to " +
                                        "Create a Loading Screen that will be displayed at the Game's Runtime when the " +
                                        "AssetBundle will be downloaded from a remote server. ",
                 CreateDescriptionTextStyle());
             EditorGUILayout.EndHorizontal();
-
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Use GooglePlayInstant's Build Settings Window to change " +
                                        "configurations such as scenes to include in the instant Apk, and then use " +
                                        "GooglePlayInstant to Build Apk for Google Play Console or to Build and Run Apk" +
                                        " on a device or emulator.", CreateDescriptionTextStyle());
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Open GooglePlayInstant's Build Settings Window"))
             {
@@ -428,7 +418,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.EndHorizontal();
-
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
