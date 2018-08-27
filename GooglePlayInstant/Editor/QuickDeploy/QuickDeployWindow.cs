@@ -152,9 +152,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Build AssetBundle"))
             {
                 // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
-                var assetBundleBuildPath = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
-
-                // Return if they cancelled.
+                var assetBundleBuildPath = EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
+                // Do nothing if user cancelled.
                 if (string.IsNullOrEmpty(assetBundleBuildPath))
                 {
                     return;
@@ -172,6 +171,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
+                
+                EditorGUIUtility.ExitGUI();
+
             }
 
             EditorGUILayout.EndHorizontal();
