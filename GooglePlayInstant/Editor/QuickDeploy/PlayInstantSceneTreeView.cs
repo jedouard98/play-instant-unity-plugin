@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace GooglePlayInstant.Editor.QuickDeploy
@@ -103,7 +104,28 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         protected void SetupDragAndDrop(SetupDragAndDropArgs args)
         {
-            
+            DragAndDrop.PrepareStartDrag ();
+
+            var sortedDraggedIDs = SortItemIDsInRowOrder (args.draggedItemIDs);
+
+            List<Object> objList = new List<Object> (sortedDraggedIDs.Count);
+            foreach (var id in sortedDraggedIDs)
+            {
+                Object obj = EditorUtility.InstanceIDToObject (id);
+                if (obj != null)
+                    objList.Add (obj);
+            }
+
+            DragAndDrop.objectReferences = objList.ToArray ();
+
+            string title = objList.Count > 1 ? "<Multiple>" : objList[0].name;
+            DragAndDrop.StartDrag (title);
+        }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        {
+            Debug.Log("YO!");
+            return DragAndDropVisualMode.Move;
         }
     }
 }

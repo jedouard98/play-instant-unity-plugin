@@ -91,6 +91,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         void OnGUI()
         {
+//            EditorGUILayout.BeginVertical();
+            
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames,
                 GUILayout.MinHeight(ToolbarHeight));
             var currentTab = (ToolBarSelectedButton) _toolbarSelectedButtonIndex;
@@ -158,6 +160,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 try
                 {
                     QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                    EditorGUIUtility.ExitGUI();
                     // TODO(audace): build the assetbundles
                 }
                 catch (Exception ex)
@@ -240,9 +243,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.CloudCredentialsFileName =
                     EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
+                EditorGUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
@@ -255,9 +260,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
+                EditorGUIUtility.ExitGUI();
             }
-
             EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
