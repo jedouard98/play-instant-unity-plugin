@@ -69,6 +69,12 @@ namespace GooglePlayInstant.Editor
             PlayInstantSdkInstaller.SetUp();
         }
 
+        [MenuItem("PlayInstant/Quick Deploy/Overview...", false, 303)]
+        private static void BuildApkSettings()
+        {
+            QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.Overview);
+        }
+
         [MenuItem("PlayInstant/Quick Deploy/AssetBundle Creation...", false, 300)]
         private static void AssetBundleCreationSettings()
         {
@@ -85,12 +91,6 @@ namespace GooglePlayInstant.Editor
         private static void LoadingScreenSettings()
         {
             QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen);
-        }
-
-        [MenuItem("PlayInstant/Quick Deploy/Build...", false, 303)]
-        private static void BuildApkSettings()
-        {
-            QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.Build);
         }
 
         [MenuItem("PlayInstant/Build for Play Console...", false, 400)]
