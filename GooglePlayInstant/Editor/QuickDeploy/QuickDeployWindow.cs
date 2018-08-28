@@ -24,7 +24,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         private static readonly string[] ToolbarButtonNames =
         {
-            "Bundle Creation", "Bundle Deployment", "Loading Screen", "Build"
+            "Overview", "Bundle Creation", "Bundle Deployment", "Loading Screen"
         };
 
         private static int _toolbarSelectedButtonIndex;
@@ -34,10 +34,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         public enum ToolBarSelectedButton
         {
+            Overview,
             CreateBundle,
             DeployBundle,
-            LoadingScreen,
-            Build
+            LoadingScreen
         }
 
         // Style that provides a light box background.
@@ -53,7 +53,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int ShortButtonWidth = 100;
         private const int ToolbarHeight = 25;
 
-
         private string _loadingScreenImagePath;
 
         // Titles for errors that occur
@@ -63,9 +62,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
 
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
-
         private TreeViewState _treeViewState;
-
 
         public static void ShowWindow(ToolBarSelectedButton select)
         {
@@ -99,8 +96,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             UpdateGuiFocus(currentTab);
             switch (currentTab)
             {
+                case ToolBarSelectedButton.Overview:
+                    OnGuiOverviewSelect();
+                    break;
                 case ToolBarSelectedButton.CreateBundle:
-                    AssetBundleBrowserClient.ReloadAndUpdateBrowserInfo();
                     OnGuiCreateBundleSelect();
                     break;
                 case ToolBarSelectedButton.DeployBundle:
@@ -108,9 +107,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
                 case ToolBarSelectedButton.LoadingScreen:
                     OnGuiLoadingScreenSelect();
-                    break;
-                case ToolBarSelectedButton.Build:
-                    OnGuiCreateBuildSelect();
                     break;
             }
         }
@@ -127,6 +123,43 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 _previousTab = currentTab;
                 GUI.FocusControl(null);
             }
+        }
+
+        private void OnGuiOverviewSelect()
+        {
+            var descriptionTextStyle = CreateDescriptionTextStyle();
+            EditorGUILayout.LabelField("About Quick Deploy", EditorStyles.boldLabel);
+            EditorGUILayout.BeginVertical(UserInputGuiStyle);
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Quick Deploy can significantly reduce the size of a Unity-based instant app " +
+                                       "by packaging some assets in an AssetBundle that is retrieved from a server " +
+                                       "during app startup.", descriptionTextStyle);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(
+                "Use the \"Bundle Creation\" tab to build an AssetBundle containing the game's " +
+                "main scene. Then upload the AssetBundle to Google Cloud Storage via the " +
+                "\"Bundle Deployment\" tab. Finally, use the \"Loading Screen\" tab to select an " +
+                "image to display on the loading screen and the URL that points to the uploaded " +
+                "AssetBundle.", descriptionTextStyle);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(string.Format("Use Google Play Instant's \"{0}\" window to customize the " +
+                                                     "scenes included in the instant app. Then use the \"{1}\" menu " +
+                                                     "option to test the instant app loading the AssetBundle from the " +
+                                                     "remote server. Finally, select the \"{2}\" menu option to build " +
+                                                     "the app in a manner suitable for publishing on Play Console.",
+                "Build Settings", "Build and Run", "Build for Play Console"), descriptionTextStyle);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            EditorGUILayout.Space();
+            EditorGUILayout.EndVertical();
         }
 
         private void OnGuiCreateBundleSelect()
@@ -187,9 +220,20 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
+                // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
+                var assetBundleBuildPath =
+                    EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
+                // Do nothing if user cancelled.
+                if (string.IsNullOrEmpty(assetBundleBuildPath))
+                {
+                    return;
+                }
+
+                QuickDeployConfig.AssetBundleFileName = assetBundleBuildPath;
+                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                 try
                 {
-                    // TODO(audace): build the assetbundles
+                    AssetBundleBuilder.BuildQuickDeployAssetBundle(GetEnabledSceneItemPaths());
                 }
                 catch (Exception ex)
                 {
@@ -197,12 +241,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
+
+                EditorGUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-
-            EditorGUILayout.EndVertical();
         }
 
         // Call this method after any of the SaveFilePanels and OpenFilePanels placed inbetween BeginHorizontal()s or
@@ -214,7 +258,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUIUtility.ExitGUI();
         }
 
-        // TODO(audace): use this for building the scenes
         private string[] GetEnabledSceneItemPaths()
         {
             var scenes = _playInstantSceneTreeTreeView.GetRows();
@@ -406,61 +449,43 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            if (GUILayout.Button("Create Loading Scene"))
+            if (LoadingScreenGenerator.LoadingScreenExists())
             {
-                try
+                if (GUILayout.Button("Update Loading Scene"))
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    LoadingScreenGenerator.GenerateScene(QuickDeployConfig.AssetBundleUrl,
-                        _loadingScreenImagePath);
+                    try
+                    {
+                        QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        LoadingScreenGenerator.AddImageToScene(LoadingScreenGenerator.GetLoadingScreenCanvasObject(),
+                            _loadingScreenImagePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
+                        throw;
+                    }
                 }
-                catch (Exception ex)
+            }
+            else
+            {
+                if (GUILayout.Button("Create Loading Scene"))
                 {
-                    DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
-                    throw;
+                    try
+                    {
+                        QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        LoadingScreenGenerator.GenerateScene(QuickDeployConfig.AssetBundleUrl,
+                            _loadingScreenImagePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
+                        throw;
+                    }
                 }
             }
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.EndVertical();
-        }
-
-        //TODO: redo this page
-        private void OnGuiCreateBuildSelect()
-        {
-            EditorGUILayout.LabelField("Deployment", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Build the APK using the IL2CPP engine.", EditorStyles.wordWrappedLabel);
-
-            EditorGUILayout.BeginVertical(UserInputGuiStyle);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("APK File Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.ApkFileName =
-                EditorGUILayout.TextField(QuickDeployConfig.ApkFileName, GUILayout.MinWidth(FieldMinWidth));
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
-            {
-                QuickDeployConfig.ApkFileName =
-                    EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
-                HandleDialogExit();
-            }
-
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Build Base APK"))
-            {
-                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.Build);
-                QuickDeployApkBuilder.BuildQuickDeployInstantGameApk();
-            }
-
-            EditorGUILayout.Space();
             EditorGUILayout.EndVertical();
         }
 
