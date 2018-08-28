@@ -131,10 +131,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Building an instant game with Quick Deploy will significantly reduce the size" +
-                                       " of a Unity-based instant app by packaging some assets in an AssetBundle " +
-                                       "that is retrieved from a server during app startup.",
-                descriptionTextStyle);
+            EditorGUILayout.LabelField("Quick Deploy can significantly reduce the size of a Unity-based instant app " +
+                                       "by packaging some assets in an AssetBundle that is retrieved from a server " +
+                                       "during app startup.", descriptionTextStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
