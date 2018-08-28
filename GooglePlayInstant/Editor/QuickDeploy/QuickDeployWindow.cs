@@ -60,6 +60,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const string AssetBundleDeploymentErrorTitle = "AssetBundle Deployment Error";
         private const string AssetBundleCheckerErrorTitle = "AssetBundle Checker Error";
         private const string LoadingScreenCreationErrorTitle = "Loading Screen Creation Error";
+        private const string LoadingScreenUpdateErrorTitle = "Loading Screen Update Error";
 
         private PlayInstantSceneTreeView _playInstantSceneTreeTreeView;
         private TreeViewState _treeViewState;
@@ -223,6 +224,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
                 var assetBundleBuildPath =
                     EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
+                HandleDialogExit();
                 // Do nothing if user cancelled.
                 if (string.IsNullOrEmpty(assetBundleBuildPath))
                 {
@@ -241,21 +243,10 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
-
-                EditorGUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-        }
-
-        // Call this method after any of the SaveFilePanels and OpenFilePanels placed inbetween BeginHorizontal()s or
-        // BeginVerticals()s. An error is thrown when a user switches contexts (into a different desktop), and the
-        // window reloads. After completing an action, this error is thrown. This method is called to avoid this.
-        //  Fix documentation: https://answers.unity.com/questions/1353442/editorutilitysavefilepane-and-beginhorizontal-caus.html
-        private void HandleDialogExit() 
-        {
-            GUIUtility.ExitGUI();
         }
 
         private string[] GetEnabledSceneItemPaths()
@@ -461,7 +452,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     }
                     catch (Exception ex)
                     {
-                        DialogHelper.DisplayMessage(LoadingScreenCreationErrorTitle, ex.Message);
+                        DialogHelper.DisplayMessage(LoadingScreenUpdateErrorTitle, ex.Message);
                         throw;
                     }
                 }
@@ -487,6 +478,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
             EditorGUILayout.EndVertical();
+        }
+        
+        // Call this method after any of the SaveFilePanels and OpenFilePanels placed inbetween BeginHorizontal()s or
+        // BeginVerticals()s. An error is thrown when a user switches contexts (into a different desktop), and the
+        // window reloads. After completing an action, this error is thrown. This method is called to avoid this.
+        //  Fix documentation: https://answers.unity.com/questions/1353442/editorutilitysavefilepane-and-beginhorizontal-caus.html
+        private void HandleDialogExit() 
+        {
+            GUIUtility.ExitGUI();
         }
 
         private GUIStyle CreateDescriptionTextStyle()
