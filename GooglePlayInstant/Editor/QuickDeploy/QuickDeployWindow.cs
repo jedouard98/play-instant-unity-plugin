@@ -46,6 +46,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private const int WindowMinWidth = 475;
         private const int WindowMinHeight = 400;
+        
+        private const int SceneViewDistFromTop = 10;
+        private const int SceneViewDistFromLeft = 230;
 
         private const int FieldMinWidth = 100;
         private const int ShortButtonWidth = 100;
@@ -148,7 +151,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
 
-            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 220));
+            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - SceneViewDistFromLeft, position.height - SceneViewDistFromTop));
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Add Open Scenes"))
@@ -384,6 +387,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
+                GUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
@@ -431,6 +435,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.ApkFileName =
                     EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
+                GUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
