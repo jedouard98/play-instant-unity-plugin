@@ -26,6 +26,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     public class PlayInstantSceneTreeView : TreeView
     {
         private const int ToggleWidth = 18;
+        private readonly List<TreeViewItem> _allItems = new List<TreeViewItem>();
 
         public PlayInstantSceneTreeView(TreeViewState treeViewState)
             : base(treeViewState)
@@ -43,12 +44,47 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public class SceneItem : TreeViewItem
         {
             public bool Enabled;
+            public bool OldEnabledValue;
+            public string SceneBuildIndexString;
+        }
+
+        public void AddOpenScenes()
+        {
+            var scenes = GetAllScenes();
+
+            for (var i = 0; i < scenes.Length; i++)
+            {
+                var sceneItem = new SceneItem
+                {
+                    id = i,
+                    depth = 0,
+                    displayName = scenes[i].path,
+                    Enabled = true
+                };
+
+                if (!_allItems.Contains(sceneItem))
+                {
+                    _allItems.Add(sceneItem);
+                }
+            }
+
+            EditSceneBuildIndexString();
+            Reload();
+        }
+
+        private void EditSceneBuildIndexString()
+        {
+            var i = 0;
+            foreach (var item in _allItems)
+            {
+                var sceneItem = (SceneItem) item;
+                sceneItem.id = i;
+                sceneItem.SceneBuildIndexString = sceneItem.Enabled ? "" + i++ : "";
+            }
         }
 
         protected override TreeViewItem BuildRoot()
         {
-            var scenes = GetAllScenes();
-
             var root = new TreeViewItem
             {
                 id = 0,
@@ -56,19 +92,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 displayName = "Root"
             };
 
-            var allItems = new List<TreeViewItem>();
-            for (var i = 0; i < scenes.Length; i++)
-            {
-                allItems.Add(new SceneItem
-                {
-                    id = i,
-                    depth = 0,
-                    displayName = scenes[i].path,
-                    Enabled = true
-                });
-            }
-
-            SetupParentsAndChildrenFromDepths(root, allItems);
+            SetupParentsAndChildrenFromDepths(root, _allItems);
 
             return root;
         }
@@ -92,40 +116,36 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             var item = (SceneItem) args.item;
 
+            item.OldEnabledValue = item.Enabled;
+
             item.Enabled = EditorGUI.Toggle(toggleRect, item.Enabled);
 
-            base.RowGUI(args);
-        }
-
-        protected bool CanStartDrag(CanStartDragArgs args)
-        {
-            return true;
-        }
-
-        protected void SetupDragAndDrop(SetupDragAndDropArgs args)
-        {
-            DragAndDrop.PrepareStartDrag ();
-
-            var sortedDraggedIDs = SortItemIDsInRowOrder (args.draggedItemIDs);
-
-            List<Object> objList = new List<Object> (sortedDraggedIDs.Count);
-            foreach (var id in sortedDraggedIDs)
+            if (item.OldEnabledValue != item.Enabled)
             {
-                Object obj = EditorUtility.InstanceIDToObject (id);
-                if (obj != null)
-                    objList.Add (obj);
+                EditSceneBuildIndexString();
             }
 
-            DragAndDrop.objectReferences = objList.ToArray ();
+            DefaultGUI.LabelRightAligned(args.rowRect, item.SceneBuildIndexString, args.selected, args.focused);
 
-            string title = objList.Count > 1 ? "<Multiple>" : objList[0].name;
-            DragAndDrop.StartDrag (title);
+            base.RowGUI(args);
+
+            var current = Event.current;
+
+            if (args.rowRect.Contains(current.mousePosition) && current.type == EventType.ContextClick)
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Remove Selection"), false, RemoveScene, item);
+                menu.ShowAsContext();
+            }
         }
 
-        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        private void RemoveScene(object item)
         {
-            Debug.Log("YO!");
-            return DragAndDropVisualMode.Move;
+            _allItems.Remove((SceneItem) item);
+            EditSceneBuildIndexString();
+            Reload();
         }
+
+        //TODO: implement drag and drop
     }
 }

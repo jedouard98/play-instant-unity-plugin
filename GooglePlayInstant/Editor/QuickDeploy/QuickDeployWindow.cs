@@ -91,8 +91,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         void OnGUI()
         {
-//            EditorGUILayout.BeginVertical();
-            
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames,
                 GUILayout.MinHeight(ToolbarHeight));
             var currentTab = (ToolBarSelectedButton) _toolbarSelectedButtonIndex;
@@ -150,17 +148,41 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
 
-            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 200));
+            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - 10, position.height - 220));
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Add Open Scenes"))
+            {
+                _playInstantSceneTreeTreeView.AddOpenScenes();
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            
             EditorGUILayout.Space();
 
+            
+            EditorGUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
+            QuickDeployConfig.AssetBundleFileName = EditorGUILayout.TextField(QuickDeployConfig.AssetBundleFileName,
+                GUILayout.MinWidth(FieldMinWidth));
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
+            {
+                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                GUIUtility.ExitGUI();
+            }
+            EditorGUILayout.EndHorizontal();
+            
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Build AssetBundle"))
             {
                 try
                 {
-                    QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
-                    EditorGUIUtility.ExitGUI();
                     // TODO(audace): build the assetbundles
                 }
                 catch (Exception ex)
@@ -243,7 +265,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.CloudCredentialsFileName =
                     EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
-                EditorGUIUtility.ExitGUI();
+                GUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
@@ -260,7 +282,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
-                EditorGUIUtility.ExitGUI();
+                GUIUtility.ExitGUI();
             }
             EditorGUILayout.EndHorizontal();
             
