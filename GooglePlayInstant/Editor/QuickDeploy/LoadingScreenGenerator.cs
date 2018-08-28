@@ -111,6 +111,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
         }
 
+        public static bool LoadingScreenExists()
+        {
+            return SceneManager.GetSceneByName(SceneName).IsValid();
+        }
+
+        public static GameObject GetLoadingScreenCanvasObject()
+        {
+            return GameObject.Find(CanvasName);
+        }
+
         // Visible for testing
         internal static void SetMainSceneInBuild(string pathToScene)
         {
@@ -128,7 +138,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
 
         // Visible for testing
-        internal static void AddImageToScene(GameObject loadingScreenGameObject,
+        public static void AddImageToScene(GameObject loadingScreenGameObject,
             string pathToLoadingScreenImage)
         {
             loadingScreenGameObject.AddComponent<Canvas>();
