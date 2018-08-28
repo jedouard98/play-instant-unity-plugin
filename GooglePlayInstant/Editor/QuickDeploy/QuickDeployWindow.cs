@@ -175,6 +175,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                // Exit GUI to avoid BeginLayout GUI issues from automatically generated layout.
                 GUIUtility.ExitGUI();
             }
             EditorGUILayout.EndHorizontal();
