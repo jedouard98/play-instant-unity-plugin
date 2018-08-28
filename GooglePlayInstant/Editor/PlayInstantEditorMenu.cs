@@ -70,7 +70,7 @@ namespace GooglePlayInstant.Editor
         }
 
         [MenuItem("PlayInstant/Quick Deploy/Overview...", false, 300)]
-        private static void BuildApkSettings()
+        private static void QuickDeployOverview()
         {
             QuickDeployWindow.ShowWindow(QuickDeployWindow.ToolBarSelectedButton.Overview);
         }

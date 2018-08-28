@@ -126,29 +126,35 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private void OnGuiOverviewSelect()
         {
             var descriptionTextStyle = CreateDescriptionTextStyle();
-            EditorGUILayout.LabelField("Building Instant Game with Quick Deploy", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("About Quick Deploy", EditorStyles.boldLabel);
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Building an instant game with Quick Deploy will significantly reduce the size" +
-                                       " of your game by storing the main AssetBundle of the game to a remote server.",
+                                       " of a Unity-based instant app by packaging some assets in an AssetBundle " +
+                                       "that is retrieved from a server during app startup.",
                 descriptionTextStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Use Quick Deploy features to Build and Deploy AssetBundle, as well as to " +
-                                       "Create a Loading Screen that will be displayed at game startup when the " +
-                                       "AssetBundle will be downloaded from a remote server. ", descriptionTextStyle);
+            EditorGUILayout.LabelField(
+                "Use the \"Bundle Creation\" tab to build an AssetBundle containing the game's " +
+                "main scene. Then upload the AssetBundle to Google Cloud Storage via the " +
+                "\"Bundle Deployment\" tab. Finally, use the \"Loading Screen\" tab to select an " +
+                "image to display on the loading screen and the URL that points to the uploaded " +
+                "AssetBundle.", descriptionTextStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Use GooglePlayInstant's Build Settings Window to change " +
-                                       "configurations such as scenes to include in the instant Build, and then use " +
-                                       "GooglePlayInstant to build APK for Google Play Console or to build and run APK" +
-                                       " on a device or emulator.", descriptionTextStyle);
+            EditorGUILayout.LabelField(string.Format("Use Google Play Instant's \"{0}\" window to customize the " +
+                                                     "scenes included in the instant app. Then use the \"{1}\" menu " +
+                                                     "option to test the instant app loading the AssetBundle from the " +
+                                                     "remote server. Finally, select the \"{2}\" menu option to build " +
+                                                     "the app in a manner suitable for publishing on Play Console.",
+                "Build Settings", "Build and Run", "Build for Play Console"), descriptionTextStyle);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.Space();
@@ -184,7 +190,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Build AssetBundle"))
             {
                 // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
-                var assetBundleBuildPath = EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
+                var assetBundleBuildPath =
+                    EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
                 // Do nothing if user cancelled.
                 if (string.IsNullOrEmpty(assetBundleBuildPath))
                 {
@@ -203,9 +210,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
-                
-                EditorGUIUtility.ExitGUI();
 
+                EditorGUIUtility.ExitGUI();
             }
 
             EditorGUILayout.EndHorizontal();
