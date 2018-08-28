@@ -47,8 +47,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private const int WindowMinWidth = 475;
         private const int WindowMinHeight = 400;
         
-        private const int SceneViewDistFromTop = 10;
-        private const int SceneViewDistFromLeft = 230;
+        private const int SceneViewDistFromTop = 230;
 
         private const int FieldMinWidth = 100;
         private const int ShortButtonWidth = 100;
@@ -151,7 +150,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
 
-            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width - SceneViewDistFromLeft, position.height - SceneViewDistFromTop));
+            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width, position.height - SceneViewDistFromTop));
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Add Open Scenes"))

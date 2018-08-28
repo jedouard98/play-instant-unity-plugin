@@ -46,6 +46,18 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             public bool Enabled;
             public bool OldEnabledValue;
             public string SceneBuildIndexString;
+            
+            public override bool Equals(object obj)
+            {
+                var that = obj as SceneItem;
+
+                if (that == null)
+                {
+                    return false;
+                }
+
+                return this.displayName.Equals(that.displayName);
+            }
         }
 
         public void AddOpenScenes()
