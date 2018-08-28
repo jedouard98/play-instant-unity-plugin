@@ -211,7 +211,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
-                // Exit GUI to avoid BeginLayout GUI issues from automatically generated layout.
                 HandleDialogExit();
             }
 
@@ -221,17 +220,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
-                // TODO: Change UI to have default path and a browse button, and avoid prompting user every time they want to build.
-                var assetBundleBuildPath =
-                    EditorUtility.SaveFilePanel("Save AssetBundle", "", "quickDeployAssetBundle", "");
-                HandleDialogExit();
                 // Do nothing if user cancelled.
-                if (string.IsNullOrEmpty(assetBundleBuildPath))
+                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleFileName))
                 {
                     return;
                 }
-
-                QuickDeployConfig.AssetBundleFileName = assetBundleBuildPath;
+                
                 QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                 try
                 {
