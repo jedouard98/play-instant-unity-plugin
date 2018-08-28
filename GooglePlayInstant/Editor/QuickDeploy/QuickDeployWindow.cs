@@ -46,8 +46,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private const int WindowMinWidth = 475;
         private const int WindowMinHeight = 400;
-        
-        private const int SceneViewDistFromTop = 230;
+
+        private const int SceneViewDeltaFromTop = 230;
 
         private const int FieldMinWidth = 100;
         private const int ShortButtonWidth = 100;
@@ -150,19 +150,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginVertical(UserInputGuiStyle);
             EditorGUILayout.Space();
 
-            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width, position.height - SceneViewDistFromTop));
+            _playInstantSceneTreeTreeView.OnGUI(GUILayoutUtility.GetRect(position.width,
+                position.height - SceneViewDeltaFromTop));
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Add Open Scenes"))
             {
                 _playInstantSceneTreeTreeView.AddOpenScenes();
             }
+
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.Space();
 
-            
+
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
@@ -176,10 +178,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
                 // Exit GUI to avoid BeginLayout GUI issues from automatically generated layout.
-                GUIUtility.ExitGUI();
+                HandleDialogExit();
             }
+
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.BeginHorizontal();
 
             if (GUILayout.Button("Build AssetBundle"))
@@ -200,6 +203,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
 
             EditorGUILayout.EndVertical();
+        }
+
+        // Call this method after any of the SaveFilePanels and OpenFilePanels placed inbetween BeginHorizontal()s or
+        // BeginVerticals()s. An error is thrown when a user switches contexts (into a different desktop), and the
+        // window reloads. After completing an action, this error is thrown. This method is called to avoid this.
+        //  Fix documentation: https://answers.unity.com/questions/1353442/editorutilitysavefilepane-and-beginhorizontal-caus.html
+        private void HandleDialogExit() 
+        {
+            GUIUtility.ExitGUI();
         }
 
         // TODO(audace): use this for building the scenes
@@ -268,11 +280,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.CloudCredentialsFileName =
                     EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
-                GUIUtility.ExitGUI();
+                HandleDialogExit();
             }
 
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
@@ -285,10 +297,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
                 QuickDeployConfig.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
-                GUIUtility.ExitGUI();
+                HandleDialogExit();
             }
+
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
@@ -387,7 +400,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 _loadingScreenImagePath =
                     EditorUtility.OpenFilePanel("Select Image", "", "png,jpg,jpeg,tif,tiff,gif,bmp");
-                GUIUtility.ExitGUI();
+                HandleDialogExit();
             }
 
             EditorGUILayout.EndHorizontal();
@@ -435,7 +448,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 QuickDeployConfig.ApkFileName =
                     EditorUtility.SaveFilePanel("Choose file name and location", "", "base.apk", "apk");
-                GUIUtility.ExitGUI();
+                HandleDialogExit();
             }
 
             EditorGUILayout.EndHorizontal();

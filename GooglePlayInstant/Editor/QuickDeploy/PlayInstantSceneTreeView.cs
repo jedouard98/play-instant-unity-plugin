@@ -27,6 +27,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     {
         private const int ToggleWidth = 18;
         private readonly List<TreeViewItem> _allItems = new List<TreeViewItem>();
+        private int rowID = 0;
 
         public PlayInstantSceneTreeView(TreeViewState treeViewState)
             : base(treeViewState)
@@ -50,13 +51,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             public override bool Equals(object obj)
             {
                 var that = obj as SceneItem;
-
-                if (that == null)
-                {
-                    return false;
-                }
-
-                return this.displayName.Equals(that.displayName);
+                return that != null && this.displayName.Equals(that.displayName);
             }
         }
 
@@ -68,7 +63,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 var sceneItem = new SceneItem
                 {
-                    id = i,
+                    id = rowID++,
                     depth = 0,
                     displayName = scenes[i].path,
                     Enabled = true
@@ -86,12 +81,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
         private void EditSceneBuildIndexString()
         {
-            var i = 0;
+            var buildIndex = 0;
             foreach (var item in _allItems)
             {
                 var sceneItem = (SceneItem) item;
-                sceneItem.id = i;
-                sceneItem.SceneBuildIndexString = sceneItem.Enabled ? "" + i++ : "";
+                sceneItem.SceneBuildIndexString = sceneItem.Enabled ? "" + buildIndex++ : "";
             }
         }
 
