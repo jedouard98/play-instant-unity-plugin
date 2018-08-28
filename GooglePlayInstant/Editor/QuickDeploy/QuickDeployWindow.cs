@@ -363,7 +363,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (LoadingScreenGenerator.LoadingScreenExists())
             {
-                Debug.Log("here...");
                 if (GUILayout.Button("Update Loading Scene"))
                 {
                     try
@@ -381,7 +380,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
             else
             {
-                Debug.Log("AHHH");
                 if (GUILayout.Button("Create Loading Scene"))
                 {
                     try
