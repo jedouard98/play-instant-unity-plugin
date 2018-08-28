@@ -89,6 +89,26 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             WwwRequestInProgress.Update();
         }
 
+        private void OnDestroy()
+        {
+            SaveTabConfiguration();
+        }
+
+        private void OnLostFocus()
+        {
+            SaveTabConfiguration();
+        }
+        
+        private static void SaveTabConfiguration()
+        {
+            if (_previousTab == ToolBarSelectedButton.CreateBundle ||
+                _previousTab == ToolBarSelectedButton.DeployBundle ||
+                _previousTab == ToolBarSelectedButton.LoadingScreen)
+            {
+                QuickDeployConfig.SaveConfiguration(_previousTab);
+            }
+        }
+
         void OnGUI()
         {
             _toolbarSelectedButtonIndex = GUILayout.Toolbar(_toolbarSelectedButtonIndex, ToolbarButtonNames,

@@ -53,6 +53,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     _config.assetBundleFileName = AssetBundleFileName;
                     _config.cloudStorageBucketName = CloudStorageBucketName;
                     _config.cloudStorageObjectName = CloudStorageObjectName;
+                    UpdateAssetBundleManifest();
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
                     _config.assetBundleUrl = AssetBundleUrl;
@@ -67,6 +68,21 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
             // when a major action happens.
             File.WriteAllText(ConfigurationFilePath, JsonUtility.ToJson(_config));
+        }
+
+
+        /// <summary>
+        /// Updates Asset Bundle Manifest Path in Build Settings based on the current value of the Asset Bundle Path in
+        /// Quick Deploy Configurations.
+        /// </summary>
+        private static void UpdateAssetBundleManifest()
+        {
+            var newAssetBundleManifestPathValue = string.Format("{0}.manifest", _config.assetBundleFileName);
+            if (newAssetBundleManifestPathValue != PlayInstantBuildConfiguration.AssetBundleManifestPath)
+            {
+                PlayInstantBuildConfiguration.SaveConfiguration(PlayInstantBuildConfiguration.InstantUrl,
+                    PlayInstantBuildConfiguration.ScenesInBuild, newAssetBundleManifestPathValue);
+            }
         }
 
         /// <summary>

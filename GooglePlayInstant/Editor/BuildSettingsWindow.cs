@@ -51,12 +51,22 @@ namespace GooglePlayInstant.Editor
 
         private void Awake()
         {
+            UpdateConfigFields();
+        }
+
+        private void OnFocus()
+        {
+            UpdateConfigFields();
+        }
+
+        private void UpdateConfigFields()
+        {
             _isInstant = PlayInstantBuildConfiguration.IsInstantBuildType();
             _instantUrl = PlayInstantBuildConfiguration.InstantUrl;
             _scenesInBuild = GetScenesInBuildAsString(PlayInstantBuildConfiguration.ScenesInBuild);
             _assetBundleManifestPath = PlayInstantBuildConfiguration.AssetBundleManifestPath;
         }
-
+        
         private void OnGUI()
         {
             var descriptionTextStyle = new GUIStyle(GUI.skin.label)
