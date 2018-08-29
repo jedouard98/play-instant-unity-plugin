@@ -220,15 +220,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             if (GUILayout.Button("Build AssetBundle"))
             {
-                // Do nothing if user cancelled.
-                if (string.IsNullOrEmpty(QuickDeployConfig.AssetBundleFileName))
-                {
-                    return;
-                }
-                
-                QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                 try
                 {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                     AssetBundleBuilder.BuildQuickDeployAssetBundle(GetEnabledSceneItemPaths());
                 }
                 catch (Exception ex)
@@ -237,6 +231,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
+                HandleDialogExit();
             }
 
             EditorGUILayout.EndHorizontal();
