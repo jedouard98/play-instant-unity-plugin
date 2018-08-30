@@ -39,7 +39,7 @@ namespace GooglePlayInstant.LoadingScreen
 
             if (loadingScreenConfigJsonTextAsset == null)
             {
-                throw new FileNotFoundException(string.Format("{0}.json missing in Resources folder.",
+                throw new FileNotFoundException(string.Format("{0} missing in Resources folder.",
                     LoadingScreenConfig.EngineConfigurationFileName));
             }
 
