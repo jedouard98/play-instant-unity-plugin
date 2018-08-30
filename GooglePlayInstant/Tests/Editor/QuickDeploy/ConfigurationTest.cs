@@ -32,44 +32,83 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             AssetDatabase.DeleteAsset(TestConfigurationPath);
         }
-        
+
         [Test]
         public void TestSavingConfigOnCreateBundle()
         {
-            QuickDeployConfig.EditorConfiguration inputConfig = new QuickDeployConfig.EditorConfiguration();
-            QuickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, inputConfig, TestConfigurationPath);
-            
+            var inputConfig = new QuickDeployConfig.EditorConfiguration();
+            QuickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, inputConfig,
+                TestConfigurationPath);
+
             var outputConfigurationJson = File.ReadAllText(TestConfigurationPath);
-            QuickDeployConfig.EditorConfiguration outputConfig = JsonUtility.FromJson<QuickDeployConfig.EditorConfiguration>(outputConfigurationJson);
-            
+            var outputConfig =
+                JsonUtility.FromJson<QuickDeployConfig.EditorConfiguration>(outputConfigurationJson);
+
             Assert.AreEqual(outputConfig.assetBundleFileName, QuickDeployConfig.AssetBundleFileName);
         }
-        
+
         [Test]
         public void TestSavingConfigOnDeployBundle()
         {
-            QuickDeployConfig.EditorConfiguration inputConfig = new QuickDeployConfig.EditorConfiguration();
-            QuickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, inputConfig, TestConfigurationPath);
-            
+            var inputConfig = new QuickDeployConfig.EditorConfiguration();
+            QuickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, inputConfig,
+                TestConfigurationPath);
+
             var outputConfigurationJson = File.ReadAllText(TestConfigurationPath);
-            QuickDeployConfig.EditorConfiguration outputConfig = JsonUtility.FromJson<QuickDeployConfig.EditorConfiguration>(outputConfigurationJson);
-            
+            var outputConfig =
+                JsonUtility.FromJson<QuickDeployConfig.EditorConfiguration>(outputConfigurationJson);
+
             Assert.AreEqual(outputConfig.cloudCredentialsFileName, QuickDeployConfig.CloudCredentialsFileName);
             Assert.AreEqual(outputConfig.assetBundleFileName, QuickDeployConfig.AssetBundleFileName);
             Assert.AreEqual(outputConfig.cloudStorageBucketName, QuickDeployConfig.CloudStorageBucketName);
             Assert.AreEqual(outputConfig.cloudStorageObjectName, QuickDeployConfig.CloudStorageObjectName);
         }
-        
+
         [Test]
         public void TestSavingConfigOnLoadingScreen()
         {
-            LoadingScreenConfig.EngineConfiguration inputConfig = new LoadingScreenConfig.EngineConfiguration();
-            QuickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, inputConfig, TestConfigurationPath);
-            
+            var inputConfig = new LoadingScreenConfig.EngineConfiguration();
+            QuickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen,
+                inputConfig, TestConfigurationPath);
+
             var outputConfigurationJson = File.ReadAllText(TestConfigurationPath);
-            LoadingScreenConfig.EngineConfiguration outputConfig = JsonUtility.FromJson<LoadingScreenConfig.EngineConfiguration>(outputConfigurationJson);
-            
+            var outputConfig =
+                JsonUtility.FromJson<LoadingScreenConfig.EngineConfiguration>(outputConfigurationJson);
+
             Assert.AreEqual(outputConfig.assetBundleUrl, QuickDeployConfig.AssetBundleUrl);
+        }
+
+        [Test]
+        public void TestLoadingEditorConfiguration()
+        {
+            var inputConfig = new QuickDeployConfig.EditorConfiguration()
+            {
+                cloudCredentialsFileName = "testcredentials",
+                assetBundleFileName = "testbundle",
+                cloudStorageBucketName = "testbucket",
+                cloudStorageObjectName = "testobject"
+            };
+
+            File.WriteAllText(TestConfigurationPath, JsonUtility.ToJson(inputConfig));
+
+            var outputConfig = QuickDeployConfig.LoadEditorConfiguration(TestConfigurationPath);
+
+            Assert.AreEqual(inputConfig.cloudCredentialsFileName, outputConfig.cloudCredentialsFileName);
+            Assert.AreEqual(inputConfig.assetBundleFileName, outputConfig.assetBundleFileName);
+            Assert.AreEqual(inputConfig.cloudStorageBucketName, outputConfig.cloudStorageBucketName);
+            Assert.AreEqual(inputConfig.cloudStorageObjectName, outputConfig.cloudStorageObjectName);
+        }
+
+        [Test]
+        public void TestLoadingEngineConfiguration()
+        {
+            var inputConfig = new LoadingScreenConfig.EngineConfiguration {assetBundleUrl = "testurl"};
+
+            File.WriteAllText(TestConfigurationPath, JsonUtility.ToJson(inputConfig));
+
+            var outputConfig = QuickDeployConfig.LoadEngineConfiguration(TestConfigurationPath);
+
+            Assert.AreEqual(inputConfig.assetBundleUrl, outputConfig.assetBundleUrl);
         }
     }
 }

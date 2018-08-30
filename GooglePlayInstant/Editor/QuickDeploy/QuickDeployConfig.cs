@@ -37,13 +37,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// The Editor Configuration singleton that should be used to read and modify Quick Deploy configuration.
         /// Modified values are persisted by calling SaveEditorConfiguration.
         /// </summary>
-        private static readonly EditorConfiguration EditorConfig = LoadEditorConfiguration();
+        private static readonly EditorConfiguration EditorConfig = LoadEditorConfiguration(EditorConfigurationFilePath);
 
         /// <summary>
         /// The Engine Configuration singleton that should be used to read and modify Loading Screen configuration.
         /// Modified values are persisted by calling SaveEngineConfiguration.
         /// </summary>
-        private static readonly LoadingScreenConfig.EngineConfiguration EngineConfig = LoadEngineConfiguration();
+        private static readonly LoadingScreenConfig.EngineConfiguration EngineConfig = LoadEngineConfiguration(EngineConfigurationFilePath);
 
         public static string CloudCredentialsFileName = EditorConfig.cloudCredentialsFileName;
         public static string AssetBundleFileName = EditorConfig.assetBundleFileName;
@@ -60,13 +60,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             switch (currentTab)
             {
                 case QuickDeployWindow.ToolBarSelectedButton.CreateBundle:
-                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, EditorConfig, EditorConfigurationFilePath);
+                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, EditorConfig,
+                        EditorConfigurationFilePath);
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.DeployBundle:
-                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, EditorConfig, EditorConfigurationFilePath);
+                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, EditorConfig,
+                        EditorConfigurationFilePath);
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
-                    SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, EngineConfig, EditorConfigurationFilePath);
+                    SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, EngineConfig,
+                        EditorConfigurationFilePath);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
@@ -74,7 +77,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab, EditorConfiguration configuration, string editorConfigurationPath)
+        internal static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
+            EditorConfiguration configuration, string editorConfigurationPath)
         {
             switch (currentTab)
             {
@@ -99,7 +103,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab, LoadingScreenConfig.EngineConfiguration configuration, string engineConfigurationPath)
+        internal static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
+            LoadingScreenConfig.EngineConfiguration configuration, string engineConfigurationPath)
         {
             switch (currentTab)
             {
@@ -123,14 +128,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// De-serialize editor configuration file contents into EditorConfiguration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
-        private static EditorConfiguration LoadEditorConfiguration()
+        internal static EditorConfiguration LoadEditorConfiguration(string editorConfigurationPath)
         {
-            if (!File.Exists(EditorConfigurationFilePath))
+            if (!File.Exists(editorConfigurationPath))
             {
                 return new EditorConfiguration();
             }
 
-            var configurationJson = File.ReadAllText(EditorConfigurationFilePath);
+            var configurationJson = File.ReadAllText(editorConfigurationPath);
             return JsonUtility.FromJson<EditorConfiguration>(configurationJson);
         }
 
@@ -138,14 +143,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// De-serialize engine configuration file contents into EngineConfiguration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
-        private static LoadingScreenConfig.EngineConfiguration LoadEngineConfiguration()
+        internal static LoadingScreenConfig.EngineConfiguration LoadEngineConfiguration(string engineConfigurationPath)
         {
-            if (!File.Exists(EngineConfigurationFilePath))
+            if (!File.Exists(engineConfigurationPath))
             {
                 return new LoadingScreenConfig.EngineConfiguration();
             }
 
-            var configurationJson = File.ReadAllText(EngineConfigurationFilePath);
+            var configurationJson = File.ReadAllText(engineConfigurationPath);
             return JsonUtility.FromJson<LoadingScreenConfig.EngineConfiguration>(configurationJson);
         }
 
@@ -163,8 +168,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         [Serializable]
         public class EditorConfiguration
         {
-            public string assetBundleFileName;
             public string cloudCredentialsFileName;
+            public string assetBundleFileName;
             public string cloudStorageBucketName;
             public string cloudStorageObjectName;
         }
