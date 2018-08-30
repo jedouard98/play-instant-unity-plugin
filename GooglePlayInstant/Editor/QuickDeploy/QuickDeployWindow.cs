@@ -235,7 +235,6 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
         }
 
         private string[] GetEnabledSceneItemPaths()
