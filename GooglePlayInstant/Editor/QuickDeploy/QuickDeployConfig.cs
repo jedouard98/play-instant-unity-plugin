@@ -22,7 +22,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
     /// <summary>
     /// Contains a set of operations for storing and retrieving quick deploy configurations.
     /// </summary>
-    public static class QuickDeployConfig
+    public class QuickDeployConfig
     {
         private static readonly string EditorConfigurationFilePath =
             Path.Combine("Library", "PlayInstantQuickDeployEditorConfig.json");
@@ -37,26 +37,39 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// The Editor Configuration singleton that should be used to read and modify Quick Deploy configuration.
         /// Modified values are persisted by calling SaveEditorConfiguration.
         /// </summary>
-        private static readonly EditorConfiguration EditorConfig = LoadEditorConfiguration(EditorConfigurationFilePath);
+        private readonly EditorConfiguration EditorConfig;
 
         /// <summary>
         /// The Engine Configuration singleton that should be used to read and modify Loading Screen configuration.
         /// Modified values are persisted by calling SaveEngineConfiguration.
         /// </summary>
-        private static readonly LoadingScreenConfig.EngineConfiguration EngineConfig = LoadEngineConfiguration(EngineConfigurationFilePath);
+        private readonly LoadingScreenConfig.EngineConfiguration EngineConfig;
 
         // Copy of fields from EditorConfig and EngineConfig for holding unsaved values set in the UI.
-        public static string CloudCredentialsFileName = EditorConfig.cloudCredentialsFileName;
-        public static string AssetBundleFileName = EditorConfig.assetBundleFileName;
-        public static string CloudStorageBucketName = EditorConfig.cloudStorageBucketName;
-        public static string CloudStorageObjectName = EditorConfig.cloudStorageObjectName;
-        public static string AssetBundleUrl = EngineConfig.assetBundleUrl;
+        public string CloudCredentialsFileName;
+        public string AssetBundleFileName;
+        public string CloudStorageBucketName;
+        public string CloudStorageObjectName;
+        public string AssetBundleUrl;
+
+        public QuickDeployConfig()
+        {
+            EditorConfig = LoadEditorConfiguration(EditorConfigurationFilePath);
+            EngineConfig = LoadEngineConfiguration(EngineConfigurationFilePath);
+            
+            // Copy of fields from EditorConfig and EngineConfig for holding unsaved values set in the UI.
+            CloudCredentialsFileName = EditorConfig.cloudCredentialsFileName;
+            AssetBundleFileName = EditorConfig.assetBundleFileName;
+            CloudStorageBucketName = EditorConfig.cloudStorageBucketName;
+            CloudStorageObjectName = EditorConfig.cloudStorageObjectName;
+            AssetBundleUrl = EngineConfig.assetBundleUrl;
+        }
 
         /// <summary>
         /// Store configuration from the current quick deploy tab to persistent storage.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if tab shouldn't have input fields.</exception>
-        public static void SaveConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
+        public void SaveConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
         {
             switch (currentTab)
             {
@@ -78,7 +91,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
+        internal void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
             EditorConfiguration configuration, string editorConfigurationPath)
         {
             switch (currentTab)
@@ -103,7 +116,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         }
 
         // Visible for testing
-        internal static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
+        internal void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab,
             LoadingScreenConfig.EngineConfiguration configuration, string engineConfigurationPath)
         {
             switch (currentTab)
@@ -127,7 +140,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// De-serialize editor configuration file contents into EditorConfiguration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
-        internal static EditorConfiguration LoadEditorConfiguration(string editorConfigurationPath)
+        internal EditorConfiguration LoadEditorConfiguration(string editorConfigurationPath)
         {
             if (!File.Exists(editorConfigurationPath))
             {
@@ -142,7 +155,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// De-serialize engine configuration file contents into EngineConfiguration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
-        internal static LoadingScreenConfig.EngineConfiguration LoadEngineConfiguration(string engineConfigurationPath)
+        internal LoadingScreenConfig.EngineConfiguration LoadEngineConfiguration(string engineConfigurationPath)
         {
             if (!File.Exists(engineConfigurationPath))
             {

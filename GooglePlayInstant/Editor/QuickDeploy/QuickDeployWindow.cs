@@ -22,6 +22,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public class QuickDeployWindow : EditorWindow
     {
+        public static QuickDeployConfig config = new QuickDeployConfig();
+        
         private static readonly string[] ToolbarButtonNames =
         {
             "Overview", "Bundle Creation", "Bundle Deployment", "Loading Screen"
@@ -202,7 +204,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.AssetBundleFileName = EditorGUILayout.TextField(QuickDeployConfig.AssetBundleFileName,
+            config.AssetBundleFileName = EditorGUILayout.TextField(config.AssetBundleFileName,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -210,7 +212,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                QuickDeployConfig.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                config.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
                 HandleDialogExit();
             }
 
@@ -222,7 +224,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
+                    config.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                     AssetBundleBuilder.BuildQuickDeployAssetBundle(GetEnabledSceneItemPaths());
                 }
                 catch (Exception ex)
@@ -292,8 +294,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Google Cloud Credentials File Path", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.CloudCredentialsFileName =
-                EditorGUILayout.TextField(QuickDeployConfig.CloudCredentialsFileName,
+            config.CloudCredentialsFileName =
+                EditorGUILayout.TextField(config.CloudCredentialsFileName,
                     GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -301,7 +303,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                QuickDeployConfig.CloudCredentialsFileName =
+                config.CloudCredentialsFileName =
                     EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
                 HandleDialogExit();
             }
@@ -311,7 +313,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.AssetBundleFileName = EditorGUILayout.TextField(QuickDeployConfig.AssetBundleFileName,
+            config.AssetBundleFileName = EditorGUILayout.TextField(config.AssetBundleFileName,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -319,7 +321,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                QuickDeployConfig.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
+                config.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
                 HandleDialogExit();
             }
 
@@ -328,14 +330,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.CloudStorageBucketName =
-                EditorGUILayout.TextField(QuickDeployConfig.CloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
+            config.CloudStorageBucketName =
+                EditorGUILayout.TextField(config.CloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Object Name", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.CloudStorageObjectName =
-                EditorGUILayout.TextField(QuickDeployConfig.CloudStorageObjectName, GUILayout.MinWidth(FieldMinWidth));
+            config.CloudStorageObjectName =
+                EditorGUILayout.TextField(config.CloudStorageObjectName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -344,7 +346,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
+                    config.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
                     GcpClient.DeployConfiguredFile();
                 }
                 catch (Exception ex)
@@ -374,8 +376,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            QuickDeployConfig.AssetBundleUrl =
-                EditorGUILayout.TextField(QuickDeployConfig.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
+            config.AssetBundleUrl =
+                EditorGUILayout.TextField(config.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -388,7 +390,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                 }
                 catch (Exception ex)
                 {
@@ -405,8 +407,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 try
                 {
-                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    window.StartAssetBundleDownload(QuickDeployConfig.AssetBundleUrl);
+                    config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    window.StartAssetBundleDownload(config.AssetBundleUrl);
                 }
                 catch (Exception ex)
                 {
@@ -456,7 +458,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     try
                     {
-                        QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                         LoadingScreenGenerator.AddImageToScene(LoadingScreenGenerator.GetLoadingScreenCanvasObject(),
                             _loadingScreenImagePath);
                     }
@@ -473,8 +475,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     try
                     {
-                        QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                        LoadingScreenGenerator.GenerateScene(QuickDeployConfig.AssetBundleUrl,
+                        config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        LoadingScreenGenerator.GenerateScene(config.AssetBundleUrl,
                             _loadingScreenImagePath);
                     }
                     catch (Exception ex)
