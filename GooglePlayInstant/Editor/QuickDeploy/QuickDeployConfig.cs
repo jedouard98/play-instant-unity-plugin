@@ -60,31 +60,32 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             switch (currentTab)
             {
                 case QuickDeployWindow.ToolBarSelectedButton.CreateBundle:
-                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle);
+                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, EditorConfig, EditorConfigurationFilePath);
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.DeployBundle:
-                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle);
+                    SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, EditorConfig, EditorConfigurationFilePath);
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
-                    SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen);
+                    SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, EngineConfig, EditorConfigurationFilePath);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
             }
         }
 
-        private static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
+        // Visible for testing
+        internal static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab, EditorConfiguration configuration, string editorConfigurationPath)
         {
             switch (currentTab)
             {
                 case QuickDeployWindow.ToolBarSelectedButton.CreateBundle:
-                    EditorConfig.assetBundleFileName = AssetBundleFileName;
+                    configuration.assetBundleFileName = AssetBundleFileName;
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.DeployBundle:
-                    EditorConfig.cloudCredentialsFileName = CloudCredentialsFileName;
-                    EditorConfig.assetBundleFileName = AssetBundleFileName;
-                    EditorConfig.cloudStorageBucketName = CloudStorageBucketName;
-                    EditorConfig.cloudStorageObjectName = CloudStorageObjectName;
+                    configuration.cloudCredentialsFileName = CloudCredentialsFileName;
+                    configuration.assetBundleFileName = AssetBundleFileName;
+                    configuration.cloudStorageBucketName = CloudStorageBucketName;
+                    configuration.cloudStorageObjectName = CloudStorageObjectName;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab,
@@ -94,15 +95,16 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             // Shouldn't hurt to write to persistent storage as long as SaveEditorConfiguration(currentTab) is only called
             // when a major action happens.
-            File.WriteAllText(EditorConfigurationFilePath, JsonUtility.ToJson(EditorConfig));
+            File.WriteAllText(editorConfigurationPath, JsonUtility.ToJson(configuration));
         }
-        
-        private static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
+
+        // Visible for testing
+        internal static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab, LoadingScreenConfig.EngineConfiguration configuration, string engineConfigurationPath)
         {
             switch (currentTab)
             {
                 case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
-                    EngineConfig.assetBundleUrl = AssetBundleUrl;
+                    configuration.assetBundleUrl = AssetBundleUrl;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab,
@@ -114,7 +116,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             // Shouldn't hurt to write to persistent storage as long as SaveEngineConfiguration(currentTab) is only called
             // when a major action happens.
-            File.WriteAllText(EngineConfigurationFilePath, JsonUtility.ToJson(EngineConfig));
+            File.WriteAllText(engineConfigurationPath, JsonUtility.ToJson(configuration));
         }
 
         /// <summary>
@@ -161,8 +163,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         [Serializable]
         public class EditorConfiguration
         {
-            public string cloudCredentialsFileName;
             public string assetBundleFileName;
+            public string cloudCredentialsFileName;
             public string cloudStorageBucketName;
             public string cloudStorageObjectName;
         }
