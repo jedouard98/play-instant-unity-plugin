@@ -27,7 +27,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         private static readonly string EditorConfigurationFilePath =
             Path.Combine("Library", "PlayInstantQuickDeployEditorConfig.json");
 
-        private static readonly string ResourcesDirectoryPath = Path.Combine(LoadingScreenGenerator.SceneDirectoryPath, "Resources");
+        private static readonly string ResourcesDirectoryPath =
+            Path.Combine(LoadingScreenGenerator.SceneDirectoryPath, "Resources");
 
         private static readonly string EngineConfigurationFilePath =
             Path.Combine(ResourcesDirectoryPath, LoadingScreenConfig.EngineConfigurationFileName);
@@ -90,9 +91,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     EditorConfig.cloudStorageObjectName = CloudStorageObjectName;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save editor configurations " +
-                                                                                    "from this tab.");
+                    throw new ArgumentOutOfRangeException("currentTab", currentTab,
+                        "Can't save editor configurations " +
+                        "from this tab.");
             }
+
+            // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
+            // when a major action happens.
+            File.WriteAllText(EditorConfigurationFilePath, JsonUtility.ToJson(EditorConfig));
         }
 
         /// <summary>
@@ -122,9 +128,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     EngineConfig.assetBundleUrl = AssetBundleUrl;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save engine configurations " + 
-                                                                                    "from this tab.");
+                    throw new ArgumentOutOfRangeException("currentTab", currentTab,
+                        "Can't save engine configurations " +
+                        "from this tab.");
             }
+
+            Directory.CreateDirectory(ResourcesDirectoryPath);
 
             // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
             // when a major action happens.
@@ -144,6 +153,24 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             var configurationJson = File.ReadAllText(EngineConfigurationFilePath);
             return JsonUtility.FromJson<LoadingScreenConfig.EngineConfiguration>(configurationJson);
+        }
+
+        
+        public static bool EngineConfigExists()
+        {
+            return File.Exists(EngineConfigurationFilePath);
+        }
+
+        /// <summary>
+        /// Represents JSON contents of the quick deploy configuration file.
+        /// </summary>
+        [Serializable]
+        public class EditorConfiguration
+        {
+            public string cloudCredentialsFileName;
+            public string assetBundleFileName;
+            public string cloudStorageBucketName;
+            public string cloudStorageObjectName;
         }
     }
 }

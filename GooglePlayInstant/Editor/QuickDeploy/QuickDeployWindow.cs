@@ -231,6 +231,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         ex.Message);
                     throw;
                 }
+
                 HandleDialogExit();
             }
 
@@ -376,6 +377,27 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             QuickDeployConfig.AssetBundleUrl =
                 EditorGUILayout.TextField(QuickDeployConfig.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
+
+            var setAssetBundleText = QuickDeployConfig.EngineConfigExists()
+                ? "Update AssetBundle URL"
+                : "Set AssetBundle URL";
+            
+            if (GUILayout.Button(setAssetBundleText))
+            {
+                try
+                {
+                    QuickDeployConfig.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                }
+                catch (Exception ex)
+                {
+                    DialogHelper.DisplayMessage(AssetBundleCheckerErrorTitle, ex.Message);
+
+                    throw;
+                }
+            }
+
             EditorGUILayout.Space();
             if (GUILayout.Button("Check AssetBundle"))
             {
@@ -467,12 +489,12 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             EditorGUILayout.EndVertical();
         }
-        
+
         // Call this method after any of the SaveFilePanels and OpenFilePanels placed inbetween BeginHorizontal()s or
         // BeginVerticals()s. An error is thrown when a user switches contexts (into a different desktop), and the
         // window reloads. After completing an action, this error is thrown. This method is called to avoid this.
         //  Fix documentation: https://answers.unity.com/questions/1353442/editorutilitysavefilepane-and-beginhorizontal-caus.html
-        private void HandleDialogExit() 
+        private void HandleDialogExit()
         {
             GUIUtility.ExitGUI();
         }

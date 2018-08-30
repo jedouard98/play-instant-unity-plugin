@@ -62,7 +62,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             }
 
             // Removes the loading scene if it is present, otherwise does nothing.
-            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(SceneName)), true);
+            EditorSceneManager.CloseScene(SceneManager.GetSceneByName(Path.GetFileNameWithoutExtension(SceneName)),
+                true);
 
             var loadingScreenScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
 
@@ -90,11 +91,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 //TODO: investigate GUI Layout errors that occur when moving this to DialogHelper
                 if (EditorUtility.DisplayDialog("Change Scenes in Build",
-                    "Would you like to replace any existing Scenes in Build with the loading screen scene?", "Yes", "No"))
+                    "Would you like to replace any existing Scenes in Build with the loading screen scene?", "Yes",
+                    "No"))
                 {
                     SetMainSceneInBuild(SceneFilePath);
                 }
-
             }
         }
 
@@ -132,9 +133,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 // First time creating a loading screen, configure nested game objects appropriately.
                 var loadingScreenCanvas = loadingScreenGameObject.AddComponent<Canvas>();
-                
+
                 loadingScreenCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                
+
                 loadingScreenGameObject.AddComponent<Image>();
             }
 

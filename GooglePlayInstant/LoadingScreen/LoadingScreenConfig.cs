@@ -16,14 +16,15 @@ using System;
 
 namespace GooglePlayInstant.LoadingScreen
 {
+    /// <summary>
+    /// Class that represents the contents of the Loading Screen configuration json file, which notifies the loading scene
+    /// what URL to download the quick deploy application's main scene AssetBundle from.
+    /// </summary>
     public class LoadingScreenConfig
     {
 
         public const string EngineConfigurationFileName = "PlayInstantQuickDeployEngineConfig.json";
-        /// <summary>
-        /// Class that represents the contents of the Loading Screen configuration json file, which notifies the loading scene
-        /// what URL to download the quick deploy application's main scene AssetBundle from.
-        /// </summary>
+        
         [Serializable]
         public class EngineConfiguration
         {
