@@ -14,7 +14,6 @@
 
 using System;
 using System.Linq;
-using System.Net.NetworkInformation;
 using GooglePlayInstant.Editor.AndroidManifest;
 using UnityEditor;
 using UnityEngine;
