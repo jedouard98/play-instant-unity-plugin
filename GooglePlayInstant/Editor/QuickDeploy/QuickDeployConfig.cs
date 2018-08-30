@@ -69,7 +69,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
                 case QuickDeployWindow.ToolBarSelectedButton.LoadingScreen:
                     SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, EngineConfig,
-                        EditorConfigurationFilePath);
+                        EngineConfigurationFilePath);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
