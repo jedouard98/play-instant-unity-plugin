@@ -45,6 +45,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// </summary>
         private static readonly LoadingScreenConfig.EngineConfiguration EngineConfig = LoadEngineConfiguration(EngineConfigurationFilePath);
 
+        // Copy of fields from EditorConfig and EngineConfig for holding unsaved values set in the UI.
         public static string CloudCredentialsFileName = EditorConfig.cloudCredentialsFileName;
         public static string AssetBundleFileName = EditorConfig.assetBundleFileName;
         public static string CloudStorageBucketName = EditorConfig.cloudStorageBucketName;
@@ -93,8 +94,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab,
-                        "Can't save editor configurations " +
-                        "from this tab.");
+                        "Can't save editor configurations from this tab.");
             }
 
             // Shouldn't hurt to write to persistent storage as long as SaveEditorConfiguration(currentTab) is only called
@@ -113,8 +113,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab,
-                        "Can't save engine configurations " +
-                        "from this tab.");
+                        "Can't save engine configurations from this tab.");
             }
 
             Directory.CreateDirectory(ResourcesDirectoryPath);
