@@ -34,11 +34,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             Path.Combine(ResourcesDirectoryPath, LoadingScreenConfig.EngineConfigurationFileName);
 
         /// <summary>
-        /// The Configuration singleton that should be used to read and modify Quick Deploy configuration.
-        /// Modified values are persisted by calling SaveConfiguration.
+        /// The Editor Configuration singleton that should be used to read and modify Quick Deploy configuration.
+        /// Modified values are persisted by calling SaveEditorConfiguration.
         /// </summary>
         private static readonly EditorConfiguration EditorConfig = LoadEditorConfiguration();
 
+        /// <summary>
+        /// The Engine Configuration singleton that should be used to read and modify Loading Screen configuration.
+        /// Modified values are persisted by calling SaveEngineConfiguration.
+        /// </summary>
         private static readonly LoadingScreenConfig.EngineConfiguration EngineConfig = LoadEngineConfiguration();
 
         public static string CloudCredentialsFileName = EditorConfig.cloudCredentialsFileName;
@@ -67,16 +71,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 default:
                     throw new ArgumentOutOfRangeException("currentTab", currentTab, "Can't save from this tab.");
             }
-
-            // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
-            // when a major action happens.
-            File.WriteAllText(EngineConfigurationFilePath, JsonUtility.ToJson(EngineConfig));
         }
 
-        /// <summary>
-        /// Store configuration from the current quick deploy tab to persistent storage.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if tab shouldn't have input fields.</exception>
         private static void SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
         {
             switch (currentTab)
@@ -96,30 +92,11 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                         "from this tab.");
             }
 
-            // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
+            // Shouldn't hurt to write to persistent storage as long as SaveEditorConfiguration(currentTab) is only called
             // when a major action happens.
             File.WriteAllText(EditorConfigurationFilePath, JsonUtility.ToJson(EditorConfig));
         }
-
-        /// <summary>
-        /// De-serialize configuration file contents into Configuration instance if the file exists exists, otherwise
-        /// return Configuration instance with empty fields.
-        /// </summary>
-        private static EditorConfiguration LoadEditorConfiguration()
-        {
-            if (!File.Exists(EditorConfigurationFilePath))
-            {
-                return new EditorConfiguration();
-            }
-
-            var configurationJson = File.ReadAllText(EditorConfigurationFilePath);
-            return JsonUtility.FromJson<EditorConfiguration>(configurationJson);
-        }
-
-        /// <summary>
-        /// Store configuration from the current quick deploy tab to persistent storage.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if tab shouldn't have input fields.</exception>
+        
         private static void SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton currentTab)
         {
             switch (currentTab)
@@ -135,13 +112,28 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             Directory.CreateDirectory(ResourcesDirectoryPath);
 
-            // Shouldn't hurt to write to persistent storage as long as SaveConfiguration(currentTab) is only called
+            // Shouldn't hurt to write to persistent storage as long as SaveEngineConfiguration(currentTab) is only called
             // when a major action happens.
             File.WriteAllText(EngineConfigurationFilePath, JsonUtility.ToJson(EngineConfig));
         }
 
         /// <summary>
-        /// De-serialize configuration file contents into Configuration instance if the file exists exists, otherwise
+        /// De-serialize editor configuration file contents into EditorConfiguration instance if the file exists exists, otherwise
+        /// return Configuration instance with empty fields.
+        /// </summary>
+        private static EditorConfiguration LoadEditorConfiguration()
+        {
+            if (!File.Exists(EditorConfigurationFilePath))
+            {
+                return new EditorConfiguration();
+            }
+
+            var configurationJson = File.ReadAllText(EditorConfigurationFilePath);
+            return JsonUtility.FromJson<EditorConfiguration>(configurationJson);
+        }
+
+        /// <summary>
+        /// De-serialize engine configuration file contents into EngineConfiguration instance if the file exists exists, otherwise
         /// return Configuration instance with empty fields.
         /// </summary>
         private static LoadingScreenConfig.EngineConfiguration LoadEngineConfiguration()
@@ -155,7 +147,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             return JsonUtility.FromJson<LoadingScreenConfig.EngineConfiguration>(configurationJson);
         }
 
-        
+        /// <summary>
+        /// Returns true if an instance of the engine configuration exists.
+        /// </summary>
         public static bool EngineConfigExists()
         {
             return File.Exists(EngineConfigurationFilePath);

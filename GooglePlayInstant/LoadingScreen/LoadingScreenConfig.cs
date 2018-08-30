@@ -22,7 +22,9 @@ namespace GooglePlayInstant.LoadingScreen
     /// </summary>
     public class LoadingScreenConfig
     {
-
+        /// <summary>
+        /// Name of the json file that contains Engine configurations
+        /// </summary>
         public const string EngineConfigurationFileName = "PlayInstantQuickDeployEngineConfig.json";
         
         [Serializable]
