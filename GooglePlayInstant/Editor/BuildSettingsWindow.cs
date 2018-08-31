@@ -50,6 +50,11 @@ namespace GooglePlayInstant.Editor
             _windowInstance = GetWindow(typeof(BuildSettingsWindow), true, WindowTitle) as BuildSettingsWindow;
         }
 
+        private void OnDestroy()
+        {
+            _windowInstance = null;
+        }
+
         private void Awake()
         {
             ReadFromBuildConfiguration();
