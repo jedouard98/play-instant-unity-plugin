@@ -37,13 +37,13 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// The Editor Configuration singleton that should be used to read and modify Quick Deploy configuration.
         /// Modified values are persisted by calling SaveEditorConfiguration.
         /// </summary>
-        private readonly EditorConfiguration EditorConfig;
+        private EditorConfiguration EditorConfig;
 
         /// <summary>
         /// The Engine Configuration singleton that should be used to read and modify Loading Screen configuration.
         /// Modified values are persisted by calling SaveEngineConfiguration.
         /// </summary>
-        private readonly LoadingScreenConfig.EngineConfiguration EngineConfig;
+        private LoadingScreenConfig.EngineConfiguration EngineConfig;
 
         // Copy of fields from EditorConfig and EngineConfig for holding unsaved values set in the UI.
         public string CloudCredentialsFileName;
@@ -52,7 +52,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         public string CloudStorageObjectName;
         public string AssetBundleUrl;
 
-        public QuickDeployConfig()
+        public void LoadConfiguration()
         {
             EditorConfig = LoadEditorConfiguration(EditorConfigurationFilePath);
             EngineConfig = LoadEngineConfiguration(EngineConfigurationFilePath);

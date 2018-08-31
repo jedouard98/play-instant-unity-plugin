@@ -73,6 +73,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
+            
+            config.LoadConfiguration();
         }
 
         void OnEnable()
