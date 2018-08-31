@@ -38,10 +38,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         {
             var quickDeployConfig = new QuickDeployConfig
             {
-                AssetBundleFileName = "testbundle"
+                AssetBundleFileName = "testbundle",
+                CloudCredentialsFileName = "testcredentials",
+                CloudStorageBucketName = "testbucketname",
+                CloudStorageObjectName = "testobjectname"
             };
             var inputConfig = new QuickDeployConfig.EditorConfiguration();
-            
+
             quickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, inputConfig,
                 TestConfigurationPath);
 
@@ -50,18 +53,23 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
                 JsonUtility.FromJson<QuickDeployConfig.EditorConfiguration>(outputConfigurationJson);
 
             Assert.AreEqual(outputConfig.assetBundleFileName, quickDeployConfig.AssetBundleFileName);
+            
+            Assert.IsEmpty(outputConfig.cloudCredentialsFileName, "Cloud credentials should not have been saved. Should be empty.");
+            Assert.IsEmpty(outputConfig.cloudStorageBucketName, "Cloud storage bucket should not have been saved. Should be empty.");
+            Assert.IsEmpty(outputConfig.cloudStorageObjectName, "Cloud storage object should not have been saved. Should be empty.");
+
         }
-        
+
         [Test]
         public void TestSavingConfigOnCreateBundleWithEmptyString()
         {
-            var quickDeployConfig = new QuickDeployConfig 
+            var quickDeployConfig = new QuickDeployConfig
             {
                 AssetBundleFileName = ""
             };
 
             var inputConfig = new QuickDeployConfig.EditorConfiguration();
-            
+
             quickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.CreateBundle, inputConfig,
                 TestConfigurationPath);
 
@@ -71,20 +79,20 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             Assert.IsEmpty(outputConfig.assetBundleFileName);
         }
-        
+
         [Test]
         public void TestSavingConfigOnDeployBundleWithString()
         {
-            var quickDeployConfig = new QuickDeployConfig()
+            var quickDeployConfig = new QuickDeployConfig
             {
                 CloudCredentialsFileName = "testcredentials",
                 AssetBundleFileName = "testbundle",
                 CloudStorageBucketName = "testbucket",
                 CloudStorageObjectName = "testobject"
             };
-            
+
             var inputConfig = new QuickDeployConfig.EditorConfiguration();
-            
+
             quickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, inputConfig,
                 TestConfigurationPath);
 
@@ -97,20 +105,20 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             Assert.AreEqual(outputConfig.cloudStorageBucketName, quickDeployConfig.CloudStorageBucketName);
             Assert.AreEqual(outputConfig.cloudStorageObjectName, quickDeployConfig.CloudStorageObjectName);
         }
-        
+
         [Test]
         public void TestSavingConfigOnDeployBundleWithEmptyStrings()
         {
-            var quickDeployConfig = new QuickDeployConfig()
+            var quickDeployConfig = new QuickDeployConfig
             {
                 CloudCredentialsFileName = "",
                 AssetBundleFileName = "",
                 CloudStorageBucketName = "",
-                CloudStorageObjectName =  ""
+                CloudStorageObjectName = ""
             };
-            
+
             var inputConfig = new QuickDeployConfig.EditorConfiguration();
-            
+
             quickDeployConfig.SaveEditorConfiguration(QuickDeployWindow.ToolBarSelectedButton.DeployBundle, inputConfig,
                 TestConfigurationPath);
 
@@ -133,8 +141,9 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             };
 
             var inputConfig = new LoadingScreenConfig.EngineConfiguration();
-            
-            quickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, inputConfig,
+
+            quickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen,
+                inputConfig,
                 TestConfigurationPath);
 
             var outputConfigurationJson = File.ReadAllText(TestConfigurationPath);
@@ -151,10 +160,11 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
             {
                 AssetBundleUrl = ""
             };
-            
+
             var inputConfig = new LoadingScreenConfig.EngineConfiguration();
-            
-            quickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen, inputConfig,
+
+            quickDeployConfig.SaveEngineConfiguration(QuickDeployWindow.ToolBarSelectedButton.LoadingScreen,
+                inputConfig,
                 TestConfigurationPath);
 
             var outputConfigurationJson = File.ReadAllText(TestConfigurationPath);
@@ -163,13 +173,13 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
 
             Assert.IsEmpty(outputConfig.assetBundleUrl);
         }
- 
+
         [Test]
         public void TestLoadingEditorConfiguration()
         {
             var quickDeployConfig = new QuickDeployConfig();
 
-            var inputConfig = new QuickDeployConfig.EditorConfiguration()
+            var inputConfig = new QuickDeployConfig.EditorConfiguration
             {
                 cloudCredentialsFileName = "testcredentials",
                 assetBundleFileName = "testbundle",
@@ -191,7 +201,7 @@ namespace GooglePlayInstant.Tests.Editor.QuickDeploy
         public void TestLoadingEngineConfiguration()
         {
             var quickDeployConfig = new QuickDeployConfig();
-            
+
             var inputConfig = new LoadingScreenConfig.EngineConfiguration {assetBundleUrl = "testurl"};
 
             File.WriteAllText(TestConfigurationPath, JsonUtility.ToJson(inputConfig));
