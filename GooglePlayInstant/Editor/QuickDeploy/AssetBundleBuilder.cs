@@ -34,15 +34,15 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 throw new Exception("No scenes were selected. Please select scenes to include in AssetBundle.");
             }
 
-            if (string.IsNullOrEmpty(QuickDeployWindow.config.AssetBundleFileName))
+            if (string.IsNullOrEmpty(QuickDeployWindow.Config.AssetBundleFileName))
             {
                 throw new Exception("Cannot build AssetBundle with invalid file name.");
             }
 
             var assetBundleBuild = new AssetBundleBuild();
-            assetBundleBuild.assetBundleName = Path.GetFileName(QuickDeployWindow.config.AssetBundleFileName);
+            assetBundleBuild.assetBundleName = Path.GetFileName(QuickDeployWindow.Config.AssetBundleFileName);
             assetBundleBuild.assetNames = scenePaths;
-            var assetBundleDirectory = Path.GetDirectoryName(QuickDeployWindow.config.AssetBundleFileName);
+            var assetBundleDirectory = Path.GetDirectoryName(QuickDeployWindow.Config.AssetBundleFileName);
             if (!Directory.Exists(assetBundleDirectory))
             {
                 Directory.CreateDirectory(assetBundleDirectory);

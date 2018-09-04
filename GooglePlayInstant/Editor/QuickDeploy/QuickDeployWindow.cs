@@ -25,7 +25,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
         /// <summary>
         /// Saved configurations from a previous session.
         /// </summary>
-        public static QuickDeployConfig config = new QuickDeployConfig();
+        public static readonly QuickDeployConfig Config = new QuickDeployConfig();
         
         private static readonly string[] ToolbarButtonNames =
         {
@@ -77,7 +77,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             window.minSize = new Vector2(WindowMinWidth, WindowMinHeight);
             _toolbarSelectedButtonIndex = (int) select;
             
-            config.LoadConfiguration();
+            Config.LoadConfiguration();
         }
 
         void OnEnable()
@@ -209,7 +209,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
-            config.AssetBundleFileName = EditorGUILayout.TextField(config.AssetBundleFileName,
+            Config.AssetBundleFileName = EditorGUILayout.TextField(Config.AssetBundleFileName,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -217,7 +217,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                config.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
+                Config.AssetBundleFileName = EditorUtility.SaveFilePanel("Save AssetBundle", "", "", "");
                 HandleDialogExit();
             }
 
@@ -229,7 +229,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    config.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
+                    Config.SaveConfiguration(ToolBarSelectedButton.CreateBundle);
                     AssetBundleBuilder.BuildQuickDeployAssetBundle(GetEnabledSceneItemPaths());
                 }
                 catch (Exception ex)
@@ -299,8 +299,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Google Cloud Credentials File Path", GUILayout.MinWidth(FieldMinWidth));
-            config.CloudCredentialsFileName =
-                EditorGUILayout.TextField(config.CloudCredentialsFileName,
+            Config.CloudCredentialsFileName =
+                EditorGUILayout.TextField(Config.CloudCredentialsFileName,
                     GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -308,7 +308,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                config.CloudCredentialsFileName =
+                Config.CloudCredentialsFileName =
                     EditorUtility.OpenFilePanel("Select cloud credentials file", "", "");
                 HandleDialogExit();
             }
@@ -318,7 +318,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField("AssetBundle File Path", GUILayout.MinWidth(FieldMinWidth));
-            config.AssetBundleFileName = EditorGUILayout.TextField(config.AssetBundleFileName,
+            Config.AssetBundleFileName = EditorGUILayout.TextField(Config.AssetBundleFileName,
                 GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
@@ -326,7 +326,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Browse", GUILayout.Width(ShortButtonWidth)))
             {
-                config.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
+                Config.AssetBundleFileName = EditorUtility.OpenFilePanel("Select AssetBundle file", "", "");
                 HandleDialogExit();
             }
 
@@ -335,14 +335,14 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Bucket Name", GUILayout.MinWidth(FieldMinWidth));
-            config.CloudStorageBucketName =
-                EditorGUILayout.TextField(config.CloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
+            Config.CloudStorageBucketName =
+                EditorGUILayout.TextField(Config.CloudStorageBucketName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Cloud Storage Object Name", GUILayout.MinWidth(FieldMinWidth));
-            config.CloudStorageObjectName =
-                EditorGUILayout.TextField(config.CloudStorageObjectName, GUILayout.MinWidth(FieldMinWidth));
+            Config.CloudStorageObjectName =
+                EditorGUILayout.TextField(Config.CloudStorageObjectName, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
@@ -351,7 +351,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    config.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
+                    Config.SaveConfiguration(ToolBarSelectedButton.DeployBundle);
                     GcpClient.DeployConfiguredFile();
                 }
                 catch (Exception ex)
@@ -381,8 +381,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("AssetBundle URL", GUILayout.MinWidth(FieldMinWidth));
-            config.AssetBundleUrl =
-                EditorGUILayout.TextField(config.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
+            Config.AssetBundleUrl =
+                EditorGUILayout.TextField(Config.AssetBundleUrl, GUILayout.MinWidth(FieldMinWidth));
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -395,7 +395,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
             {
                 try
                 {
-                    config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    Config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                 }
                 catch (Exception ex)
                 {
@@ -412,8 +412,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 
                 try
                 {
-                    config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                    window.StartAssetBundleDownload(config.AssetBundleUrl);
+                    Config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                    window.StartAssetBundleDownload(Config.AssetBundleUrl);
                 }
                 catch (Exception ex)
                 {
@@ -463,7 +463,7 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     try
                     {
-                        config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        Config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
                         LoadingScreenGenerator.AddImageToScene(LoadingScreenGenerator.GetLoadingScreenCanvasObject(),
                             _loadingScreenImagePath);
                     }
@@ -480,8 +480,8 @@ namespace GooglePlayInstant.Editor.QuickDeploy
                 {
                     try
                     {
-                        config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
-                        LoadingScreenGenerator.GenerateScene(config.AssetBundleUrl,
+                        Config.SaveConfiguration(ToolBarSelectedButton.LoadingScreen);
+                        LoadingScreenGenerator.GenerateScene(Config.AssetBundleUrl,
                             _loadingScreenImagePath);
                     }
                     catch (Exception ex)
