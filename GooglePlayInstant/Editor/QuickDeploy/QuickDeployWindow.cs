@@ -22,6 +22,9 @@ namespace GooglePlayInstant.Editor.QuickDeploy
 {
     public class QuickDeployWindow : EditorWindow
     {
+        /// <summary>
+        /// Saved configurations from a previous session.
+        /// </summary>
         public static QuickDeployConfig config = new QuickDeployConfig();
         
         private static readonly string[] ToolbarButtonNames =
